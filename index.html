@@ -25,7 +25,7 @@
     }
 
     .sub {
-      opacity: 0.8;
+      opacity: 0.85;
       margin-top: 10px;
     }
 
@@ -35,21 +35,47 @@
 
     .servers {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       gap: 15px;
-      max-width: 900px;
-      margin: auto;
+      max-width: 1100px;
+      margin: 25px auto;
     }
 
     .card {
       background: #1a1a1a;
       padding: 20px;
       border-radius: 10px;
+      box-shadow: 0 0 10px rgba(255,255,255,0.04);
+      text-align: left;
+    }
+
+    .server-name {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-bottom: 8px;
     }
 
     .online {
       color: #00ff88;
       font-weight: bold;
+    }
+
+    .offline {
+      color: #ff5c5c;
+      font-weight: bold;
+    }
+
+    .players {
+      margin-top: 8px;
+      opacity: 0.95;
+    }
+
+    .names {
+      margin-top: 10px;
+      font-size: 0.92rem;
+      opacity: 0.85;
+      line-height: 1.4;
+      word-break: break-word;
     }
 
     .btn {
@@ -70,41 +96,87 @@
     }
   </style>
 </head>
-
 <body>
 
 <header>
   <h1>Adult ASA Cluster</h1>
-  <div class="sub">No wipes • Balanced • Community-driven</div>
+  <div class="sub" id="subtitle">Loading live server data...</div>
 </header>
 
 <div class="section">
   <h2>🌍 Live Server Status</h2>
-
-  <div class="servers">
-    <div class="card">Island<br><span class="online">Online</span></div>
-    <div class="card">Scorched Earth<br><span class="online">Online</span></div>
-    <div class="card">Aberration<br><span class="online">Online</span></div>
-    <div class="card">Extinction<br><span class="online">Online</span></div>
-    <div class="card">Ragnarok<br><span class="online">Online</span></div>
-    <div class="card">Valguero<br><span class="online">Online</span></div>
-  </div>
-
-  <a class="btn" href="#">Join Discord</a>
+  <div id="servers" class="servers"></div>
+  <a class="btn" href="https://discord.gg/adultasa" target="_blank" rel="noopener noreferrer">Join Discord</a>
 </div>
 
 <div class="section">
   <h2>🔥 Why Play Here?</h2>
-  <p>• Active community<br>
-     • Balanced rates<br>
-     • No wipes ever<br>
-     • Cross-map transfers<br>
-     • Admin support</p>
+  <p>
+    • Active community<br>
+    • Balanced rates<br>
+    • No wipes ever<br>
+    • Cross-map transfers<br>
+    • Admin support
+  </p>
 </div>
 
 <footer>
   © 2026 Adult ASA Cluster
 </footer>
+
+<script>
+  const API_URL = "https://aasa-discord-bot-v-20-production.up.railway.app/api/status";
+
+  function cleanServerName(name) {
+    return name.replace(/^Adult ASA\s*-\s*/i, "").trim();
+  }
+
+  async function loadStatus() {
+    try {
+      const response = await fetch(API_URL);
+      if (!response.ok) throw new Error("Failed to fetch status");
+
+      const data = await response.json();
+
+      const subtitle = document.getElementById("subtitle");
+      const updated = data.updatedAt
+        ? new Date(data.updatedAt).toLocaleString()
+        : "Unknown";
+
+      subtitle.textContent = `Total Survivors Online: ${data.totalOnline} | Last updated: ${updated}`;
+
+      const serversEl = document.getElementById("servers");
+      serversEl.innerHTML = "";
+
+      for (const server of data.servers) {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        const playerNames = server.playerNames && server.playerNames.length
+          ? server.playerNames.join(", ")
+          : "None";
+
+        card.innerHTML = `
+          <div class="server-name">${cleanServerName(server.name)}</div>
+          <div class="${server.online ? "online" : "offline"}">
+            ${server.online ? "Online" : "Offline"}
+          </div>
+          <div class="players">${server.players}/${server.maxPlayers} players</div>
+          <div class="names"><strong>Players:</strong> ${playerNames}</div>
+        `;
+
+        serversEl.appendChild(card);
+      }
+    } catch (error) {
+      document.getElementById("subtitle").textContent =
+        "Could not load live server data right now.";
+      console.error(error);
+    }
+  }
+
+  loadStatus();
+  setInterval(loadStatus, 15000);
+</script>
 
 </body>
 </html>
