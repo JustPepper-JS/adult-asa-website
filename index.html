@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Adult ASA Cluster</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
     body {
@@ -25,8 +25,19 @@
     }
 
     .sub {
-      opacity: 0.85;
-      margin-top: 10px;
+      opacity: 0.95;
+      margin-top: 12px;
+      line-height: 1.5;
+    }
+
+    .sub-main {
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    .sub-time {
+      font-size: 0.95rem;
+      opacity: 0.8;
     }
 
     .section {
@@ -45,7 +56,7 @@
       background: #1a1a1a;
       padding: 20px;
       border-radius: 10px;
-      box-shadow: 0 0 10px rgba(255,255,255,0.04);
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.04);
       text-align: left;
     }
 
@@ -74,7 +85,7 @@
       margin-top: 10px;
       font-size: 0.92rem;
       opacity: 0.85;
-      line-height: 1.4;
+      line-height: 1.45;
       word-break: break-word;
     }
 
@@ -97,67 +108,109 @@
   </style>
 </head>
 <body>
+  <header>
+    <h1>Adult ASA Cluster</h1>
+    <div class="sub" id="subtitle">
+      <div class="sub-main">Loading live server data...</div>
+      <div class="sub-time">Please wait a moment</div>
+    </div>
+  </header>
 
-<header>
-  <h1>Adult ASA Cluster</h1>
-  <div class="sub" id="subtitle">Loading live server data...</div>
-</header>
+  <div class="section">
+    <h2>🌍 Live Server Status</h2>
+    <div id="servers" class="servers"></div>
+    <a
+      class="btn"
+      href="https://discord.gg/adultasa"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      Join Discord
+    </a>
+  </div>
 
-<div class="section">
-  <h2>🌍 Live Server Status</h2>
-  <div id="servers" class="servers"></div>
-  <a class="btn" href="https://discord.gg/adultasa" target="_blank" rel="noopener noreferrer">Join Discord</a>
-</div>
+  <div class="section">
+    <h2>🔥 Why Play Here?</h2>
+    <p>
+      • Active community<br />
+      • Balanced rates<br />
+      • No wipes ever<br />
+      • Cross-map transfers<br />
+      • Admin support
+    </p>
+  </div>
 
-<div class="section">
-  <h2>🔥 Why Play Here?</h2>
-  <p>
-    • Active community<br>
-    • Balanced rates<br>
-    • No wipes ever<br>
-    • Cross-map transfers<br>
-    • Admin support
-  </p>
-</div>
+  <footer>© 2026 Adult ASA Cluster</footer>
 
-<footer>
-  © 2026 Adult ASA Cluster
-</footer>
+  <script>
+    const API_URL = "https://aasa-discord-bot-v-20-production.up.railway.app/api/status";
 
-<script>
-  const API_URL = "https://aasa-discord-bot-v-20-production.up.railway.app/api/status";
+    const SERVER_ORDER = [
+      "Island",
+      "Scorched Earth",
+      "Aberration",
+      "Extinction",
+      "Ragnarok",
+      "Valguero",
+      "Astraeos",
+      "Lost Colony"
+    ];
 
-  function cleanServerName(name) {
-    return name.replace(/^Adult ASA\s*-\s*/i, "").trim();
-  }
+    function cleanServerName(name) {
+      let cleaned = String(name || "").replace(/^Adult ASA\s*-\s*/i, "").trim();
 
-  async function loadStatus() {
-    try {
-      const response = await fetch(API_URL);
-      if (!response.ok) throw new Error("Failed to fetch status");
+      if (cleaned === "SE") return "Scorched Earth";
+      if (cleaned === "The Island") return "Island";
 
-      const data = await response.json();
+      return cleaned;
+    }
 
+    function sortServers(servers) {
+      return [...servers].sort((a, b) => {
+        const aName = cleanServerName(a.name);
+        const bName = cleanServerName(b.name);
+
+        const aIndex = SERVER_ORDER.indexOf(aName);
+        const bIndex = SERVER_ORDER.indexOf(bName);
+
+        if (aIndex === -1 && bIndex === -1) return aName.localeCompare(bName);
+        if (aIndex === -1) return 1;
+        if (bIndex === -1) return -1;
+
+        return aIndex - bIndex;
+      });
+    }
+
+    function renderSubtitle(totalOnline, updatedAt) {
       const subtitle = document.getElementById("subtitle");
-      const updated = data.updatedAt
-        ? new Date(data.updatedAt).toLocaleString()
+      const updated = updatedAt
+        ? new Date(updatedAt).toLocaleString()
         : "Unknown";
 
-      subtitle.textContent = `Total Survivors Online: ${data.totalOnline} | Last updated: ${updated}`;
+      subtitle.innerHTML = `
+        <div class="sub-main">${totalOnline} Survivors Online</div>
+        <div class="sub-time">Last updated: ${updated}</div>
+      `;
+    }
 
+    function renderServers(servers) {
       const serversEl = document.getElementById("servers");
       serversEl.innerHTML = "";
 
-      for (const server of data.servers) {
+      const sortedServers = sortServers(servers);
+
+      for (const server of sortedServers) {
         const card = document.createElement("div");
         card.className = "card";
 
-        const playerNames = server.playerNames && server.playerNames.length
-          ? server.playerNames.join(", ")
-          : "None";
+        const displayName = cleanServerName(server.name);
+        const playerNames =
+          server.playerNames && server.playerNames.length
+            ? server.playerNames.join(", ")
+            : "None";
 
         card.innerHTML = `
-          <div class="server-name">${cleanServerName(server.name)}</div>
+          <div class="server-name">${displayName}</div>
           <div class="${server.online ? "online" : "offline"}">
             ${server.online ? "Online" : "Offline"}
           </div>
@@ -167,16 +220,29 @@
 
         serversEl.appendChild(card);
       }
-    } catch (error) {
-      document.getElementById("subtitle").textContent =
-        "Could not load live server data right now.";
-      console.error(error);
     }
-  }
 
-  loadStatus();
-  setInterval(loadStatus, 15000);
-</script>
+    async function loadStatus() {
+      try {
+        const response = await fetch(API_URL);
+        if (!response.ok) {
+          throw new Error("Failed to fetch status");
+        }
 
+        const data = await response.json();
+        renderSubtitle(data.totalOnline, data.updatedAt);
+        renderServers(data.servers || []);
+      } catch (error) {
+        document.getElementById("subtitle").innerHTML = `
+          <div class="sub-main">Could not load live server data</div>
+          <div class="sub-time">Please try again shortly</div>
+        `;
+        console.error(error);
+      }
+    }
+
+    loadStatus();
+    setInterval(loadStatus, 15000);
+  </script>
 </body>
 </html>
