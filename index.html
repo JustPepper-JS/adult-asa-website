@@ -109,11 +109,12 @@
     }
 
     .pill.online {
-      background: rgba(31, 143, 163, 0.18);
-      color: #8ee7ff;
-      border-color: rgba(31, 143, 163, 0.35);
-      font-weight: bold;
-    }
+  background: rgba(0, 255, 140, 0.08);
+  color: #6effb3;
+  border: 1px solid rgba(0, 255, 140, 0.35);
+  font-weight: bold;
+  box-shadow: 0 0 8px rgba(0, 255, 140, 0.25);
+}
 
     .pill.offline {
       background: rgba(255, 92, 92, 0.12);
@@ -143,16 +144,20 @@
     }
 
     .player-tag {
-      display: inline-block;
-      background: rgba(31, 143, 163, 0.16);
-      border: 1px solid rgba(31, 143, 163, 0.38);
-      color: #dcf8ff;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 0.88rem;
-      line-height: 1.2;
-      word-break: break-word;
-    }
+  display: inline-block;
+  background: rgba(0, 255, 140, 0.08);   /* changed */
+  border: 1px solid rgba(0, 255, 140, 0.35); /* changed */
+  color: #6effb3; /* changed */
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+    .player-tag:hover {
+  box-shadow: 0 0 10px rgba(0, 255, 140, 0.35);
+}
 
     .player-tag.none {
       background: rgba(255, 255, 255, 0.06);
@@ -252,7 +257,7 @@
     ];
 
     function cleanServerName(name) {
-      let cleaned = String(name || "").replace(/^Adult ASA\\s*-\\s*/i, "").trim();
+      let cleaned = String(name || "").replace(/^Adult ASA\s*-\s*/i, "").trim();
 
       if (cleaned === "SE") return "Scorched Earth";
       if (cleaned === "The Island") return "Island";
