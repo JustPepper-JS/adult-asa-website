@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Adult ASA Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0b0d14;
+      color: white;
+    }
+
+    header {
+      padding: 32px 20px;
+      background: linear-gradient(90deg, #0f5c66, #1f8fa3);
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 2.6rem;
+    }
+
+    .sub {
+      margin-top: 10px;
+      opacity: 0.9;
+    }
+
+    .wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px 16px 50px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+
+    .range-btn {
+      background: #171a20;
+      color: white;
+      border: 1px solid rgba(126, 201, 222, 0.16);
+      border-radius: 999px;
+      padding: 10px 16px;
+      cursor: pointer;
+    }
+
+    .range-btn.active {
+      background: linear-gradient(90deg, #ff6a00, #ff8c1a);
+      border-color: transparent;
+      font-weight: bold;
+    }
+
+    .panel {
+      background: linear-gradient(180deg, #171a20, #111318);
+      border: 1px solid rgba(126, 201, 222, 0.08);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 22px;
+      box-shadow: 0 0 18px rgba(0, 0, 0, 0.18);
+    }
+
+    .panel h2 {
+      margin-top: 0;
+      color: #7ec9de;
+    }
+
+    .chart-wrap {
+      position: relative;
+      height: 340px;
+      overflow: hidden;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.02);
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .timeline-header {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 0;
+      font-size: 0.85rem;
+      color: #a9d6e3;
+      margin-bottom: 8px;
+    }
+
+    .timeline {
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .timeline-row {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      min-height: 52px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .timeline-row:first-child {
+      border-top: none;
+    }
+
+    .player-name {
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.03);
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      word-break: break-word;
+    }
+
+    .track {
+      position: relative;
+      overflow: hidden;
+      background:
+        repeating-linear-gradient(
+          to right,
+          rgba(255,255,255,0.05) 0,
+          rgba(255,255,255,0.05) 1px,
+          transparent 1px,
+          transparent 8.333%
+        );
+    }
+
+    .session-bar {
+      position: absolute;
+      top: 10px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(90deg, #ff6a00, #ff8c1a);
+      box-shadow: 0 0 14px rgba(255, 106, 0, 0.22);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      font-size: 0.8rem;
+      white-space: nowrap;
+    }
+
+    .session-bar small {
+      opacity: 0.9;
+    }
+
+    .empty {
+      opacity: 0.65;
+      text-align: center;
+      padding: 24px 12px;
+    }
+
+    .top-links {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .top-links a {
+      color: #ffb277;
+      text-decoration: none;
+      margin: 0 10px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Adult ASA Player Tracker</h1>
+    <div class="sub" id="subtitle">Loading tracker data...</div>
+  </header>
+
+  <div class="wrap">
+    <div class="top-links">
+      <a href="./index.html">Live Status</a>
+      <a href="./tracker.html">Tracker</a>
+    </div>
+
+    <div class="controls" id="controls">
+      <button class="range-btn" data-range="24h">Day</button>
+      <button class="range-btn active" data-range="72h">3 Days</button>
+      <button class="range-btn" data-range="7d">Week</button>
+      <button class="range-btn" data-range="30d">Month</button>
+      <button class="range-btn" data-range="365d">Year</button>
+    </div>
+
+    <div class="panel">
+      <h2>Cluster Activity</h2>
+      <div class="chart-wrap">
+        <svg id="trendChart" viewBox="0 0 1200 340" preserveAspectRatio="none"></svg>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Player Activity Timeline</h2>
+      <div class="timeline-header">
+        <div>Player</div>
+        <div id="timeHeader">Time Range</div>
+      </div>
+      <div class="timeline" id="timeline"></div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "https://aasa-discord-bot-v-20-production.up.railway.app";
+    let currentRange = "72h";
+
+    function fmtDate(ms) {
+      return new Date(ms).toLocaleString();
+    }
+
+    function fmtShort(ms) {
+      return new Date(ms).toLocaleDateString([], {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      });
+    }
+
+    function setActiveRange(range) {
+      currentRange = range;
+      document.querySelectorAll(".range-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.range === range);
+      });
+    }
+
+    function renderTrend(svg, trend, startMs, endMs) {
+      const width = 1200;
+      const height = 340;
+      const padLeft = 70;
+      const padRight = 20;
+      const padTop = 20;
+      const padBottom = 40;
+      const plotW = width - padLeft - padRight;
+      const plotH = height - padTop - padBottom;
+
+      const maxVal = Math.max(1, ...trend.map(p => Number(p.value || 0)));
+      const xFor = (t) => padLeft + ((t - startMs) / (endMs - startMs)) * plotW;
+      const yFor = (v) => padTop + plotH - (v / maxVal) * plotH;
+
+      let areaPath = "";
+      let linePath = "";
+
+      trend.forEach((point, i) => {
+        const x = xFor(point.time);
+        const y = yFor(point.value);
+
+        if (i === 0) {
+          areaPath += `M ${x} ${padTop + plotH} L ${x} ${y} `;
+          linePath += `M ${x} ${y} `;
+        } else {
+          areaPath += `L ${x} ${y} `;
+          linePath += `L ${x} ${y} `;
+        }
+      });
+
+      const lastX = trend.length ? xFor(trend[trend.length - 1].time) : padLeft;
+      areaPath += `L ${lastX} ${padTop + plotH} Z`;
+
+      const gridLines = [];
+      for (let i = 0; i <= 5; i++) {
+        const y = padTop + (plotH / 5) * i;
+        const label = Math.round(maxVal - (maxVal / 5) * i);
+
+        gridLines.push(`
+          <line x1="${padLeft}" y1="${y}" x2="${width - padRight}" y2="${y}" stroke="rgba(255,255,255,0.08)" stroke-dasharray="4 6"/>
+          <text x="${padLeft - 10}" y="${y + 4}" fill="#9eb9c3" font-size="14" text-anchor="end">${label}</text>
+        `);
+      }
+
+      const xLabels = [];
+      for (let i = 0; i <= 6; i++) {
+        const t = startMs + ((endMs - startMs) / 6) * i;
+        const x = xFor(t);
+        xLabels.push(`
+          <line x1="${x}" y1="${padTop}" x2="${x}" y2="${padTop + plotH}" stroke="rgba(255,255,255,0.06)" stroke-dasharray="4 6"/>
+          <text x="${x}" y="${height - 10}" fill="#9eb9c3" font-size="13" text-anchor="middle">${fmtShort(t)}</text>
+        `);
+      }
+
+      svg.innerHTML = `
+        ${gridLines.join("")}
+        ${xLabels.join("")}
+        <path d="${areaPath}" fill="rgba(255, 106, 0, 0.22)"></path>
+        <path d="${linePath}" fill="none" stroke="#ff6a00" stroke-width="3"></path>
+      `;
+    }
+
+    function renderTimeline(container, players, startMs, endMs) {
+      container.innerHTML = "";
+
+      if (!players.length) {
+        container.innerHTML = `<div class="empty">No tracked player sessions found in this range.</div>`;
+        return;
+      }
+
+      for (const row of players) {
+        const rowEl = document.createElement("div");
+        rowEl.className = "timeline-row";
+
+        const nameEl = document.createElement("div");
+        nameEl.className = "player-name";
+        nameEl.textContent = row.player;
+
+        const trackEl = document.createElement("div");
+        trackEl.className = "track";
+
+        for (const session of row.sessions) {
+          const leftPct = ((session.start - startMs) / (endMs - startMs)) * 100;
+          const widthPct = ((session.end - session.start) / (endMs - startMs)) * 100;
+
+          const bar = document.createElement("div");
+          bar.className = "session-bar";
+          bar.style.left = `${Math.max(0, leftPct)}%`;
+          bar.style.width = `${Math.max(0.8, widthPct)}%`;
+          bar.title = `${row.player}\n${session.server}\n${fmtDate(session.start)} → ${fmtDate(session.end)}`;
+          bar.innerHTML = `<small>${session.server}</small>`;
+
+          trackEl.appendChild(bar);
+        }
+
+        rowEl.appendChild(nameEl);
+        rowEl.appendChild(trackEl);
+        container.appendChild(rowEl);
+      }
+    }
+
+    async function loadTracker(range) {
+      setActiveRange(range);
+
+      const subtitle = document.getElementById("subtitle");
+      subtitle.textContent = "Loading tracker data...";
+
+      const res = await fetch(`${API_BASE}/api/tracker?range=${encodeURIComponent(range)}`);
+      if (!res.ok) throw new Error("Failed to load tracker data");
+
+      const data = await res.json();
+
+      subtitle.textContent = `${data.players.length} tracked players • ${fmtDate(data.startMs)} to ${fmtDate(data.endMs)}`;
+      document.getElementById("timeHeader").textContent = `${fmtShort(data.startMs)} → ${fmtShort(data.endMs)}`;
+
+      renderTrend(document.getElementById("trendChart"), data.trend || [], data.startMs, data.endMs);
+      renderTimeline(document.getElementById("timeline"), data.players || [], data.startMs, data.endMs);
+    }
+
+    document.getElementById("controls").addEventListener("click", async (e) => {
+      const btn = e.target.closest(".range-btn");
+      if (!btn) return;
+
+      try {
+        await loadTracker(btn.dataset.range);
+      } catch (err) {
+        console.error(err);
+        document.getElementById("subtitle").textContent = "Could not load tracker data.";
+      }
+    });
+
+    loadTracker(currentRange).catch((err) => {
+      console.error(err);
+      document.getElementById("subtitle").textContent = "Could not load tracker data.";
+    });
+  </script>
+</body>
+</html>
