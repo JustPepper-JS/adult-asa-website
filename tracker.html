@@ -265,7 +265,7 @@
       areaPath += `L ${lastX} ${padTop + plotH} Z`;
 
       const gridLines = [];
-      const steps = Math.max(3, maxVal); // dynamic steps
+const steps = Math.max(3, maxVal);
 
 for (let i = 0; i <= steps; i++) {
   const value = i;
@@ -278,12 +278,6 @@ for (let i = 0; i <= steps; i++) {
       fill="#9eb9c3" font-size="14" text-anchor="end">${value}</text>
   `);
 }
-
-        gridLines.push(`
-          <line x1="${padLeft}" y1="${y}" x2="${width - padRight}" y2="${y}" stroke="rgba(255,255,255,0.08)" stroke-dasharray="4 6"/>
-          <text x="${padLeft - 10}" y="${y + 4}" fill="#9eb9c3" font-size="14" text-anchor="end">${label}</text>
-        `);
-      }
 
       const xLabels = [];
       for (let i = 0; i <= 6; i++) {
