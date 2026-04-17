@@ -16,22 +16,37 @@
       padding: 32px 20px;
       background: linear-gradient(90deg, #0f5c66, #1f8fa3);
       text-align: center;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
     }
 
     h1 {
       margin: 0;
       font-size: 2.6rem;
+      color: #dff8ff;
     }
 
     .sub {
       margin-top: 10px;
       opacity: 0.9;
+      color: #d0eef5;
     }
 
     .wrap {
       max-width: 1400px;
       margin: 0 auto;
       padding: 24px 16px 50px;
+    }
+
+    .top-links {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .top-links a {
+      color: #ffb277;
+      text-decoration: none;
+      margin: 0 10px;
+      font-weight: 600;
     }
 
     .controls {
@@ -49,12 +64,18 @@
       border-radius: 999px;
       padding: 10px 16px;
       cursor: pointer;
+      transition: 0.15s ease;
+    }
+
+    .range-btn:hover {
+      transform: translateY(-1px);
     }
 
     .range-btn.active {
       background: linear-gradient(90deg, #ff6a00, #ff8c1a);
       border-color: transparent;
       font-weight: bold;
+      box-shadow: 0 0 14px rgba(255, 106, 0, 0.24);
     }
 
     .panel {
@@ -73,7 +94,7 @@
 
     .chart-wrap {
       position: relative;
-      height: 340px;
+      height: 400px;
       overflow: hidden;
       border-radius: 12px;
       background: rgba(255,255,255,0.02);
@@ -85,88 +106,12 @@
       height: 100%;
     }
 
-    .timeline-header {
-      display: grid;
-      grid-template-columns: 220px 1fr;
-      gap: 0;
-      font-size: 0.85rem;
+    .note {
+      text-align: center;
       color: #a9d6e3;
-      margin-bottom: 8px;
-    }
-
-    .timeline {
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 12px;
-      overflow: hidden;
-    }
-
-    .timeline-row {
-      display: grid;
-      grid-template-columns: 220px 1fr;
-      min-height: 52px;
-      border-top: 1px solid rgba(255,255,255,0.05);
-    }
-
-    .timeline-row:first-child {
-      border-top: none;
-    }
-
-    .player-name {
-      padding: 12px 14px;
-      background: rgba(255,255,255,0.03);
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      word-break: break-word;
-    }
-
-    .track {
-      position: relative;
-      overflow: hidden;
-      background:
-        repeating-linear-gradient(
-          to right,
-          rgba(255,255,255,0.05) 0,
-          rgba(255,255,255,0.05) 1px,
-          transparent 1px,
-          transparent 8.333%
-        );
-    }
-
-    .session-bar {
-      position: absolute;
-      top: 10px;
-      height: 32px;
-      border-radius: 8px;
-      background: linear-gradient(90deg, #ff6a00, #ff8c1a);
-      box-shadow: 0 0 14px rgba(255, 106, 0, 0.22);
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      padding: 0 10px;
-      font-size: 0.8rem;
-      white-space: nowrap;
-    }
-
-    .session-bar small {
-      opacity: 0.9;
-    }
-
-    .empty {
-      opacity: 0.65;
-      text-align: center;
-      padding: 24px 12px;
-    }
-
-    .top-links {
-      text-align: center;
-      margin-bottom: 18px;
-    }
-
-    .top-links a {
-      color: #ffb277;
-      text-decoration: none;
-      margin: 0 10px;
+      opacity: 0.85;
+      margin-top: 14px;
+      font-size: 0.95rem;
     }
   </style>
 </head>
@@ -193,17 +138,9 @@
     <div class="panel">
       <h2>Cluster Activity</h2>
       <div class="chart-wrap">
-        <svg id="trendChart" viewBox="0 0 1200 340" preserveAspectRatio="none"></svg>
+        <svg id="trendChart" viewBox="0 0 1200 400" preserveAspectRatio="none"></svg>
       </div>
-    </div>
-
-    <div class="panel">
-      <h2>Player Activity Timeline</h2>
-      <div class="timeline-header">
-        <div>Player</div>
-        <div id="timeHeader">Time Range</div>
-      </div>
-      <div class="timeline" id="timeline"></div>
+      <div class="note">Y-axis shows total players online across the cluster.</div>
     </div>
   </div>
 
@@ -233,11 +170,11 @@
 
     function renderTrend(svg, trend, startMs, endMs) {
       const width = 1200;
-      const height = 340;
+      const height = 400;
       const padLeft = 70;
       const padRight = 20;
       const padTop = 20;
-      const padBottom = 40;
+      const padBottom = 50;
       const plotW = width - padLeft - padRight;
       const plotH = height - padTop - padBottom;
 
@@ -265,27 +202,38 @@
       areaPath += `L ${lastX} ${padTop + plotH} Z`;
 
       const gridLines = [];
-const steps = Math.max(3, maxVal);
+      const stepCount = Math.min(6, Math.max(3, maxVal));
+      const stepSize = Math.max(1, Math.ceil(maxVal / stepCount));
 
-for (let i = 0; i <= steps; i++) {
-  const value = i;
-  const y = yFor(value);
+      for (let value = 0; value <= maxVal; value += stepSize) {
+        const y = yFor(value);
 
-  gridLines.push(`
-    <line x1="${padLeft}" y1="${y}" x2="${width - padRight}" y2="${y}"
-      stroke="rgba(255,255,255,0.08)" stroke-dasharray="4 6"/>
-    <text x="${padLeft - 10}" y="${y + 4}"
-      fill="#9eb9c3" font-size="14" text-anchor="end">${value}</text>
-  `);
-}
+        gridLines.push(`
+          <line x1="${padLeft}" y1="${y}" x2="${width - padRight}" y2="${y}"
+            stroke="rgba(255,255,255,0.08)" stroke-dasharray="4 6"/>
+          <text x="${padLeft - 10}" y="${y + 4}"
+            fill="#9eb9c3" font-size="14" text-anchor="end">${value}</text>
+        `);
+      }
+
+      if (maxVal % stepSize !== 0) {
+        const y = yFor(maxVal);
+        gridLines.push(`
+          <line x1="${padLeft}" y1="${y}" x2="${width - padRight}" y2="${y}"
+            stroke="rgba(255,255,255,0.08)" stroke-dasharray="4 6"/>
+          <text x="${padLeft - 10}" y="${y + 4}"
+            fill="#9eb9c3" font-size="14" text-anchor="end">${maxVal}</text>
+        `);
+      }
 
       const xLabels = [];
       for (let i = 0; i <= 6; i++) {
         const t = startMs + ((endMs - startMs) / 6) * i;
         const x = xFor(t);
         xLabels.push(`
-          <line x1="${x}" y1="${padTop}" x2="${x}" y2="${padTop + plotH}" stroke="rgba(255,255,255,0.06)" stroke-dasharray="4 6"/>
-          <text x="${x}" y="${height - 10}" fill="#9eb9c3" font-size="13" text-anchor="middle">${fmtShort(t)}</text>
+          <line x1="${x}" y1="${padTop}" x2="${x}" y2="${padTop + plotH}"
+            stroke="rgba(255,255,255,0.06)" stroke-dasharray="4 6"/>
+          <text x="${x}" y="${height - 12}" fill="#9eb9c3" font-size="13" text-anchor="middle">${fmtShort(t)}</text>
         `);
       }
 
@@ -295,45 +243,6 @@ for (let i = 0; i <= steps; i++) {
         <path d="${areaPath}" fill="rgba(255, 106, 0, 0.22)"></path>
         <path d="${linePath}" fill="none" stroke="#ff6a00" stroke-width="3"></path>
       `;
-    }
-
-    function renderTimeline(container, players, startMs, endMs) {
-      container.innerHTML = "";
-
-      if (!players.length) {
-        container.innerHTML = `<div class="empty">No tracked player sessions found in this range.</div>`;
-        return;
-      }
-
-      for (const row of players) {
-        const rowEl = document.createElement("div");
-        rowEl.className = "timeline-row";
-
-        const nameEl = document.createElement("div");
-        nameEl.className = "player-name";
-        nameEl.textContent = row.player;
-
-        const trackEl = document.createElement("div");
-        trackEl.className = "track";
-
-        for (const session of row.sessions) {
-          const leftPct = ((session.start - startMs) / (endMs - startMs)) * 100;
-          const widthPct = ((session.end - session.start) / (endMs - startMs)) * 100;
-
-          const bar = document.createElement("div");
-          bar.className = "session-bar";
-          bar.style.left = `${Math.max(0, leftPct)}%`;
-          bar.style.width = `${Math.max(0.8, widthPct)}%`;
-          bar.title = `${row.player}\n${session.server}\n${fmtDate(session.start)} → ${fmtDate(session.end)}`;
-          bar.innerHTML = `<small>${session.server}</small>`;
-
-          trackEl.appendChild(bar);
-        }
-
-        rowEl.appendChild(nameEl);
-        rowEl.appendChild(trackEl);
-        container.appendChild(rowEl);
-      }
     }
 
     async function loadTracker(range) {
@@ -347,11 +256,8 @@ for (let i = 0; i <= steps; i++) {
 
       const data = await res.json();
 
-      subtitle.textContent = `${data.players.length} tracked players • ${fmtDate(data.startMs)} to ${fmtDate(data.endMs)}`;
-      document.getElementById("timeHeader").textContent = `${fmtShort(data.startMs)} → ${fmtShort(data.endMs)}`;
-
+      subtitle.textContent = `Showing total players online from ${fmtDate(data.startMs)} to ${fmtDate(data.endMs)}`;
       renderTrend(document.getElementById("trendChart"), data.trend || [], data.startMs, data.endMs);
-      renderTimeline(document.getElementById("timeline"), data.players || [], data.startMs, data.endMs);
     }
 
     document.getElementById("controls").addEventListener("click", async (e) => {
