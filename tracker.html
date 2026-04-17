@@ -202,7 +202,7 @@
       areaPath += `L ${lastX} ${padTop + plotH} Z`;
 
       const gridLines = [];
-      const stepCount = Math.min(6, Math.max(3, maxVal));
+      const stepCount = Math.min(8, Math.max(3, Math.ceil(maxVal)));
       const stepSize = Math.max(1, Math.ceil(maxVal / stepCount));
 
       for (let value = 0; value <= maxVal; value += stepSize) {
