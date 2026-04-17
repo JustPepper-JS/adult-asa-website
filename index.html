@@ -178,6 +178,16 @@
       box-shadow: 0 0 22px rgba(255, 106, 0, 0.32);
     }
 
+    .tracker-link {
+      margin-top: 12px;
+    }
+
+    .tracker-link a {
+      color: #ffb277;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
     footer {
       margin-top: 40px;
       padding: 20px;
@@ -196,33 +206,23 @@
     </div>
   </header>
 
-  <a
-  class="btn"
-  href="https://discord.gg/adultasa"
-  target="_blank"
-  rel="noopener noreferrer"
->
-  Join Discord
-</a>
-
-<div style="margin-top: 12px;">
-  <a href="./tracker.html" style="color:#ffb277; text-decoration:none;">
-    Open Player Tracker
-  </a>
-</div>
-
   <div class="section">
-  <h2 style="margin-top: 50px;">📊 Player Activity</h2>
+    <h2>🌍 Live Server Status</h2>
+    <div id="servers" class="servers"></div>
 
-  <canvas id="playerChart" style="max-width: 100%; height: 300px;"></canvas>
+    <a
+      class="btn"
+      href="https://discord.gg/adultasa"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      Join Discord
+    </a>
 
-  <div style="margin-top: 15px;">
-    <button onclick="loadChart('24h')">24H</button>
-    <button onclick="loadChart('72h')">3 Days</button>
-    <button onclick="loadChart('7d')">Week</button>
-    <button onclick="loadChart('30d')">Month</button>
+    <div class="tracker-link">
+      <a href="./tracker.html">Open Player Tracker</a>
+    </div>
   </div>
-</div>
 
   <div class="section">
     <h2>🔥 Why Play Here?</h2>
@@ -252,7 +252,7 @@
     ];
 
     function cleanServerName(name) {
-      let cleaned = String(name || "").replace(/^Adult ASA\s*-\s*/i, "").trim();
+      let cleaned = String(name || "").replace(/^Adult ASA\\s*-\\s*/i, "").trim();
 
       if (cleaned === "SE") return "Scorched Earth";
       if (cleaned === "The Island") return "Island";
@@ -354,55 +354,5 @@
     loadStatus();
     setInterval(loadStatus, 15000);
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-let chart;
-
-async function loadChart(range = "72h") {
-  const res = await fetch("https://aasa-discord-bot-v-20-production.up.railway.app/api/tracker?range=" + range);
-  const data = await res.json();
-
-  const labels = data.trend.map(t =>
-    new Date(t.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-  );
-
-  const values = data.trend.map(t => t.value);
-
-  const ctx = document.getElementById("playerChart").getContext("2d");
-
-  if (chart) chart.destroy();
-
-  chart = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: labels,
-      datasets: [{
-        label: "Players Online",
-        data: values,
-        borderColor: "#ff6a00",
-        backgroundColor: "rgba(255, 106, 0, 0.2)",
-        fill: true,
-        tension: 0.3
-      }]
-    },
-    options: {
-      plugins: {
-        legend: { display: false }
-      },
-      scales: {
-        x: {
-          ticks: { color: "#aaa" }
-        },
-        y: {
-          ticks: { color: "#aaa" }
-        }
-      }
-    }
-  });
-}
-
-// load default
-loadChart();
-</script>
 </body>
 </html>
