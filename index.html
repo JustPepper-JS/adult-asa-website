@@ -196,18 +196,20 @@
     </div>
   </header>
 
-  <div class="section">
-    <h2>🌍 Live Server Status</h2>
-    <div id="servers" class="servers"></div>
-    <a
-      class="btn"
-      href="https://discord.gg/adultasa"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      Join Discord
-    </a>
-  </div>
+  <a
+  class="btn"
+  href="https://discord.gg/adultasa"
+  target="_blank"
+  rel="noopener noreferrer"
+>
+  Join Discord
+</a>
+
+<div style="margin-top: 12px;">
+  <a href="./tracker.html" style="color:#ffb277; text-decoration:none;">
+    Open Player Tracker
+  </a>
+</div>
 
   <div class="section">
     <h2>🔥 Why Play Here?</h2>
@@ -339,5 +341,55 @@
     loadStatus();
     setInterval(loadStatus, 15000);
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+let chart;
+
+async function loadChart(range = "72h") {
+  const res = await fetch("https://aasa-discord-bot-v-20-production.up.railway.app/api/tracker?range=" + range);
+  const data = await res.json();
+
+  const labels = data.trend.map(t =>
+    new Date(t.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+  );
+
+  const values = data.trend.map(t => t.value);
+
+  const ctx = document.getElementById("playerChart").getContext("2d");
+
+  if (chart) chart.destroy();
+
+  chart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [{
+        label: "Players Online",
+        data: values,
+        borderColor: "#ff6a00",
+        backgroundColor: "rgba(255, 106, 0, 0.2)",
+        fill: true,
+        tension: 0.3
+      }]
+    },
+    options: {
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          ticks: { color: "#aaa" }
+        },
+        y: {
+          ticks: { color: "#aaa" }
+        }
+      }
+    }
+  });
+}
+
+// load default
+loadChart();
+</script>
 </body>
 </html>
