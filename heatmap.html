@@ -718,20 +718,6 @@ function setActiveRange(range) {
         </div>
       `).join("");
 
-      const transfersHtml = (session.transfers || []).length
-        ? `
-          <div class="transfer-list">
-            <div class="transfer-title">Transfers in this session</div>
-            ${(session.transfers || []).map((transfer) => `
-              <div class="movement sub-movement">
-                <strong>${transfer.fromServer}</strong> to <strong>${transfer.toServer}</strong>
-                <div class="movement-time">${fmtDate(transfer.time)}</div>
-              </div>
-            `).join("")}
-          </div>
-        `
-        : `<div class="movement sub-movement"><div class="movement-time">No transfers in this session.</div></div>`;
-
       return `
         <div class="movement session-block">
           <div class="session-top">
@@ -752,10 +738,9 @@ function setActiveRange(range) {
           </div>
 
           <div id="${dropdownId}" class="session-details" style="display:none;">
-            <div class="section-mini-title">Maps in this session</div>
-            ${mapRows}
-            ${transfersHtml}
-          </div>
+  <div class="section-mini-title">Maps in this session</div>
+  ${mapRows}
+</div>
         </div>
       `;
     }).join("");
