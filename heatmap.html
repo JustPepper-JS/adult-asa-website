@@ -307,7 +307,7 @@
 
     .players-list {
       display: grid;
-      gap: 14px;
+      gap: 8px;
     }
 
     .player-card {
@@ -316,6 +316,17 @@
       background: rgba(255, 255, 255, 0.02);
       border: 1px solid rgba(255, 255, 255, 0.05);
     }
+
+    .players-list {
+  transform: scale(0.75);
+  transform-origin: top center;
+}
+
+    .players-list {
+  transform: scale(0.75);
+  transform-origin: top center;
+  margin-bottom: -25%;
+}
 
     .player-card-online {
   border-color: rgba(126, 201, 222, 0.24);
@@ -823,44 +834,6 @@ function setActiveRange(range) {
         `Showing player movement${searchText} from ${fmtDate(data.startMs)} to ${fmtDate(data.endMs)}. Last refresh: ${fmtDate(Date.now())}`;
 
       renderStats(data);
-      renderHeatmap(data);
-      renderPlayers(data.players || []);
-    }
-
-    document.getElementById("controls").addEventListener("click", (event) => {
-      const btn = event.target.closest(".range-btn");
-      if (!btn) return;
-
-      loadHeatmap(btn.dataset.range, currentSearch).catch((error) => {
-        console.error(error);
-        document.getElementById("subtitle").textContent = "Could not load heat map data.";
-      });
-    });
-
-    document.getElementById("playerSearch").addEventListener("input", (event) => {
-      currentSearch = event.target.value.trim();
-      clearTimeout(searchTimer);
-      searchTimer = setTimeout(() => {
-        loadHeatmap(currentRange, currentSearch).catch((error) => {
-          console.error(error);
-          document.getElementById("subtitle").textContent = "Could not load heat map data.";
-        });
-      }, 250);
-    });
-
-    loadHeatmap(currentRange, currentSearch).catch((error) => {
-      console.error(error);
-      document.getElementById("subtitle").textContent = "Could not load heat map data.";
-    });
-
-    setInterval(() => {
-      loadHeatmap(currentRange, currentSearch, true).catch((error) => {
-        console.error(error);
-      });
-    }, AUTO_REFRESH_MS);
-  </script>
-</body>
-</html>
       renderHeatmap(data);
       renderPlayers(data.players || []);
     }
