@@ -406,11 +406,31 @@
     }
 
     function fmtDuration(ms) {
-      const totalMinutes = Math.max(0, Math.round((Number(ms || 0)) / 60000));
-      const hours = Math.floor(totalMinutes / 60);
-      const minutes = totalMinutes % 60;
-      return `${hours}h ${minutes}m`;
-    }
+  const totalMinutes = Math.max(0, Math.round(Number(ms || 0) / 60000));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${hours}h ${minutes}m`;
+}
+
+function fmtAgo(ms) {
+  const diff = Math.max(0, Date.now() - Number(ms || 0));
+  const minutes = Math.floor(diff / 60000);
+
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+
+  const hours = Math.floor(minutes / 60);
+  const remMinutes = minutes % 60;
+
+  if (hours < 24) {
+    return remMinutes ? `${hours}h ${remMinutes}m ago` : `${hours}h ago`;
+  }
+
+  const days = Math.floor(hours / 24);
+  const remHours = hours % 24;
+
+  return remHours ? `${days}d ${remHours}h ago` : `${days}d ago`;
+}
 
     function setActiveRange(range) {
       currentRange = range;
@@ -480,55 +500,77 @@
     }
 
     function renderPlayers(players) {
-      const list = document.getElementById("playersList");
+  const list = document.getElementById("playersList");
+  const cleanPlayers = (players || []).filter((player) => {
+    const name = String(player?.player || "").trim();
+    return name && name !== "." && name !== "-" && /[a-z0-9]/i.test(name);
+  });
 
-      if (!players.length) {
-        list.innerHTML = `<div class="empty">No players match this range or search.</div>`;
-        return;
+  if (!cleanPlayers.length) {
+    list.innerHTML = `<div class="empty">No players match this range or search.</div>`;
+    return;
+  }
+
+  list.innerHTML = cleanPlayers.map((player) => {
+    const sessions = (player.sessions || []).map((session) => `
+      <div class="movement">
+        <strong>${session.server}</strong> for ${fmtDuration(session.durationMs)}
+        ${session.isActive ? ` <span class="pill live">Live Now</span>` : ""}
+        <div class="movement-time">
+          Joined ${fmtDate(session.start)}
+          ${session.isActive
+            ? ` and is still there`
+            : `, left ${fmtDate(session.end)} (${fmtAgo(session.end)})`}
+        </div>
+      </div>
+    `).join("");
+
+    const transfers = (player.transfers || []).length
+      ? `
+        <div class="transfer-list">
+          <div class="transfer-title">Transfers</div>
+          ${(player.transfers || []).map((transfer) => `
+            <div class="movement">
+              <strong>${transfer.fromServer}</strong> to <strong>${transfer.toServer}</strong>
+              <div class="movement-time">${fmtDate(transfer.time)}${transfer.inferred ? " • inferred move" : ""}</div>
+            </div>
+          `).join("")}
+        </div>
+      `
+      : "";
+
+    const statusPills = `
+      <span class="pill">${player.totalHours}h total</span>
+      <span class="pill">${player.sessionCount} sessions</span>
+      <span class="pill">${player.transferCount} transfers</span>
+      ${
+        player.currentServer
+          ? `<span class="pill live">On ${player.currentServer}</span>`
+          : player.lastSeenAt
+            ? `<span class="pill">Left ${fmtAgo(player.lastSeenAt)}</span>`
+            : ""
       }
+      ${
+        player.lastSeenAt
+          ? `<span class="pill">Last seen ${fmtDate(player.lastSeenAt)}</span>`
+          : ""
+      }
+    `;
 
-      list.innerHTML = players.map((player) => {
-        const sessions = (player.sessions || []).map((session) => `
-          <div class="movement">
-            <strong>${session.server}</strong> for ${fmtDuration(session.durationMs)}
-            ${session.isActive ? ` <span class="pill live">Live Now</span>` : ""}
-            <div class="movement-time">
-              Joined ${fmtDate(session.start)}${session.isActive ? ` and is still there` : `, left ${fmtDate(session.end)}`}
-            </div>
+    return `
+      <div class="player-card">
+        <div class="player-head">
+          <div class="player-name">${player.player}</div>
+          <div class="player-meta">
+            ${statusPills}
           </div>
-        `).join("");
-
-        const transfers = (player.transfers || []).length
-          ? `
-            <div class="transfer-list">
-              <div class="transfer-title">Transfers</div>
-              ${(player.transfers || []).map((transfer) => `
-                <div class="movement">
-                  <strong>${transfer.fromServer}</strong> to <strong>${transfer.toServer}</strong>
-                  <div class="movement-time">${fmtDate(transfer.time)}${transfer.inferred ? " • inferred move" : ""}</div>
-                </div>
-              `).join("")}
-            </div>
-          `
-          : "";
-
-        return `
-          <div class="player-card">
-            <div class="player-head">
-              <div class="player-name">${player.player}</div>
-              <div class="player-meta">
-                <span class="pill">${player.totalHours}h total</span>
-                <span class="pill">${player.sessionCount} sessions</span>
-                <span class="pill">${player.transferCount} transfers</span>
-                ${player.currentServer ? `<span class="pill live">On ${player.currentServer}</span>` : ""}
-              </div>
-            </div>
-            <div class="movements">${sessions}</div>
-            ${transfers}
-          </div>
-        `;
-      }).join("");
-    }
+        </div>
+        <div class="movements">${sessions}</div>
+        ${transfers}
+      </div>
+    `;
+  }).join("");
+}
 
     async function loadHeatmap(range = currentRange, search = currentSearch, silent = false) {
       const nextRequestId = ++requestId;
