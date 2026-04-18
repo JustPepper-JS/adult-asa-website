@@ -2,51 +2,109 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Adult ASA Tracker</title>
+  <title>Adult ASA Player Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <style>
+    :root {
+      --bg: #0b0d14;
+      --panel-top: #171a20;
+      --panel-bottom: #111318;
+      --border: rgba(126, 201, 222, 0.08);
+      --teal: #7ec9de;
+      --teal-soft: #d0eef5;
+      --orange: #ff6a00;
+      --orange-soft: #ffb277;
+      --text: #f4fbff;
+      --muted: #9bc1cc;
+      --discord: #5865f2;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #0b0d14;
+      background:
+        radial-gradient(circle at top, rgba(31, 143, 163, 0.08), transparent 28%),
+        linear-gradient(180deg, #090b11 0%, #0b0d14 100%);
       color: white;
     }
 
     header {
       padding: 32px 20px;
-      background: linear-gradient(90deg, #0f5c66, #1f8fa3);
+      background: linear-gradient(90deg, #1a4650, #225c68);
       text-align: center;
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
     }
 
     h1 {
       margin: 0;
-      font-size: 2.6rem;
+      font-size: 2.8rem;
       color: #dff8ff;
+      letter-spacing: 0.2px;
     }
 
     .sub {
       margin-top: 10px;
-      opacity: 0.9;
+      opacity: 0.92;
       color: #d0eef5;
+      font-size: 1rem;
+      line-height: 1.45;
     }
 
     .wrap {
       max-width: 1400px;
       margin: 0 auto;
-      padding: 24px 16px 50px;
+      padding: 20px 16px 50px;
     }
 
     .top-links {
-      text-align: center;
-      margin-bottom: 18px;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 0 auto 18px;
+      padding: 0 4px;
     }
 
     .top-links a {
-      color: #ffb277;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 150px;
+      padding: 12px 18px;
+      border-radius: 999px;
       text-decoration: none;
-      margin: 0 10px;
-      font-weight: 600;
+      font-weight: 700;
+      font-size: 0.98rem;
+      color: #f4fbff;
+      background: linear-gradient(180deg, rgba(23, 26, 32, 0.96), rgba(17, 19, 24, 0.96));
+      border: 1px solid rgba(126, 201, 222, 0.14);
+      box-shadow:
+        0 0 16px rgba(0, 0, 0, 0.18),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+
+    .top-links a:hover {
+      transform: translateY(-1px);
+      border-color: rgba(126, 201, 222, 0.28);
+      box-shadow:
+        0 0 20px rgba(0, 0, 0, 0.22),
+        0 0 18px rgba(126, 201, 222, 0.08);
+    }
+
+    .top-links a.active {
+      background: linear-gradient(90deg, rgba(126, 201, 222, 0.22), rgba(255, 106, 0, 0.16));
+      border-color: rgba(126, 201, 222, 0.24);
+    }
+
+    .top-links a.discord {
+      background: linear-gradient(90deg, rgba(88, 101, 242, 0.22), rgba(126, 201, 222, 0.14));
+      border-color: rgba(88, 101, 242, 0.28);
     }
 
     .controls {
@@ -58,46 +116,50 @@
     }
 
     .range-btn {
-      background: #171a20;
+      background: linear-gradient(180deg, rgba(23, 26, 32, 0.96), rgba(17, 19, 24, 0.96));
       color: white;
       border: 1px solid rgba(126, 201, 222, 0.16);
       border-radius: 999px;
       padding: 10px 16px;
       cursor: pointer;
-      transition: 0.15s ease;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+      font-weight: 600;
     }
 
     .range-btn:hover {
       transform: translateY(-1px);
+      border-color: rgba(126, 201, 222, 0.28);
     }
 
     .range-btn.active {
       background: linear-gradient(90deg, #ff6a00, #ff8c1a);
       border-color: transparent;
-      font-weight: bold;
+      font-weight: 700;
       box-shadow: 0 0 14px rgba(255, 106, 0, 0.24);
     }
 
     .panel {
-      background: linear-gradient(180deg, #171a20, #111318);
-      border: 1px solid rgba(126, 201, 222, 0.08);
-      border-radius: 16px;
+      background: linear-gradient(180deg, var(--panel-top), var(--panel-bottom));
+      border: 1px solid var(--border);
+      border-radius: 18px;
       padding: 18px;
       margin-bottom: 22px;
       box-shadow: 0 0 18px rgba(0, 0, 0, 0.18);
     }
 
     .panel h2 {
-      margin-top: 0;
-      color: #7ec9de;
+      margin: 0 0 14px;
+      color: var(--teal);
+      font-size: 1.8rem;
     }
 
     .chart-wrap {
       position: relative;
       height: 400px;
       overflow: hidden;
-      border-radius: 12px;
+      border-radius: 14px;
       background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.04);
     }
 
     svg {
@@ -113,6 +175,22 @@
       margin-top: 14px;
       font-size: 0.95rem;
     }
+
+    @media (max-width: 700px) {
+      h1 {
+        font-size: 2.2rem;
+      }
+
+      .top-links {
+        gap: 10px;
+      }
+
+      .top-links a {
+        min-width: 135px;
+        padding: 11px 15px;
+        font-size: 0.92rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -124,8 +202,9 @@
   <div class="wrap">
     <div class="top-links">
       <a href="./index.html">Live Status</a>
-      <a href="./tracker.html">Tracker</a>
+      <a href="./tracker.html" class="active">Live Tracker</a>
       <a href="./heatmap.html">Heat Map</a>
+      <a href="https://discord.gg/adultasa" target="_blank" rel="noopener noreferrer" class="discord">Join Discord</a>
     </div>
 
     <div class="controls" id="controls">
