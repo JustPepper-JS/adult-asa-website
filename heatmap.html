@@ -190,14 +190,14 @@
     .heatmap-grid {
       display: grid;
       gap: 8px;
-      min-width: 900px;
+      min-width: 760px;
       align-items: stretch;
     }
 
     .heatmap-cell {
-      min-height: 74px;
+      min-height: 64px;
       border-radius: 12px;
-      padding: 10px;
+      padding: 8px;
       border: 1px solid rgba(255, 255, 255, 0.04);
       display: flex;
       flex-direction: column;
@@ -221,14 +221,14 @@
     }
 
     .heatmap-hours {
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 700;
       color: #fff4eb;
     }
 
     .heatmap-meta {
       color: rgba(255, 255, 255, 0.82);
-      font-size: 0.82rem;
+      font-size: 0.76rem;
       line-height: 1.35;
     }
 
@@ -452,7 +452,7 @@
         return;
       }
 
-      grid.style.gridTemplateColumns = `200px repeat(${bucketCount}, minmax(120px, 1fr))`;
+      grid.style.gridTemplateColumns = `160px repeat(${bucketCount}, minmax(92px, 1fr))`;
 
       const headerCells = [`<div class="heatmap-cell header">Map</div>`];
       for (const bucket of rows[0].buckets) {
