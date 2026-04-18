@@ -317,6 +317,13 @@
       border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
+    .player-card-online {
+  border-color: rgba(126, 201, 222, 0.24);
+  box-shadow:
+    0 0 18px rgba(0, 0, 0, 0.18),
+    0 0 22px rgba(126, 201, 222, 0.12);
+}
+
     .player-head {
       display: flex;
       justify-content: space-between;
@@ -405,6 +412,14 @@
   font-weight: 800;
   color: #f4fbff;
   margin-bottom: 14px;
+}
+
+    .player-name-card-online {
+  background: linear-gradient(90deg, rgba(126, 201, 222, 0.26), rgba(255, 106, 0, 0.18));
+  border-color: rgba(126, 201, 222, 0.30);
+  box-shadow:
+    inset 0 0 0 1px rgba(126, 201, 222, 0.08),
+    0 0 24px rgba(126, 201, 222, 0.16);
 }
 
 .player-section {
@@ -673,10 +688,21 @@ function setActiveRange(range) {
 
     function renderPlayers(players) {
   const list = document.getElementById("playersList");
-  const cleanPlayers = (players || []).filter((player) => {
-    const name = String(player?.player || "").trim();
-    return name && name !== "." && name !== "-" && /[a-z0-9]/i.test(name);
-  });
+  const cleanPlayers = (players || [])
+    .filter((player) => {
+      const name = String(player?.player || "").trim();
+      return name && name !== "." && name !== "-" && /[a-z0-9]/i.test(name);
+    })
+    .sort((a, b) => {
+      const aOnline = a.currentServer ? 1 : 0;
+      const bOnline = b.currentServer ? 1 : 0;
+
+      if (aOnline !== bOnline) return bOnline - aOnline;
+
+      const aLast = Number(a.lastSeenAt || 0);
+      const bLast = Number(b.lastSeenAt || 0);
+      return bLast - aLast;
+    });
 
   if (!cleanPlayers.length) {
     list.innerHTML = `<div class="empty">No players match this range or search.</div>`;
@@ -684,6 +710,15 @@ function setActiveRange(range) {
   }
 
   list.innerHTML = cleanPlayers.map((player, playerIndex) => {
+    const isOnline = !!player.currentServer;
+    const titleText = isOnline
+      ? `${player.player} - Playing on ${player.currentServer}`
+      : `${player.player} - Offline`;
+
+    const sortedSessions = [...(player.sessions || [])].sort(
+      (a, b) => Number(b.sessionStart || 0) - Number(a.sessionStart || 0)
+    );
+
     const statusPills = `
       <span class="pill">${player.totalHours}h total</span>
       <span class="pill">${player.sessionCount} sessions</span>
@@ -702,21 +737,23 @@ function setActiveRange(range) {
       }
     `;
 
-    const sessionsHtml = (player.sessions || []).map((session, sessionIndex) => {
+    const sessionsHtml = sortedSessions.map((session, sessionIndex) => {
       const dropdownId = `session-${playerIndex}-${sessionIndex}`;
 
-      const mapRows = (session.maps || []).map((map) => `
-        <div class="movement sub-movement">
-          <strong>${map.server}</strong> for ${fmtDuration(map.durationMs)}
-          ${map.isActive ? ` <span class="pill live">Live Now</span>` : ""}
-          <div class="movement-time">
-            Joined ${fmtDate(map.start)}
-            ${map.isActive
-              ? ` and is still there`
-              : `, left ${fmtDate(map.end)} (${fmtAgo(map.end)})`}
+      const mapRows = [...(session.maps || [])]
+        .sort((a, b) => Number(b.start || 0) - Number(a.start || 0))
+        .map((map) => `
+          <div class="movement sub-movement">
+            <strong>${map.server}</strong> for ${fmtDuration(map.durationMs)}
+            ${map.isActive ? ` <span class="pill live">Live Now</span>` : ""}
+            <div class="movement-time">
+              Joined ${fmtDate(map.start)}
+              ${map.isActive
+                ? ` and is still there`
+                : `, left ${fmtDate(map.end)} (${fmtAgo(map.end)})`}
+            </div>
           </div>
-        </div>
-      `).join("");
+        `).join("");
 
       return `
         <div class="movement session-block">
@@ -731,23 +768,23 @@ function setActiveRange(range) {
             </div>
             <div class="pill-row session-pills">
               <span class="pill">${fmtDuration(session.totalDurationMs)}</span>
-              <span class="pill">${session.mapCount} maps</span>
+              <span class="pill">${(session.maps || []).length} stays</span>
               <span class="pill">${session.transferCount} transfers</span>
               <button class="pill session-toggle" type="button" onclick="toggleSessionDetails('${dropdownId}', this)">Show details</button>
             </div>
           </div>
 
           <div id="${dropdownId}" class="session-details" style="display:none;">
-  <div class="section-mini-title">Maps in this session</div>
-  ${mapRows}
-</div>
+            <div class="section-mini-title">Maps in this session</div>
+            ${mapRows}
+          </div>
         </div>
       `;
     }).join("");
 
     return `
-      <div class="player-card">
-        <div class="player-name-card">${player.player}</div>
+      <div class="player-card ${isOnline ? 'player-card-online' : ''}">
+        <div class="player-name-card ${isOnline ? 'player-name-card-online' : ''}">${titleText}</div>
 
         <div class="player-section">
           <div class="player-meta">
