@@ -6,16 +6,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
+    :root {
+      --bg: #0b0d14;
+      --panel-top: #171a20;
+      --panel-bottom: #111318;
+      --border: rgba(126, 201, 222, 0.08);
+      --teal: #7ec9de;
+      --teal-soft: #d0eef5;
+      --orange: #ff6a00;
+      --orange-soft: #ffb277;
+      --text: #f4fbff;
+      --muted: #9bc1cc;
+      --green: #6effb3;
+      --discord: #5865f2;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #0b0d14;
+      background:
+        radial-gradient(circle at top, rgba(31, 143, 163, 0.08), transparent 28%),
+        linear-gradient(180deg, #090b11 0%, #0b0d14 100%);
       color: white;
       text-align: center;
     }
 
     header {
-      padding: 40px 20px;
+      padding: 44px 20px 34px;
       background: linear-gradient(90deg, #0f5c66, #1f8fa3);
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
     }
@@ -35,7 +56,7 @@
 
     .sub-main {
       font-size: 1.2rem;
-      font-weight: bold;
+      font-weight: 700;
       color: #e8fbff;
     }
 
@@ -45,13 +66,65 @@
       color: #d0eef5;
     }
 
+    .wrap {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 26px 18px 40px;
+    }
+
+    .top-nav {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 0 auto 26px;
+    }
+
+    .top-nav-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 150px;
+      padding: 12px 18px;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.98rem;
+      color: #f4fbff;
+      background: linear-gradient(180deg, rgba(23, 26, 32, 0.96), rgba(17, 19, 24, 0.96));
+      border: 1px solid rgba(126, 201, 222, 0.14);
+      box-shadow:
+        0 0 16px rgba(0, 0, 0, 0.18),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+
+    .top-nav-btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(126, 201, 222, 0.28);
+      box-shadow:
+        0 0 20px rgba(0, 0, 0, 0.22),
+        0 0 18px rgba(126, 201, 222, 0.08);
+    }
+
+    .top-nav-btn.primary {
+      background: linear-gradient(90deg, rgba(126, 201, 222, 0.22), rgba(255, 106, 0, 0.16));
+      border-color: rgba(126, 201, 222, 0.24);
+    }
+
+    .top-nav-btn.discord {
+      background: linear-gradient(90deg, rgba(88, 101, 242, 0.22), rgba(126, 201, 222, 0.14));
+      border-color: rgba(88, 101, 242, 0.28);
+    }
+
     .section {
-      padding: 40px 20px;
+      padding: 12px 0 28px;
     }
 
     .section h2 {
-      color: #7ec9de;
+      color: var(--teal);
       margin-bottom: 22px;
+      font-size: 2rem;
     }
 
     .servers {
@@ -63,12 +136,12 @@
     }
 
     .card {
-      background: linear-gradient(180deg, #171a20, #111318);
+      background: linear-gradient(180deg, var(--panel-top), var(--panel-bottom));
       padding: 20px;
-      border-radius: 14px;
+      border-radius: 16px;
       box-shadow: 0 0 10px rgba(255, 255, 255, 0.04);
       text-align: left;
-      border: 1px solid rgba(126, 201, 222, 0.08);
+      border: 1px solid var(--border);
       transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
     }
 
@@ -79,7 +152,7 @@
 
     .card.active {
       border-color: rgba(255, 106, 0, 0.45);
-      box-shadow: 0 0 20px rgba(255, 106, 0, 0.22);
+      box-shadow: 0 0 20px rgba(255, 106, 0, 0.18);
     }
 
     .server-name {
@@ -109,18 +182,18 @@
     }
 
     .pill.online {
-  background: rgba(0, 255, 140, 0.08);
-  color: #6effb3;
-  border: 1px solid rgba(0, 255, 140, 0.35);
-  font-weight: bold;
-  box-shadow: 0 0 8px rgba(0, 255, 140, 0.25);
-}
+      background: rgba(0, 255, 140, 0.08);
+      color: var(--green);
+      border: 1px solid rgba(0, 255, 140, 0.35);
+      font-weight: 700;
+      box-shadow: 0 0 8px rgba(0, 255, 140, 0.25);
+    }
 
     .pill.offline {
       background: rgba(255, 92, 92, 0.12);
       color: #ff7d7d;
       border-color: rgba(255, 92, 92, 0.2);
-      font-weight: bold;
+      font-weight: 700;
     }
 
     .players-section {
@@ -144,20 +217,20 @@
     }
 
     .player-tag {
-  display: inline-block;
-  background: rgba(0, 255, 140, 0.08);   /* changed */
-  border: 1px solid rgba(0, 255, 140, 0.35); /* changed */
-  color: #6effb3; /* changed */
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-size: 0.88rem;
-  line-height: 1.2;
-  word-break: break-word;
-}
+      display: inline-block;
+      background: rgba(0, 255, 140, 0.08);
+      border: 1px solid rgba(0, 255, 140, 0.35);
+      color: var(--green);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.88rem;
+      line-height: 1.2;
+      word-break: break-word;
+    }
 
     .player-tag:hover {
-  box-shadow: 0 0 10px rgba(0, 255, 140, 0.35);
-}
+      box-shadow: 0 0 10px rgba(0, 255, 140, 0.35);
+    }
 
     .player-tag.none {
       background: rgba(255, 255, 255, 0.06);
@@ -165,40 +238,41 @@
       color: rgba(255, 255, 255, 0.75);
     }
 
-    .btn {
-      display: inline-block;
-      margin-top: 20px;
-      padding: 12px 22px;
-      background: linear-gradient(90deg, #ff6a00, #ff8c1a);
-      color: white;
-      text-decoration: none;
-      border-radius: 8px;
-      font-weight: bold;
-      box-shadow: 0 0 16px rgba(255, 106, 0, 0.24);
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-    }
-
-    .btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 0 22px rgba(255, 106, 0, 0.32);
-    }
-
-    .tracker-link {
-      margin-top: 12px;
-    }
-
-    .tracker-link a {
-      color: #ffb277;
-      text-decoration: none;
-      font-weight: 600;
+    .why-play {
+      max-width: 900px;
+      margin: 0 auto;
+      background: linear-gradient(180deg, rgba(23, 26, 32, 0.96), rgba(17, 19, 24, 0.96));
+      border: 1px solid rgba(126, 201, 222, 0.08);
+      border-radius: 18px;
+      padding: 24px 20px;
+      text-align: center;
+      box-shadow: 0 0 18px rgba(0, 0, 0, 0.18);
+      line-height: 1.8;
+      color: #d8f6ff;
     }
 
     footer {
-      margin-top: 40px;
+      margin-top: 10px;
       padding: 20px;
       font-size: 0.8rem;
       opacity: 0.7;
       color: #a3c9d3;
+    }
+
+    @media (max-width: 700px) {
+      h1 {
+        font-size: 2.4rem;
+      }
+
+      .top-nav {
+        gap: 10px;
+      }
+
+      .top-nav-btn {
+        min-width: 135px;
+        padding: 11px 15px;
+        font-size: 0.92rem;
+      }
     }
   </style>
 </head>
@@ -211,37 +285,29 @@
     </div>
   </header>
 
-  <div class="section">
-    <h2>🌍 Live Server Status</h2>
-    <div id="servers" class="servers"></div>
-
-    <a
-      class="btn"
-      href="https://discord.gg/adultasa"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      Join Discord
-    </a>
-
-    <div class="tracker-link">
-      <a href="./tracker.html">Open Player Tracker</a>
+  <div class="wrap">
+    <div class="top-nav">
+      <a class="top-nav-btn primary" href="./index.html">Live Status</a>
+      <a class="top-nav-btn" href="./tracker.html">Live Tracker</a>
+      <a class="top-nav-btn" href="./heatmap.html">Heat Map</a>
+      <a class="top-nav-btn discord" href="https://discord.gg/adultasa" target="_blank" rel="noopener noreferrer">Join Discord</a>
     </div>
 
-    <div class="tracker-link">
-      <a href="./heatmap.html">Open Heat Map</a>
+    <div class="section">
+      <h2>🌍 Live Server Status</h2>
+      <div id="servers" class="servers"></div>
     </div>
-  </div>
 
-  <div class="section">
-    <h2>🔥 Why Play Here?</h2>
-    <p>
-      • Active community<br />
-      • Balanced rates<br />
-      • No wipes ever<br />
-      • Cross-map transfers<br />
-      • Admin support
-    </p>
+    <div class="section">
+      <h2>🔥 Why Play Here?</h2>
+      <div class="why-play">
+        • Active community<br />
+        • Balanced rates<br />
+        • No wipes ever<br />
+        • Cross-map transfers<br />
+        • Admin support
+      </div>
+    </div>
   </div>
 
   <footer>© 2026 Adult ASA Cluster</footer>
@@ -261,7 +327,7 @@
     ];
 
     function cleanServerName(name) {
-      let cleaned = String(name || "").replace(/^Adult ASA\s*-\s*/i, "").trim();
+      let cleaned = String(name || "").replace(/^Adult ASA\\s*-\\s*/i, "").trim();
 
       if (cleaned === "SE") return "Scorched Earth";
       if (cleaned === "The Island") return "Island";
