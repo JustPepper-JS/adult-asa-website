@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Adult ASA Player Profiles</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #0b0d14;
+      --panel-top: #171a20;
+      --panel-bottom: #111318;
+      --border: rgba(126, 201, 222, 0.08);
+      --teal: #7ec9de;
+      --teal-soft: #d0eef5;
+      --orange-soft: #ffb277;
+      --text: #f4fbff;
+      --muted: #9bc1cc;
+      --green: #6effb3;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: white;
+    }
+
+    header {
+      padding: 30px 20px;
+      text-align: center;
+      background: linear-gradient(90deg, #0f5c66, #1f8fa3);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 2.4rem;
+      color: #dff8ff;
+    }
+
+    .sub {
+      margin-top: 10px;
+      color: var(--teal-soft);
+      line-height: 1.45;
+    }
+
+    .wrap {
+      max-width: 1500px;
+      margin: 0 auto;
+      padding: 24px 16px 50px;
+    }
+
+    .top-links {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .top-links a {
+      color: var(--orange-soft);
+      text-decoration: none;
+      margin: 0 10px;
+      font-weight: 600;
+    }
+
+    .search-wrap, .profile-card {
+      background: linear-gradient(180deg, var(--panel-top), var(--panel-bottom));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 0 18px rgba(0, 0, 0, 0.18);
+    }
+
+    .search-wrap {
+      padding: 16px;
+      margin-bottom: 18px;
+    }
+
+    .search-label {
+      display: block;
+      font-size: 0.9rem;
+      color: var(--teal);
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(126, 201, 222, 0.18);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .profiles {
+      display: grid;
+      gap: 16px;
+    }
+
+    .profile-card {
+      padding: 16px;
+    }
+
+    .player-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .player-name {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 0.88rem;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.06);
+      color: #e9f8ff;
+    }
+
+    .pill.live {
+      color: var(--green);
+      border-color: rgba(0, 255, 140, 0.35);
+      background: rgba(0, 255, 140, 0.08);
+    }
+
+    .section-title {
+      color: var(--teal);
+      font-weight: 700;
+      margin: 14px 0 8px;
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+    }
+
+    .mini-card {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.04);
+      line-height: 1.4;
+    }
+
+    .empty {
+      color: var(--muted);
+      text-align: center;
+      padding: 24px 12px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Adult ASA Player Profiles</h1>
+    <div class="sub" id="subtitle">Loading player profiles...</div>
+  </header>
+
+  <div class="wrap">
+    <div class="top-links">
+      <a href="./index.html">Live Status</a>
+      <a href="./tracker.html">Tracker</a>
+      <a href="./players.html">Player Profiles</a>
+    </div>
+
+    <div class="search-wrap">
+      <label class="search-label" for="playerSearch">Search Player</label>
+      <input id="playerSearch" class="search-input" type="search" placeholder="Search by survivor name" />
+    </div>
+
+    <div class="profiles" id="profiles"></div>
+  </div>
+
+  <script>
+    const API_BASE = "https://aasa-discord-bot-v-20-production.up.railway.app";
+    let searchTimer = null;
+    let currentSearch = "";
+
+    function fmtDate(value) {
+      if (!value) return "Unknown";
+      return new Date(value).toLocaleString();
+    }
+
+    function fmtAgo(value) {
+      if (!value) return "Unknown";
+      const diff = Math.max(0, Date.now() - new Date(value).getTime());
+      const minutes = Math.floor(diff / 60000);
+
+      if (minutes < 1) return "just now";
+      if (minutes < 60) return `${minutes}m ago`;
+
+      const hours = Math.floor(minutes / 60);
+      const remMinutes = minutes % 60;
+      if (hours < 24) return remMinutes ? `${hours}h ${remMinutes}m ago` : `${hours}h ago`;
+
+      const days = Math.floor(hours / 24);
+      const remHours = hours % 24;
+      return remHours ? `${days}d ${remHours}h ago` : `${days}d ago`;
+    }
+
+    function fmtDurationMs(ms) {
+      const totalMinutes = Math.max(0, Math.round(Number(ms || 0) / 60000));
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      return `${hours}h ${minutes}m`;
+    }
+
+    function renderProfiles(players) {
+      const el = document.getElementById("profiles");
+
+      if (!players.length) {
+        el.innerHTML = `<div class="empty">No players found.</div>`;
+        return;
+      }
+
+      el.innerHTML = players.map((player) => `
+        <div class="profile-card">
+          <div class="player-head">
+            <div class="player-name">${player.player}</div>
+            <div class="pill-row">
+              <span class="pill">${player.totalHours}h total</span>
+              <span class="pill">${player.timesJoined || 0} joins</span>
+              <span class="pill">Last seen ${fmtAgo(player.lastSeenIso || player.lastSeen)}</span>
+              ${player.currentServer ? `<span class="pill live">On ${player.currentServer}</span>` : ""}
+            </div>
+          </div>
+
+          <div class="mini-grid">
+            <div class="mini-card"><strong>First Seen</strong><br>${fmtDate(player.firstSeen)}</div>
+            <div class="mini-card"><strong>Last Seen</strong><br>${fmtDate(player.lastSeenIso || player.lastSeen)}</div>
+            <div class="mini-card"><strong>Recent Map</strong><br>${player.currentServer || "Offline"}</div>
+          </div>
+
+          <div class="section-title">Maps Visited</div>
+          <div class="mini-grid">
+            ${(player.mapTotals || []).length
+              ? player.mapTotals.map((map) => `
+                  <div class="mini-card">
+                    <strong>${map.map}</strong><br>${map.hours}h
+                  </div>
+                `).join("")
+              : `<div class="mini-card">No map history yet.</div>`}
+          </div>
+
+          <div class="section-title">Recent Sessions</div>
+          <div class="mini-grid">
+            ${(player.recentSessions || []).length
+              ? player.recentSessions.map((session) => `
+                  <div class="mini-card">
+                    <strong>${session.server}</strong><br>
+                    ${fmtDate(session.start)}<br>
+                    ${session.isActive ? "Still online" : `Stayed ${fmtDurationMs(session.durationMs)}`}
+                  </div>
+                `).join("")
+              : `<div class="mini-card">No recent sessions yet.</div>`}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    async function loadProfiles(search = "") {
+      const res = await fetch(`${API_BASE}/api/players?q=${encodeURIComponent(search)}`);
+      if (!res.ok) throw new Error("Failed to load player profiles");
+
+      const data = await res.json();
+      document.getElementById("subtitle").textContent =
+        `Showing ${data.total} player profiles. Last updated ${new Date(data.generatedAt).toLocaleString()}`;
+      renderProfiles(data.players || []);
+    }
+
+    document.getElementById("playerSearch").addEventListener("input", (event) => {
+      currentSearch = event.target.value.trim();
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        loadProfiles(currentSearch).catch((error) => {
+          console.error(error);
+          document.getElementById("subtitle").textContent = "Could not load player profiles.";
+        });
+      }, 250);
+    });
+
+    loadProfiles().catch((error) => {
+      console.error(error);
+      document.getElementById("subtitle").textContent = "Could not load player profiles.";
+    });
+  </script>
+</body>
+</html>
