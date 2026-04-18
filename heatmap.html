@@ -571,11 +571,12 @@
 
   <script>
     const API_BASE = "https://aasa-discord-bot-v-20-production.up.railway.app";
-    const AUTO_REFRESH_MS = 15000;
-    let currentRange = "72h";
-    let currentSearch = "";
-    let searchTimer = null;
-    let requestId = 0;
+const AUTO_REFRESH_MS = 15000;
+let currentRange = "72h";
+let currentSearch = "";
+let searchTimer = null;
+let requestId = 0;
+const openSessionDetails = new Set();
 
     function fmtDate(ms) {
       return new Date(ms).toLocaleString();
@@ -627,8 +628,16 @@ function toggleSessionDetails(id, btn) {
   if (!el) return;
 
   const isHidden = el.style.display === "none";
-  el.style.display = isHidden ? "block" : "none";
-  btn.textContent = isHidden ? "Hide details" : "Show details";
+
+  if (isHidden) {
+    el.style.display = "block";
+    openSessionDetails.add(id);
+    btn.textContent = "Show less";
+  } else {
+    el.style.display = "none";
+    openSessionDetails.delete(id);
+    btn.textContent = "Show details";
+  }
 }
 
 function setActiveRange(range) {
@@ -806,14 +815,16 @@ function setActiveRange(range) {
             <div class="pill-row session-pills">
               <span class="pill">${fmtDuration(session.totalDurationMs)}</span>
               <span class="pill">${session.transferCount} transfers</span>
-              <button class="pill session-toggle" type="button" onclick="toggleSessionDetails('${dropdownId}', this)">Show details</button>
+              <button class="pill session-toggle" type="button" onclick="toggleSessionDetails('${dropdownId}', this)">
+  ${openSessionDetails.has(dropdownId) ? "Show less" : "Show details"}
+</button>
             </div>
           </div>
 
-          <div id="${dropdownId}" class="session-details" style="display:none;">
-            <div class="section-mini-title">Maps in this session</div>
-            ${mapRows}
-          </div>
+          <div id="${dropdownId}" class="session-details" style="display:${openSessionDetails.has(dropdownId) ? 'block' : 'none'};">
+  <div class="section-mini-title">Session timeline</div>
+  ${mapRows}
+</div>
         </div>
       `;
     }).join("");
