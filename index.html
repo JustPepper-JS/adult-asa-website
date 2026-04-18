@@ -11,19 +11,15 @@
       --panel-top: #171a20;
       --panel-bottom: #111318;
       --border: rgba(126, 201, 222, 0.08);
-      --teal: #7ec9de;
+      --teal: #86c8da;
       --teal-soft: #d0eef5;
-      --orange: #ff6a00;
-      --orange-soft: #ffb277;
+      --orange: #ff7a14;
       --text: #f4fbff;
       --muted: #9bc1cc;
       --green: #6effb3;
-      --discord: #5865f2;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -36,11 +32,11 @@
     }
 
     header {
-  padding: 30px 20px;
-  text-align: center;
-  background: linear-gradient(90deg, #1a4650, #225c68);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
-}
+      padding: 30px 20px;
+      text-align: center;
+      background: linear-gradient(90deg, #163e47, #214f59);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+    }
 
     h1 {
       margin: 0;
@@ -85,7 +81,7 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 150px;
+      min-width: 170px;
       padding: 12px 18px;
       border-radius: 999px;
       text-decoration: none;
@@ -109,7 +105,7 @@
     }
 
     .top-nav-btn.primary {
-      background: linear-gradient(90deg, rgba(126, 201, 222, 0.22), rgba(255, 106, 0, 0.16));
+      background: linear-gradient(90deg, rgba(126, 201, 222, 0.24), rgba(255, 122, 20, 0.18));
       border-color: rgba(126, 201, 222, 0.24);
     }
 
@@ -152,8 +148,8 @@
     }
 
     .card.active {
-      border-color: rgba(255, 106, 0, 0.45);
-      box-shadow: 0 0 20px rgba(255, 106, 0, 0.18);
+      border-color: rgba(255, 122, 20, 0.45);
+      box-shadow: 0 0 20px rgba(255, 122, 20, 0.18);
     }
 
     .server-name {
@@ -208,7 +204,7 @@
       font-weight: 700;
       margin-bottom: 10px;
       opacity: 0.95;
-      color: #ff9a52;
+      color: #ffb070;
     }
 
     .player-tags {
@@ -227,10 +223,6 @@
       font-size: 0.88rem;
       line-height: 1.2;
       word-break: break-word;
-    }
-
-    .player-tag:hover {
-      box-shadow: 0 0 10px rgba(0, 255, 140, 0.35);
     }
 
     .player-tag.none {
@@ -261,16 +253,10 @@
     }
 
     @media (max-width: 700px) {
-      h1 {
-        font-size: 2.4rem;
-      }
-
-      .top-nav {
-        gap: 10px;
-      }
-
+      h1 { font-size: 2.4rem; }
+      .top-nav { gap: 10px; }
       .top-nav-btn {
-        min-width: 135px;
+        min-width: 145px;
         padding: 11px 15px;
         font-size: 0.92rem;
       }
@@ -289,9 +275,9 @@
   <div class="wrap">
     <div class="top-nav">
       <a class="top-nav-btn primary" href="./index.html">Live Status</a>
-      <a class="top-nav-btn" href="./tracker.html">Live Tracker</a>
       <a class="top-nav-btn" href="./heatmap.html">Heat Map</a>
-      <a class="top-nav-btn discord" href="https://discord.gg/adultasa" target="_blank" rel="noopener noreferrer">Join Discord</a>
+      <a class="top-nav-btn" href="./tracker.html">Activity Graph</a>
+      <a class="top-nav-btn discord" href="https://discord.gg/adultasa" target="_blank" rel="noopener noreferrer">Join Our Discord</a>
     </div>
 
     <div class="section">
@@ -328,11 +314,9 @@
     ];
 
     function cleanServerName(name) {
-      let cleaned = String(name || "").replace(/^Adult ASA\\s*-\\s*/i, "").trim();
-
+      let cleaned = String(name || "").replace(/^Adult ASA\s*-\s*/i, "").trim();
       if (cleaned === "SE") return "Scorched Earth";
       if (cleaned === "The Island") return "Island";
-
       return cleaned;
     }
 
@@ -340,24 +324,18 @@
       return [...servers].sort((a, b) => {
         const aName = cleanServerName(a.name);
         const bName = cleanServerName(b.name);
-
         const aIndex = SERVER_ORDER.indexOf(aName);
         const bIndex = SERVER_ORDER.indexOf(bName);
-
         if (aIndex === -1 && bIndex === -1) return aName.localeCompare(bName);
         if (aIndex === -1) return 1;
         if (bIndex === -1) return -1;
-
         return aIndex - bIndex;
       });
     }
 
     function renderSubtitle(totalOnline, updatedAt) {
       const subtitle = document.getElementById("subtitle");
-      const updated = updatedAt
-        ? new Date(updatedAt).toLocaleString()
-        : "Unknown";
-
+      const updated = updatedAt ? new Date(updatedAt).toLocaleString() : "Unknown";
       subtitle.innerHTML = `
         <div class="sub-main">${totalOnline} Survivors Online</div>
         <div class="sub-time">Last updated: ${updated}</div>
@@ -368,34 +346,27 @@
       if (!playerNames || playerNames.length === 0) {
         return `<span class="player-tag none">No players online</span>`;
       }
-
-      return playerNames
-        .map(name => `<span class="player-tag">${name}</span>`)
-        .join("");
+      return playerNames.map(name => `<span class="player-tag">${name}</span>`).join("");
     }
 
     function renderServers(servers) {
       const serversEl = document.getElementById("servers");
       serversEl.innerHTML = "";
-
       const sortedServers = sortServers(servers);
 
       for (const server of sortedServers) {
         const card = document.createElement("div");
         card.className = server.players > 0 ? "card active" : "card";
-
         const displayName = cleanServerName(server.name);
         const statusClass = server.online ? "online" : "offline";
         const statusText = server.online ? "Online" : "Offline";
 
         card.innerHTML = `
           <div class="server-name">${displayName}</div>
-
           <div class="meta-row">
             <span class="pill ${statusClass}">${statusText}</span>
             <span class="pill">${server.players}/${server.maxPlayers} players</span>
           </div>
-
           <div class="players-section">
             <div class="players-label">Players</div>
             <div class="player-tags">
@@ -411,10 +382,7 @@
     async function loadStatus() {
       try {
         const response = await fetch(API_URL);
-        if (!response.ok) {
-          throw new Error("Failed to fetch status");
-        }
-
+        if (!response.ok) throw new Error("Failed to fetch status");
         const data = await response.json();
         renderSubtitle(data.totalOnline, data.updatedAt);
         renderServers(data.servers || []);
