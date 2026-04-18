@@ -320,11 +320,6 @@
     .players-list {
   transform: scale(0.75);
   transform-origin: top center;
-}
-
-    .players-list {
-  transform: scale(0.75);
-  transform-origin: top center;
   margin-bottom: -25%;
 }
 
@@ -779,7 +774,6 @@ function setActiveRange(range) {
             </div>
             <div class="pill-row session-pills">
               <span class="pill">${fmtDuration(session.totalDurationMs)}</span>
-              <span class="pill">${(session.maps || []).length} stays</span>
               <span class="pill">${session.transferCount} transfers</span>
               <button class="pill session-toggle" type="button" onclick="toggleSessionDetails('${dropdownId}', this)">Show details</button>
             </div>
