@@ -1,16 +1,28 @@
 function renderNav(activePage) {
   const navHTML = `
-    <div class="top-nav">
-      <a class="top-nav-btn ${activePage === 'status' ? 'primary' : ''}" href="./index.html">Live Status</a>
-      <a class="top-nav-btn ${activePage === 'heatmap' ? 'primary' : ''}" href="./heatmap.html">Heat Map</a>
-      <a class="top-nav-btn ${activePage === 'tracker' ? 'primary' : ''}" href="./tracker.html">Live Tracker</a>
-      <a class="top-nav-btn ${activePage === 'movement' ? 'primary' : ''}" href="./movement.html">Movement History</a>
-      <a class="top-nav-btn discord" href="https://discord.gg/adultasa" target="_blank">Join Our Discord</a>
-    </div>
+    <a class="top-nav-btn ${activePage === 'index' ? 'primary' : ''}" href="./index.html">Live Status</a>
+    <a class="top-nav-btn ${activePage === 'heatmap' ? 'primary' : ''}" href="./heatmap.html">Heat Map</a>
+    <a class="top-nav-btn ${activePage === 'tracker' ? 'primary' : ''}" href="./tracker.html">Live Tracker</a>
+    <a class="top-nav-btn ${activePage === 'movement' ? 'primary' : ''}" href="./movement.html">Movement History</a>
+    <a class="top-nav-btn discord" href="https://discord.gg/adultasa" target="_blank">Join Our Discord</a>
   `;
 
-  const navContainer = document.getElementById("shared-nav");
-  if (navContainer) {
-    navContainer.innerHTML = navHTML;
-  }
+  const containers = document.querySelectorAll('[data-shared-nav]');
+
+  containers.forEach(container => {
+    const page = container.dataset.page || activePage || "";
+    container.innerHTML = navHTML.replace(
+      new RegExp(`activePage === '${page}' \\? 'primary' : ''`, 'g'),
+      'primary'
+    );
+  });
 }
+
+// AUTO RUN ON PAGE LOAD
+document.addEventListener("DOMContentLoaded", () => {
+  const container = document.querySelector('[data-shared-nav]');
+  if (!container) return;
+
+  const activePage = container.dataset.page || "";
+  renderNav(activePage);
+});
