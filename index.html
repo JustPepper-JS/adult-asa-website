@@ -273,13 +273,7 @@
   </header>
 
   <div class="wrap">
-    <div class="top-nav">
-      <a class="top-nav-btn primary" href="./index.html">Live Status</a>
-      <a class="top-nav-btn" href="./heatmap.html">Heat Map</a>
-      <a class="top-nav-btn" href="./tracker.html">Live Tracker</a>
-      <a class="top-nav-btn" href="./movement.html">Movement History</a>
-      <a class="top-nav-btn discord" href="https://discord.gg/adultasa" target="_blank" rel="noopener noreferrer">Join Our Discord</a>
-    </div>
+    <div class="top-nav" data-shared-nav data-page="index"></div>
 
     <div class="section">
       <h2>🌍 Live Server Status</h2>
@@ -399,5 +393,6 @@
     loadStatus();
     setInterval(loadStatus, 15000);
   </script>
+  <script src="./shared-nav.js"></script>
 </body>
 </html>

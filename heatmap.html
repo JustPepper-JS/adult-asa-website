@@ -266,12 +266,7 @@
   </header>
 
   <div class="wrap">
-    <div class="top-nav">
-      <a class="top-nav-btn" href="./index.html">Live Status</a>
-      <a class="top-nav-btn primary" href="./heatmap.html">Heat Map</a>
-      <a class="top-nav-btn" href="./tracker.html">Live Tracker</a>
-      <a class="top-nav-btn discord" href="https://discord.gg/adultasa" target="_blank" rel="noopener noreferrer">Join Our Discord</a>
-    </div>
+    <div class="top-nav" data-shared-nav data-page="heatmap"></div>
 
     <div class="controls" id="controls">
       <button class="range-btn" data-range="24h">Day</button>
@@ -418,5 +413,6 @@
     loadHeatmap().catch(handleError);
     setInterval(() => loadHeatmap().catch(handleError), 15000);
   </script>
+  <script src="./shared-nav.js"></script>
 </body>
 </html>

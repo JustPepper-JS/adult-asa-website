@@ -200,13 +200,7 @@
   </header>
 
   <div class="wrap">
-    <div class="top-links">
-      <a href="./index.html">Live Status</a>
-      <a href="./tracker.html" class="active">Live Tracker</a>
-      <a href="./movement.html">Movement History</a>
-      <a href="./heatmap.html">Heat Map</a>
-      <a href="https://discord.gg/adultasa" target="_blank" rel="noopener noreferrer" class="discord">Join Discord</a>
-    </div>
+    <div class="top-links" data-shared-nav data-page="tracker"></div>
 
     <div class="controls" id="controls">
       <button class="range-btn" data-range="24h">Day</button>
@@ -358,5 +352,6 @@
       document.getElementById("subtitle").textContent = "Could not load tracker data.";
     });
   </script>
+  <script src="./shared-nav.js"></script>
 </body>
 </html>
