@@ -208,6 +208,25 @@
       color: var(--green);
       border-color: rgba(0, 255, 140, 0.35);
       background: rgba(0, 255, 140, 0.08);
+      box-shadow: 0 0 14px rgba(0, 255, 140, 0.18);
+    }
+
+    .chip.sessions-chip {
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    .chip.sessions-chip:hover {
+      transform: translateY(-1px);
+      border-color: rgba(126, 201, 222, 0.34);
+      box-shadow: 0 0 14px rgba(126, 201, 222, 0.14);
+    }
+
+    .chip.sessions-chip.open {
+      color: #dff6ff;
+      border-color: rgba(126, 201, 222, 0.42);
+      background: rgba(126, 201, 222, 0.14);
+      box-shadow: 0 0 18px rgba(126, 201, 222, 0.18);
     }
 
     .sessions-title {
@@ -215,6 +234,40 @@
       font-weight: 800;
       margin-bottom: 10px;
       color: #f0f7fb;
+    }
+
+    .sessions-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .show-more-btn {
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      border: 1px solid rgba(126, 201, 222, 0.16);
+      background: linear-gradient(180deg, rgba(23, 26, 32, 0.96), rgba(17, 19, 24, 0.96));
+      color: #f4fbff;
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .show-more-btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(126, 201, 222, 0.28);
+      box-shadow: 0 0 16px rgba(126, 201, 222, 0.1);
+    }
+
+    .show-more-btn.open {
+      color: #dff6ff;
+      border-color: rgba(126, 201, 222, 0.42);
+      background: rgba(126, 201, 222, 0.14);
+      box-shadow: 0 0 18px rgba(126, 201, 222, 0.18);
     }
 
     .session-list {
@@ -313,6 +366,10 @@
       border: 1px solid rgba(255,255,255,0.05);
       line-height: 1.45;
       color: #d7edf5;
+    }
+
+    .hidden {
+      display: none !important;
     }
 
     .empty-state {
@@ -417,15 +474,21 @@
 
       el.innerHTML = players.map((player, playerIndex) => {
         const banner = `${player.player} ${player.isOnline && player.currentServer ? `- Playing on ${player.currentServer}` : "- Offline"}`;
-        const sessionsHtml = (player.sessions || []).map((session, sessionIndex) => {
-          const detailsId = `details-${playerIndex}-${sessionIndex}`;
+        const allSessions = player.sessions || [];
+        const initialSessions = allSessions.slice(0, 1);
+        const hiddenSessions = allSessions.slice(1);
+        const sessionsToggleId = `sessions-toggle-${playerIndex}`;
+        const hiddenWrapId = `hidden-sessions-${playerIndex}`;
+        const sessionChipText = `${player.sessionCount || 0} ${Number(player.sessionCount || 0) === 1 ? "session" : "sessions"}`;
+
+        const renderSessionCard = (session, sessionIndex, hidden = false) => {
+          const detailsId = `details-${playerIndex}-${sessionIndex}-${hidden ? "extra" : "main"}`;
           const mapsFlow = (session.maps || []).map((map, mapIndex) => {
             const pill = `<span class="map-pill">${map.server} · ${fmtDurationMs(map.durationMs)}</span>`;
             return mapIndex === 0 ? pill : `<span class="arrow">→</span>${pill}`;
           }).join("");
 
           const transferText = Number(session.transferCount || 0) === 1 ? "1 transfer" : `${Number(session.transferCount || 0)} transfers`;
-          const sessionText = Number(player.sessionCount || 0) === 1 ? "1 session" : `${Number(player.sessionCount || 0)} sessions`;
 
           return `
             <div class="session-card">
@@ -455,19 +518,25 @@
               </div>
             </div>
           `;
-        }).join("");
+        };
 
         return `
           <div class="player-card">
             <div class="player-banner">${banner}</div>
             <div class="chip-row">
               <span class="chip">${fmtHours(player.totalHours)}</span>
-              <span class="chip">${player.sessionCount || 0} ${Number(player.sessionCount || 0) === 1 ? "session" : "sessions"}</span>
+              <button type="button" class="chip sessions-chip" id="${sessionsToggleId}" data-target="${hiddenWrapId}" aria-expanded="false">${sessionChipText}</button>
               <span class="chip">${player.transferCount || 0} ${Number(player.transferCount || 0) === 1 ? "transfer" : "transfers"}</span>
               ${player.isOnline && player.currentServer ? `<span class="chip live">On ${player.currentServer}</span>` : `<span class="chip">Last seen ${player.lastSeenIso ? fmtDate(player.lastSeenIso) : "Unknown"}</span>`}
             </div>
-            <div class="sessions-title">Sessions List</div>
-            <div class="session-list">${sessionsHtml || `<div class="empty-state">No sessions in this range.</div>`}</div>
+            <div class="sessions-header">
+              <div class="sessions-title">Sessions List</div>
+              ${hiddenSessions.length ? `<button type="button" class="show-more-btn" data-target="${hiddenWrapId}">Show more sessions (${hiddenSessions.length})</button>` : ``}
+            </div>
+            <div class="session-list">
+              ${initialSessions.length ? initialSessions.map((session, sessionIndex) => renderSessionCard(session, sessionIndex)).join("") : `<div class="empty-state">No sessions in this range.</div>`}
+            </div>
+            ${hiddenSessions.length ? `<div class="session-list hidden" id="${hiddenWrapId}">${hiddenSessions.map((session, sessionIndex) => renderSessionCard(session, sessionIndex + 1, true)).join("")}</div>` : ``}
           </div>
         `;
       }).join("");
@@ -478,6 +547,30 @@
           const isOpen = target.classList.toggle('open');
           btn.classList.toggle('open', isOpen);
           btn.textContent = isOpen ? 'Show less' : 'Show details';
+        });
+      });
+
+      const syncSessionToggleState = (targetId, isOpen) => {
+        el.querySelectorAll(`[data-target="${targetId}"]`).forEach((control) => {
+          if (control.classList.contains('sessions-chip')) {
+            control.classList.toggle('open', isOpen);
+            control.setAttribute('aria-expanded', String(isOpen));
+          }
+
+          if (control.classList.contains('show-more-btn')) {
+            control.classList.toggle('open', isOpen);
+            control.textContent = isOpen ? 'Show fewer sessions' : `Show more sessions (${document.getElementById(targetId)?.children.length || 0})`;
+          }
+        });
+      };
+
+      el.querySelectorAll('.sessions-chip, .show-more-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const target = document.getElementById(btn.dataset.target);
+          if (!target) return;
+
+          const isOpen = target.classList.toggle('hidden') === false;
+          syncSessionToggleState(btn.dataset.target, isOpen);
         });
       });
     }
