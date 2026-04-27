@@ -225,6 +225,53 @@
       word-break: break-word;
     }
 
+
+    .legend {
+      display: inline-flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin: 0 auto 18px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.035);
+      border: 1px solid rgba(126, 201, 222, 0.12);
+    }
+
+    .legend-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #dff8ff;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .legend-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 999px;
+      display: inline-block;
+      box-shadow: 0 0 12px currentColor;
+    }
+
+    .legend-dot.survivor { color: var(--green); background: var(--green); }
+    .legend-dot.staff { color: #d99cff; background: #d99cff; }
+
+    .player-tag.staff {
+      background: rgba(217, 156, 255, 0.11);
+      border-color: rgba(217, 156, 255, 0.52);
+      color: #f1d8ff;
+      box-shadow: 0 0 14px rgba(188, 111, 255, 0.28);
+      font-weight: 800;
+    }
+
+    .player-tag.staff::before {
+      content: "✦";
+      margin-right: 5px;
+      color: #f3c7ff;
+    }
+
     .player-tag.none {
       background: rgba(255, 255, 255, 0.06);
       border-color: rgba(255, 255, 255, 0.08);
@@ -277,6 +324,10 @@
 
     <div class="section">
       <h2>🌍 Cluster Status</h2>
+      <div class="legend">
+        <span class="legend-pill"><span class="legend-dot survivor"></span>Green = Survivor</span>
+        <span class="legend-pill"><span class="legend-dot staff"></span>Purple = Staff / Owner</span>
+      </div>
       <div id="servers" class="servers"></div>
     </div>
 
@@ -337,11 +388,30 @@
       `;
     }
 
-    function buildPlayerTags(playerNames) {
-      if (!playerNames || playerNames.length === 0) {
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function buildPlayerTags(playerDetails, playerNames) {
+      const players = Array.isArray(playerDetails) && playerDetails.length
+        ? playerDetails
+        : (playerNames || []).map((name) => ({ name, isStaff: false, role: null }));
+
+      if (!players.length) {
         return `<span class="player-tag none">No players online</span>`;
       }
-      return playerNames.map(name => `<span class="player-tag">${name}</span>`).join("");
+
+      return players.map((player) => {
+        const name = escapeHtml(player.name || player);
+        const role = player.role ? ` title="${escapeHtml(player.role)}"` : "";
+        const label = player.isStaff && player.role ? `${name} · ${escapeHtml(player.role)}` : name;
+        return `<span class="player-tag ${player.isStaff ? "staff" : ""}"${role}>${label}</span>`;
+      }).join("");
     }
 
     function renderServers(servers) {
@@ -365,7 +435,7 @@
           <div class="players-section">
             <div class="players-label">Players</div>
             <div class="player-tags">
-              ${buildPlayerTags(server.playerNames || [])}
+              ${buildPlayerTags(server.playerDetails || [], server.playerNames || [])}
             </div>
           </div>
         `;

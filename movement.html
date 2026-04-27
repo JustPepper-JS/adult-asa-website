@@ -148,6 +148,61 @@
       outline: none;
     }
 
+
+
+    .filter-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin: 0 auto 18px;
+      color: #dff8ff;
+      font-weight: 800;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 54px;
+      height: 30px;
+    }
+
+    .switch input { opacity: 0; width: 0; height: 0; }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 999px;
+      transition: 0.2s;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.25);
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 22px;
+      width: 22px;
+      left: 3px;
+      top: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: 0.2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+    }
+
+    .switch input:checked + .slider {
+      background: rgba(110, 255, 179, 0.70);
+      border-color: rgba(110, 255, 179, 0.95);
+      box-shadow: 0 0 14px rgba(110, 255, 179, 0.24);
+    }
+
+    .switch input:checked + .slider:before {
+      transform: translateX(24px);
+    }
+
     .panel {
       background: linear-gradient(180deg, var(--panel-top), var(--panel-bottom));
       border: 1px solid var(--border);
@@ -408,6 +463,14 @@
       <input id="playerSearch" class="search-input" type="search" placeholder="Search a survivor or leave blank for everyone" />
     </div>
 
+    <div class="filter-row">
+      <span>Show online only</span>
+      <label class="switch">
+        <input id="onlineOnlyToggle" type="checkbox" />
+        <span class="slider"></span>
+      </label>
+    </div>
+
     <div class="totals" id="totals"></div>
 
     <div class="panel">
@@ -422,6 +485,7 @@
     let currentRange = "72h";
     let currentSearch = "";
     let searchTimer = null;
+    let showOnlineOnly = false;
 
     function fmtDate(ms) {
       return new Date(ms).toLocaleString();
@@ -466,13 +530,14 @@
 
     function renderCards(players) {
       const el = document.getElementById("cards");
+      const visiblePlayers = showOnlineOnly ? (players || []).filter((player) => player.isOnline) : (players || []);
 
-      if (!players.length) {
+      if (!visiblePlayers.length) {
         el.innerHTML = `<div class="empty-state">No movement history found for that search.</div>`;
         return;
       }
 
-      el.innerHTML = players.map((player, playerIndex) => {
+      el.innerHTML = visiblePlayers.map((player, playerIndex) => {
         const banner = `${player.player} ${player.isOnline && player.currentServer ? `- Playing on ${player.currentServer}` : "- Offline"}`;
         const allSessions = player.sessions || [];
         const initialSessions = allSessions.slice(0, 1);
@@ -602,6 +667,11 @@
       searchTimer = setTimeout(() => {
         loadMovement().catch(handleError);
       }, 250);
+    });
+
+    document.getElementById("onlineOnlyToggle").addEventListener("change", (event) => {
+      showOnlineOnly = event.target.checked;
+      loadMovement().catch(handleError);
     });
 
     function handleError(error) {

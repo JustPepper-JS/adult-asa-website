@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Adult ASA Cluster Activity</title>
+  <title>Adult ASA Player Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
@@ -97,7 +97,8 @@
         0 0 18px rgba(126, 201, 222, 0.08);
     }
 
-    .top-links a.active {
+    .top-links a.active,
+    .top-links a.primary {
       background: linear-gradient(90deg, rgba(126, 201, 222, 0.22), rgba(255, 106, 0, 0.16));
       border-color: rgba(126, 201, 222, 0.24);
     }
@@ -162,24 +163,6 @@
       border: 1px solid rgba(255,255,255,0.04);
     }
 
-    .chart-tooltip {
-      position: absolute;
-      display: none;
-      pointer-events: none;
-      z-index: 5;
-      min-width: 130px;
-      padding: 10px 12px;
-      border-radius: 12px;
-      background: rgba(10, 13, 19, 0.96);
-      border: 1px solid rgba(126, 201, 222, 0.22);
-      box-shadow: 0 0 18px rgba(0, 0, 0, 0.28), 0 0 14px rgba(126, 201, 222, 0.10);
-      color: #f4fbff;
-      font-size: 0.9rem;
-      line-height: 1.45;
-    }
-
-    .chart-tooltip strong { color: #86c8da; }
-
     svg {
       display: block;
       width: 100%;
@@ -213,8 +196,8 @@
 </head>
 <body>
   <header>
-    <h1>Adult ASA Cluster</h1>
-    <div class="sub" id="subtitle">Loading cluster activity data...</div>
+    <h1>Adult ASA Player Tracker</h1>
+    <div class="sub" id="subtitle">Loading tracker data...</div>
   </header>
 
   <div class="wrap">
@@ -232,7 +215,6 @@
       <h2>Cluster Activity</h2>
       <div class="chart-wrap">
         <svg id="trendChart" viewBox="0 0 1200 400" preserveAspectRatio="none"></svg>
-        <div id="chartTooltip" class="chart-tooltip"></div>
       </div>
       <div class="note">Y-axis shows total players online across the cluster.</div>
     </div>
@@ -241,7 +223,6 @@
   <script>
     const API_BASE = "https://aasa-discord-bot-v-20-production.up.railway.app";
     let currentRange = "72h";
-    let latestTrendPoints = [];
 
     function fmtDate(ms) {
       return new Date(ms).toLocaleString();
@@ -249,15 +230,6 @@
 
     function fmtShort(ms) {
       return new Date(ms).toLocaleDateString([], {
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit"
-      });
-    }
-
-    function fmtTooltipTime(ms) {
-      return new Date(ms).toLocaleString([], {
         month: "short",
         day: "numeric",
         hour: "numeric",
@@ -341,13 +313,6 @@
         `);
       }
 
-      latestTrendPoints = trend.map((point) => ({
-        time: point.time,
-        value: Number(point.value || 0),
-        x: xFor(point.time),
-        y: yFor(Number(point.value || 0)),
-      }));
-
       svg.innerHTML = `
         ${gridLines.join("")}
         ${xLabels.join("")}
@@ -356,53 +321,14 @@
       `;
     }
 
-    function setupChartTooltip() {
-      const chartWrap = document.querySelector(".chart-wrap");
-      const tooltip = document.getElementById("chartTooltip");
-      if (!chartWrap || !tooltip) return;
-
-      chartWrap.addEventListener("mousemove", (event) => {
-        if (!latestTrendPoints.length) return;
-
-        const rect = chartWrap.getBoundingClientRect();
-        const scaleX = 1200 / rect.width;
-        const mouseX = (event.clientX - rect.left) * scaleX;
-
-        let nearest = latestTrendPoints[0];
-        let nearestDistance = Math.abs(mouseX - nearest.x);
-
-        for (const point of latestTrendPoints) {
-          const distance = Math.abs(mouseX - point.x);
-          if (distance < nearestDistance) {
-            nearest = point;
-            nearestDistance = distance;
-          }
-        }
-
-        tooltip.innerHTML = `<strong>Time:</strong> ${fmtTooltipTime(nearest.time)}<br><strong>Players:</strong> ${nearest.value}`;
-        tooltip.style.display = "block";
-
-        const tooltipWidth = tooltip.offsetWidth || 130;
-        const left = Math.min(Math.max(event.clientX - rect.left + 14, 8), rect.width - tooltipWidth - 8);
-        const top = Math.max(event.clientY - rect.top - 52, 8);
-
-        tooltip.style.left = `${left}px`;
-        tooltip.style.top = `${top}px`;
-      });
-
-      chartWrap.addEventListener("mouseleave", () => {
-        tooltip.style.display = "none";
-      });
-    }
-
     async function loadTracker(range) {
       setActiveRange(range);
 
       const subtitle = document.getElementById("subtitle");
-      subtitle.textContent = "Loading cluster activity data...";
+      subtitle.textContent = "Loading tracker data...";
 
       const res = await fetch(`${API_BASE}/api/tracker?range=${encodeURIComponent(range)}`);
-      if (!res.ok) throw new Error("Failed to load cluster activity data");
+      if (!res.ok) throw new Error("Failed to load tracker data");
 
       const data = await res.json();
 
@@ -418,15 +344,13 @@
         await loadTracker(btn.dataset.range);
       } catch (err) {
         console.error(err);
-        document.getElementById("subtitle").textContent = "Could not load cluster activity data.";
+        document.getElementById("subtitle").textContent = "Could not load tracker data.";
       }
     });
 
-    setupChartTooltip();
-
     loadTracker(currentRange).catch((err) => {
       console.error(err);
-      document.getElementById("subtitle").textContent = "Could not load cluster activity data.";
+      document.getElementById("subtitle").textContent = "Could not load tracker data.";
     });
   </script>
   <script src="./shared-nav.js"></script>
