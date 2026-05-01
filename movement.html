@@ -256,6 +256,7 @@
     .chip-row {
       display: flex;
       flex-wrap: wrap;
+      align-items: center;
       gap: 10px;
       margin-bottom: 18px;
       padding-bottom: 14px;
@@ -284,19 +285,19 @@
     }
 
     .card-mod-button {
-  margin-left: auto;
-  min-width: 170px;
-  border-radius: 999px;
-  padding: 12px 18px;
-  font-weight: 900;
-  font-size: 0.95rem;
-  cursor: pointer;
-  color: #d8f6ff;
-  border: 1px solid rgba(84, 207, 255, 0.48);
-  background: linear-gradient(90deg, rgba(84, 207, 255, 0.16), rgba(126, 201, 222, 0.08));
-  box-shadow: 0 0 18px rgba(84, 207, 255, 0.18);
-  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-}
+      margin-left: auto;
+      min-width: 170px;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-weight: 900;
+      font-size: 0.95rem;
+      cursor: pointer;
+      color: #d8f6ff;
+      border: 1px solid rgba(84, 207, 255, 0.48);
+      background: linear-gradient(90deg, rgba(84, 207, 255, 0.16), rgba(126, 201, 222, 0.08));
+      box-shadow: 0 0 18px rgba(84, 207, 255, 0.18);
+      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
 
     .card-mod-button:hover {
       transform: translateY(-1px);
@@ -485,9 +486,8 @@
       .session-top { flex-direction: column; }
       .session-actions { width: 100%; }
       .card-mod-button {
-        position: static;
         width: 100%;
-        margin: 0 0 12px;
+        margin-left: 0;
       }
     }
   </style>
@@ -637,6 +637,8 @@
         const sessionsToggleId = `sessions-toggle-${playerIndex}`;
         const hiddenWrapId = `hidden-sessions-${playerIndex}`;
         const sessionChipText = `${player.sessionCount || 0} ${Number(player.sessionCount || 0) === 1 ? "session" : "sessions"}`;
+        const modButtonText = isLocalMod(player.player) ? "Already Mod/Owner" : "Add as Mod";
+        const modButtonClass = isLocalMod(player.player) ? "saved" : "";
 
         const renderSessionCard = (session, sessionIndex, hidden = false) => {
           const detailsId = `details-${playerIndex}-${sessionIndex}-${hidden ? "extra" : "main"}`;
@@ -648,64 +650,60 @@
           const transferText = Number(session.transferCount || 0) === 1 ? "1 transfer" : `${Number(session.transferCount || 0)} transfers`;
 
           return `
-  <div class="player-card">
-    <div class="player-banner">${banner}</div>
-
-    <div class="chip-row">
-      <span class="chip">${fmtHours(player.totalHours)}</span>
-
-      <button type="button" class="chip sessions-chip" id="${sessionsToggleId}" data-target="${hiddenWrapId}" aria-expanded="false">
-        ${sessionChipText}
-      </button>
-
-      <span class="chip">
-        ${player.transferCount || 0} ${Number(player.transferCount || 0) === 1 ? "transfer" : "transfers"}
-      </span>
-
-      ${player.isOnline && player.currentServer
-        ? `<span class="chip live">On ${player.currentServer}</span>`
-        : `<span class="chip">Last seen ${player.lastSeenIso ? fmtDate(player.lastSeenIso) : "Unknown"}</span>`}
-
-      <button type="button" class="card-mod-button ${isLocalMod(player.player) ? "saved" : ""}" data-player="${escapeHtml(player.player || '')}">
-        ${isLocalMod(player.player) ? "Already Mod/Owner" : "Add as Mod"}
-      </button>
-    </div>
-
-    <div class="sessions-header">
-      <div class="sessions-title">Sessions List</div>
-      ${hiddenSessions.length ? `<button type="button" class="show-more-btn" data-target="${hiddenWrapId}">Show more sessions (${hiddenSessions.length})</button>` : ``}
-    </div>
-
-    <div class="session-list">
-      ${initialSessions.length ? initialSessions.map((session, sessionIndex) => renderSessionCard(session, sessionIndex)).join("") : `<div class="empty-state">No sessions in this range.</div>`}
-    </div>
-
-    ${hiddenSessions.length ? `<div class="session-list hidden" id="${hiddenWrapId}">${hiddenSessions.map((session, sessionIndex) => renderSessionCard(session, sessionIndex + 1, true)).join("")}</div>` : ``}
-  </div>
-`;
+            <div class="session-card">
+              <div class="session-top">
+                <div>
+                  <div class="session-main">Session: ${fmtSessionHeader(session.sessionStart)}</div>
+                  <div class="session-sub">${buildSessionSubtitle(session)}</div>
+                </div>
+                <div class="session-actions">
+                  <span class="chip">${fmtDurationMs(session.totalDurationMs)}</span>
+                  <span class="chip">${transferText}</span>
+                  <button class="toggle-btn" data-target="${detailsId}">Show details</button>
+                </div>
+              </div>
+              <div class="details" id="${detailsId}">
+                <div class="maps-flow">${mapsFlow || `<span class="map-pill">No map path</span>`}</div>
+                <div class="detail-grid">
+                  ${(session.maps || []).map((map) => `
+                    <div class="detail-card">
+                      <strong>${map.server}</strong><br>
+                      Joined: ${fmtDate(map.start)}<br>
+                      ${map.isActive ? `Still active here` : `Left: ${fmtDate(map.end)}`}<br>
+                      Stayed: ${fmtDurationMs(map.durationMs)}
+                    </div>
+                  `).join("")}
+                </div>
+              </div>
+            </div>
+          `;
         };
 
         return `
           <div class="player-card">
-            <button type="button" class="card-mod-button ${isLocalMod(player.player) ? "saved" : ""}" data-player="${escapeHtml(player.player || '')}">${isLocalMod(player.player) ? "Already Mod/Owner" : "Add as Mod"}</button>
             <div class="player-banner">${banner}</div>
-            <div class="chip-row">
-  <span class="chip">${fmtHours(player.totalHours)}</span>
-  <button type="button" class="chip sessions-chip" id="${sessionsToggleId}" data-target="${hiddenWrapId}" aria-expanded="false">${sessionChipText}</button>
-  <span class="chip">${player.transferCount || 0} ${Number(player.transferCount || 0) === 1 ? "transfer" : "transfers"}</span>
-  ${player.isOnline && player.currentServer ? `<span class="chip live">On ${player.currentServer}</span>` : `<span class="chip">Last seen ${player.lastSeenIso ? fmtDate(player.lastSeenIso) : "Unknown"}</span>`}
 
-  <button type="button" class="card-mod-button ${isLocalMod(player.player) ? "saved" : ""}" data-player="${escapeHtml(player.player || '')}">
-    ${isLocalMod(player.player) ? "Already Mod/Owner" : "Add as Mod"}
-  </button>
-</div>
+            <div class="chip-row">
+              <span class="chip">${fmtHours(player.totalHours)}</span>
+
+              <button type="button" class="chip sessions-chip" id="${sessionsToggleId}" data-target="${hiddenWrapId}" aria-expanded="false">${sessionChipText}</button>
+
+              <span class="chip">${player.transferCount || 0} ${Number(player.transferCount || 0) === 1 ? "transfer" : "transfers"}</span>
+
+              ${player.isOnline && player.currentServer ? `<span class="chip live">On ${player.currentServer}</span>` : `<span class="chip">Last seen ${player.lastSeenIso ? fmtDate(player.lastSeenIso) : "Unknown"}</span>`}
+
+              <button type="button" class="card-mod-button ${modButtonClass}" data-player="${escapeHtml(player.player || '')}">${modButtonText}</button>
+            </div>
+
             <div class="sessions-header">
               <div class="sessions-title">Sessions List</div>
               ${hiddenSessions.length ? `<button type="button" class="show-more-btn" data-target="${hiddenWrapId}">Show more sessions (${hiddenSessions.length})</button>` : ``}
             </div>
+
             <div class="session-list">
               ${initialSessions.length ? initialSessions.map((session, sessionIndex) => renderSessionCard(session, sessionIndex)).join("") : `<div class="empty-state">No sessions in this range.</div>`}
             </div>
+
             ${hiddenSessions.length ? `<div class="session-list hidden" id="${hiddenWrapId}">${hiddenSessions.map((session, sessionIndex) => renderSessionCard(session, sessionIndex + 1, true)).join("")}</div>` : ``}
           </div>
         `;
@@ -748,7 +746,6 @@
         });
       });
     }
-
 
     async function addPlayerAsMod(playerName, button) {
       const cleanName = String(playerName || "").trim();
