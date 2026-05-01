@@ -622,7 +622,28 @@
 
     function renderCards(players) {
       const el = document.getElementById("cards");
-      const visiblePlayers = showOnlineOnly ? (players || []).filter((player) => player.isOnline) : (players || []);
+
+      const sortedPlayers = [...(players || [])].sort((a, b) => {
+        const aOnline = Boolean(a.isOnline);
+        const bOnline = Boolean(b.isOnline);
+
+        if (aOnline !== bOnline) {
+          return bOnline - aOnline;
+        }
+
+        const aHours = Number(a.totalHours || 0);
+        const bHours = Number(b.totalHours || 0);
+
+        if (bHours !== aHours) {
+          return bHours - aHours;
+        }
+
+        return String(a.player || "").localeCompare(String(b.player || ""));
+      });
+
+      const visiblePlayers = showOnlineOnly
+        ? sortedPlayers.filter((player) => player.isOnline)
+        : sortedPlayers;
 
       if (!visiblePlayers.length) {
         el.innerHTML = `<div class="empty-state">No movement history found for that search.</div>`;
