@@ -125,17 +125,17 @@
     }
 
     .servers {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 18px;
-      max-width: 1150px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      max-width: 980px;
       margin: 25px auto;
     }
 
     .card {
       background: linear-gradient(180deg, var(--panel-top), var(--panel-bottom));
-      padding: 20px;
-      border-radius: 16px;
+      padding: 18px 20px;
+      border-radius: 18px;
       box-shadow: 0 0 10px rgba(255, 255, 255, 0.04);
       text-align: left;
       border: 1px solid var(--border);
@@ -153,8 +153,8 @@
     }
 
     .server-name {
-      font-size: 1.15rem;
-      font-weight: 700;
+      font-size: 1.22rem;
+      font-weight: 800;
       margin-bottom: 14px;
       color: #f6fbff;
     }
@@ -351,32 +351,57 @@
       "Scorched Earth",
       "Aberration",
       "Extinction",
+      "Lost Colony",
       "Ragnarok",
       "Valguero",
-      "Astraeos",
       "The Center",
-      "Lost Colony"
+      "Astraeos"
     ];
 
     function cleanServerName(name) {
       let cleaned = String(name || "").replace(/^Adult ASA\s*-\s*/i, "").trim();
-      if (cleaned === "SE") return "Scorched Earth";
-      if (cleaned === "The Island") return "Island";
-      if (cleaned === "TheCenter_WP") return "The Center";
-      if (cleaned === "Center") return "The Center";
+      if (cleaned === "SE" || cleaned === "ScorchedEarth_WP") return "Scorched Earth";
+      if (cleaned === "The Island" || cleaned === "TheIsland_WP") return "Island";
+      if (cleaned === "Aberration_WP") return "Aberration";
+      if (cleaned === "Extinction_WP") return "Extinction";
+      if (cleaned === "LostColony_WP" || cleaned === "LC") return "Lost Colony";
+      if (cleaned === "Ragnarok_WP" || cleaned === "Rag") return "Ragnarok";
+      if (cleaned === "Valguero_WP" || cleaned === "Val") return "Valguero";
+      if (cleaned === "TheCenter_WP" || cleaned === "Center") return "The Center";
       return cleaned;
     }
 
+    function playerCount(server) {
+      return Number(server.players || 0);
+    }
+
+    function serverOrderIndex(server) {
+      const name = cleanServerName(server.name);
+      const index = SERVER_ORDER.indexOf(name);
+      return index === -1 ? Number.MAX_SAFE_INTEGER : index;
+    }
+
     function sortServers(servers) {
-      return [...servers].sort((a, b) => {
-        const aName = cleanServerName(a.name);
-        const bName = cleanServerName(b.name);
-        const aIndex = SERVER_ORDER.indexOf(aName);
-        const bIndex = SERVER_ORDER.indexOf(bName);
-        if (aIndex === -1 && bIndex === -1) return aName.localeCompare(bName);
-        if (aIndex === -1) return 1;
-        if (bIndex === -1) return -1;
-        return aIndex - bIndex;
+      const list = [...servers];
+      const hasActiveServer = list.some((server) => playerCount(server) > 0);
+
+      return list.sort((a, b) => {
+        const aPlayers = playerCount(a);
+        const bPlayers = playerCount(b);
+
+        if (hasActiveServer) {
+          const aActive = aPlayers > 0;
+          const bActive = bPlayers > 0;
+
+          if (aActive !== bActive) return aActive ? -1 : 1;
+          if (aActive && bActive && aPlayers !== bPlayers) return bPlayers - aPlayers;
+        }
+
+        const aIndex = serverOrderIndex(a);
+        const bIndex = serverOrderIndex(b);
+        if (aIndex !== bIndex) return aIndex - bIndex;
+
+        return cleanServerName(a.name).localeCompare(cleanServerName(b.name));
       });
     }
 
