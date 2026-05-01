@@ -648,33 +648,41 @@
           const transferText = Number(session.transferCount || 0) === 1 ? "1 transfer" : `${Number(session.transferCount || 0)} transfers`;
 
           return `
-            <div class="session-card">
-              <div class="session-top">
-                <div>
-                  <div class="session-main">Session: ${fmtSessionHeader(session.sessionStart)}</div>
-                  <div class="session-sub">${buildSessionSubtitle(session)}</div>
-                </div>
-                <div class="session-actions">
-                  <span class="chip">${fmtDurationMs(session.totalDurationMs)}</span>
-                  <span class="chip">${transferText}</span>
-                  <button class="toggle-btn" data-target="${detailsId}">Show details</button>
-                </div>
-              </div>
-              <div class="details" id="${detailsId}">
-                <div class="maps-flow">${mapsFlow || `<span class="map-pill">No map path</span>`}</div>
-                <div class="detail-grid">
-                  ${(session.maps || []).map((map) => `
-                    <div class="detail-card">
-                      <strong>${map.server}</strong><br>
-                      Joined: ${fmtDate(map.start)}<br>
-                      ${map.isActive ? `Still active here` : `Left: ${fmtDate(map.end)}`}<br>
-                      Stayed: ${fmtDurationMs(map.durationMs)}
-                    </div>
-                  `).join("")}
-                </div>
-              </div>
-            </div>
-          `;
+  <div class="player-card">
+    <div class="player-banner">${banner}</div>
+
+    <div class="chip-row">
+      <span class="chip">${fmtHours(player.totalHours)}</span>
+
+      <button type="button" class="chip sessions-chip" id="${sessionsToggleId}" data-target="${hiddenWrapId}" aria-expanded="false">
+        ${sessionChipText}
+      </button>
+
+      <span class="chip">
+        ${player.transferCount || 0} ${Number(player.transferCount || 0) === 1 ? "transfer" : "transfers"}
+      </span>
+
+      ${player.isOnline && player.currentServer
+        ? `<span class="chip live">On ${player.currentServer}</span>`
+        : `<span class="chip">Last seen ${player.lastSeenIso ? fmtDate(player.lastSeenIso) : "Unknown"}</span>`}
+
+      <button type="button" class="card-mod-button ${isLocalMod(player.player) ? "saved" : ""}" data-player="${escapeHtml(player.player || '')}">
+        ${isLocalMod(player.player) ? "Already Mod/Owner" : "Add as Mod"}
+      </button>
+    </div>
+
+    <div class="sessions-header">
+      <div class="sessions-title">Sessions List</div>
+      ${hiddenSessions.length ? `<button type="button" class="show-more-btn" data-target="${hiddenWrapId}">Show more sessions (${hiddenSessions.length})</button>` : ``}
+    </div>
+
+    <div class="session-list">
+      ${initialSessions.length ? initialSessions.map((session, sessionIndex) => renderSessionCard(session, sessionIndex)).join("") : `<div class="empty-state">No sessions in this range.</div>`}
+    </div>
+
+    ${hiddenSessions.length ? `<div class="session-list hidden" id="${hiddenWrapId}">${hiddenSessions.map((session, sessionIndex) => renderSessionCard(session, sessionIndex + 1, true)).join("")}</div>` : ``}
+  </div>
+`;
         };
 
         return `
