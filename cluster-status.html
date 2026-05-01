@@ -354,6 +354,7 @@
       "Ragnarok",
       "Valguero",
       "Astraeos",
+      "The Center",
       "Lost Colony"
     ];
 
@@ -361,6 +362,8 @@
       let cleaned = String(name || "").replace(/^Adult ASA\s*-\s*/i, "").trim();
       if (cleaned === "SE") return "Scorched Earth";
       if (cleaned === "The Island") return "Island";
+      if (cleaned === "TheCenter_WP") return "The Center";
+      if (cleaned === "Center") return "The Center";
       return cleaned;
     }
 
