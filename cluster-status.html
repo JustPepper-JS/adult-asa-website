@@ -17,6 +17,8 @@
       --text: #f4fbff;
       --muted: #9bc1cc;
       --green: #6effb3;
+      --staff-blue: #54cfff;
+      --owner-gold: #ffd36a;
     }
 
     * { box-sizing: border-box; }
@@ -127,15 +129,15 @@
     .servers {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 16px;
       max-width: 980px;
       margin: 25px auto;
     }
 
     .card {
       background: linear-gradient(180deg, var(--panel-top), var(--panel-bottom));
-      padding: 18px 20px;
-      border-radius: 18px;
+      padding: 20px;
+      border-radius: 16px;
       box-shadow: 0 0 10px rgba(255, 255, 255, 0.04);
       text-align: left;
       border: 1px solid var(--border);
@@ -153,8 +155,8 @@
     }
 
     .server-name {
-      font-size: 1.22rem;
-      font-weight: 800;
+      font-size: 1.15rem;
+      font-weight: 700;
       margin-bottom: 14px;
       color: #f6fbff;
     }
@@ -230,20 +232,29 @@
       display: inline-flex;
       flex-wrap: wrap;
       justify-content: center;
+      align-items: center;
       gap: 10px;
-      margin: 0 auto 18px;
-      padding: 10px 12px;
+      margin: 0 auto 22px;
+      padding: 10px 14px;
       border-radius: 999px;
       background: rgba(255,255,255,0.035);
       border: 1px solid rgba(126, 201, 222, 0.12);
+      box-shadow: 0 0 18px rgba(0,0,0,0.20);
     }
 
     .legend-pill {
-  width: 36px;
-  height: 36px;
-  justify-content: center;
-  padding: 0;
-}
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      color: #e8fbff;
+      font-size: 0.86rem;
+      font-weight: 800;
+    }
 
     .legend-dot {
       width: 11px;
@@ -254,20 +265,35 @@
     }
 
     .legend-dot.survivor { color: var(--green); background: var(--green); }
-    .legend-dot.staff { color: #d99cff; background: #d99cff; }
+    .legend-dot.staff { color: var(--staff-blue); background: var(--staff-blue); }
+    .legend-dot.owner { color: var(--owner-gold); background: var(--owner-gold); }
 
     .player-tag.staff {
-      background: rgba(217, 156, 255, 0.11);
-      border-color: rgba(217, 156, 255, 0.52);
-      color: #f1d8ff;
-      box-shadow: 0 0 14px rgba(188, 111, 255, 0.28);
+      background: rgba(84, 207, 255, 0.12);
+      border-color: rgba(84, 207, 255, 0.58);
+      color: #d8f6ff;
+      box-shadow: 0 0 14px rgba(84, 207, 255, 0.26);
       font-weight: 800;
     }
 
     .player-tag.staff::before {
       content: "✦";
       margin-right: 5px;
-      color: #f3c7ff;
+      color: var(--staff-blue);
+    }
+
+    .player-tag.owner {
+      background: rgba(255, 211, 106, 0.14);
+      border-color: rgba(255, 211, 106, 0.68);
+      color: #ffe8a8;
+      box-shadow: 0 0 16px rgba(255, 211, 106, 0.28);
+      font-weight: 900;
+    }
+
+    .player-tag.owner::before {
+      content: "♛";
+      margin-right: 5px;
+      color: var(--owner-gold);
     }
 
     .player-tag.none {
@@ -323,8 +349,9 @@
     <div class="section">
       <h2>🌍 Cluster Status</h2>
       <div class="legend">
-  <span class="legend-pill"><span class="legend-dot survivor"></span></span>
-  <span class="legend-pill"><span class="legend-dot staff"></span></span>
+  <span class="legend-pill"><span class="legend-dot survivor"></span>Players</span>
+  <span class="legend-pill"><span class="legend-dot staff"></span>Mods</span>
+  <span class="legend-pill"><span class="legend-dot owner"></span>Owner</span>
 </div>
       <div id="servers" class="servers"></div>
     </div>
@@ -360,49 +387,70 @@
 
     function cleanServerName(name) {
       let cleaned = String(name || "").replace(/^Adult ASA\s*-\s*/i, "").trim();
-      if (cleaned === "SE" || cleaned === "ScorchedEarth_WP") return "Scorched Earth";
-      if (cleaned === "The Island" || cleaned === "TheIsland_WP") return "Island";
+      if (cleaned === "SE") return "Scorched Earth";
+      if (cleaned === "ScorchedEarth_WP") return "Scorched Earth";
+      if (cleaned === "The Island") return "Island";
+      if (cleaned === "TheIsland_WP") return "Island";
+      if (cleaned === "TheCenter_WP") return "The Center";
+      if (cleaned === "Center") return "The Center";
+      if (cleaned === "LC") return "Lost Colony";
+      if (cleaned === "LostColony") return "Lost Colony";
+      if (cleaned === "LostColony_WP") return "Lost Colony";
+      if (cleaned === "Rag") return "Ragnarok";
+      if (cleaned === "Ragnarok_WP") return "Ragnarok";
+      if (cleaned === "Val") return "Valguero";
+      if (cleaned === "Valguero_WP") return "Valguero";
       if (cleaned === "Aberration_WP") return "Aberration";
+      if (cleaned === "Abberation") return "Aberration";
       if (cleaned === "Extinction_WP") return "Extinction";
-      if (cleaned === "LostColony_WP" || cleaned === "LC") return "Lost Colony";
-      if (cleaned === "Ragnarok_WP" || cleaned === "Rag") return "Ragnarok";
-      if (cleaned === "Valguero_WP" || cleaned === "Val") return "Valguero";
-      if (cleaned === "TheCenter_WP" || cleaned === "Center") return "The Center";
+      if (cleaned === "Astraeos_WP") return "Astraeos";
       return cleaned;
     }
 
-    function playerCount(server) {
-      return Number(server.players || 0);
-    }
-
-    function serverOrderIndex(server) {
-      const name = cleanServerName(server.name);
-      const index = SERVER_ORDER.indexOf(name);
-      return index === -1 ? Number.MAX_SAFE_INTEGER : index;
+    function defaultServerCompare(a, b) {
+      const aName = cleanServerName(a.name);
+      const bName = cleanServerName(b.name);
+      const aIndex = SERVER_ORDER.indexOf(aName);
+      const bIndex = SERVER_ORDER.indexOf(bName);
+      if (aIndex === -1 && bIndex === -1) return aName.localeCompare(bName);
+      if (aIndex === -1) return 1;
+      if (bIndex === -1) return -1;
+      return aIndex - bIndex;
     }
 
     function sortServers(servers) {
       const list = [...servers];
-      const hasActiveServer = list.some((server) => playerCount(server) > 0);
+      const hasActiveServer = list.some((server) => Number(server.players || 0) > 0);
+
+      if (!hasActiveServer) {
+        return list.sort(defaultServerCompare);
+      }
 
       return list.sort((a, b) => {
-        const aPlayers = playerCount(a);
-        const bPlayers = playerCount(b);
+        const aPlayers = Number(a.players || 0);
+        const bPlayers = Number(b.players || 0);
+        const aActive = aPlayers > 0;
+        const bActive = bPlayers > 0;
 
-        if (hasActiveServer) {
-          const aActive = aPlayers > 0;
-          const bActive = bPlayers > 0;
-
-          if (aActive !== bActive) return aActive ? -1 : 1;
-          if (aActive && bActive && aPlayers !== bPlayers) return bPlayers - aPlayers;
+        if (aActive && bActive) {
+          if (bPlayers !== aPlayers) return bPlayers - aPlayers;
+          return defaultServerCompare(a, b);
         }
 
-        const aIndex = serverOrderIndex(a);
-        const bIndex = serverOrderIndex(b);
-        if (aIndex !== bIndex) return aIndex - bIndex;
-
-        return cleanServerName(a.name).localeCompare(cleanServerName(b.name));
+        if (aActive) return -1;
+        if (bActive) return 1;
+        return defaultServerCompare(a, b);
       });
+    }
+
+    function normalizePlayer(player) {
+      const normalized = typeof player === "string" ? { name: player } : { ...player };
+      const name = String(normalized.name || "").trim();
+      if (name.toLowerCase() === "pepper") {
+        normalized.isStaff = true;
+        normalized.role = "Owner";
+      }
+      return normalized;
     }
 
     function renderSubtitle(totalOnline, updatedAt) {
@@ -424,9 +472,9 @@
     }
 
     function buildPlayerTags(playerDetails, playerNames) {
-      const players = Array.isArray(playerDetails) && playerDetails.length
+      const players = (Array.isArray(playerDetails) && playerDetails.length
         ? playerDetails
-        : (playerNames || []).map((name) => ({ name, isStaff: false, role: null }));
+        : (playerNames || []).map((name) => ({ name, isStaff: false, role: null }))).map(normalizePlayer);
 
       if (!players.length) {
         return `<span class="player-tag none">No players online</span>`;
@@ -436,7 +484,8 @@
         const name = escapeHtml(player.name || player);
         const role = player.role ? ` title="${escapeHtml(player.role)}"` : "";
         const label = player.isStaff && player.role ? `${name} · ${escapeHtml(player.role)}` : name;
-        return `<span class="player-tag ${player.isStaff ? "staff" : ""}"${role}>${label}</span>`;
+        const className = player.role && String(player.role).toLowerCase() === "owner" ? "owner" : (player.isStaff ? "staff" : "");
+        return `<span class="player-tag ${className}"${role}>${label}</span>`;
       }).join("");
     }
 

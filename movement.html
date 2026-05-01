@@ -17,6 +17,7 @@
       --muted: #9bc1cc;
       --green: #6effb3;
       --pill: rgba(255,255,255,0.06);
+      --staff-blue: #54cfff;
     }
 
     * { box-sizing: border-box; }
@@ -266,6 +267,20 @@
       box-shadow: 0 0 14px rgba(0, 255, 140, 0.18);
     }
 
+    .chip.mod-add {
+      cursor: pointer;
+      color: #d8f6ff;
+      border-color: rgba(84, 207, 255, 0.42);
+      background: rgba(84, 207, 255, 0.10);
+      box-shadow: 0 0 14px rgba(84, 207, 255, 0.16);
+    }
+
+    .chip.mod-add:hover {
+      transform: translateY(-1px);
+      border-color: rgba(84, 207, 255, 0.68);
+      box-shadow: 0 0 18px rgba(84, 207, 255, 0.24);
+    }
+
     .chip.sessions-chip {
       cursor: pointer;
       transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
@@ -482,6 +497,7 @@
 
   <script>
     const API_BASE = "https://aasa-discord-bot-v-20-production.up.railway.app";
+    const WEBSITE_MASTER_PASSWORD = "Az1999!!";
     let currentRange = "72h";
     let currentSearch = "";
     let searchTimer = null;
@@ -592,6 +608,7 @@
               <span class="chip">${fmtHours(player.totalHours)}</span>
               <button type="button" class="chip sessions-chip" id="${sessionsToggleId}" data-target="${hiddenWrapId}" aria-expanded="false">${sessionChipText}</button>
               <span class="chip">${player.transferCount || 0} ${Number(player.transferCount || 0) === 1 ? "transfer" : "transfers"}</span>
+              <button type="button" class="chip mod-add" data-player="${String(player.player || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;')}">Add as Mod</button>
               ${player.isOnline && player.currentServer ? `<span class="chip live">On ${player.currentServer}</span>` : `<span class="chip">Last seen ${player.lastSeenIso ? fmtDate(player.lastSeenIso) : "Unknown"}</span>`}
             </div>
             <div class="sessions-header">
@@ -605,6 +622,10 @@
           </div>
         `;
       }).join("");
+
+      el.querySelectorAll('.mod-add').forEach((btn) => {
+        btn.addEventListener('click', () => addPlayerAsMod(btn.dataset.player, btn));
+      });
 
       el.querySelectorAll('.toggle-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
@@ -638,6 +659,59 @@
           syncSessionToggleState(btn.dataset.target, isOpen);
         });
       });
+    }
+
+
+    async function addPlayerAsMod(playerName, button) {
+      const password = prompt(`Enter website master password to add ${playerName} as a Mod:`);
+      if (password === null) return;
+      if (password !== WEBSITE_MASTER_PASSWORD) {
+        alert("Wrong website master password.");
+        return;
+      }
+
+      const originalText = button.textContent;
+      button.textContent = "Saving...";
+      button.disabled = true;
+
+      try {
+        let currentStaff = [];
+        const currentRes = await fetch(`${API_BASE}/api/staff`);
+        if (currentRes.ok) {
+          const currentData = await currentRes.json();
+          currentStaff = currentData.staff || [];
+        }
+
+        const lowerName = String(playerName || "").trim().toLowerCase();
+        const hasPlayer = currentStaff.some((member) => String(member.name || "").trim().toLowerCase() === lowerName);
+        if (!hasPlayer && lowerName) {
+          currentStaff.push({ name: playerName, id: "", role: "Mod" });
+        }
+
+        if (!currentStaff.some((member) => String(member.name || "").trim().toLowerCase() === "pepper")) {
+          currentStaff.unshift({ name: "Pepper", id: "", role: "Owner" });
+        }
+
+        const saveRes = await fetch(`${API_BASE}/api/staff`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-admin-key": WEBSITE_MASTER_PASSWORD
+          },
+          body: JSON.stringify({ staff: currentStaff })
+        });
+
+        const saveData = await saveRes.json().catch(() => ({}));
+        if (!saveRes.ok) throw new Error(saveData.error || "Could not save mod.");
+
+        button.textContent = "Mod saved";
+        setTimeout(() => { button.textContent = originalText; button.disabled = false; }, 1500);
+      } catch (error) {
+        console.error(error);
+        alert(error.message || "Could not save mod.");
+        button.textContent = originalText;
+        button.disabled = false;
+      }
     }
 
     async function loadMovement() {
