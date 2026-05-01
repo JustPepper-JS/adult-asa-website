@@ -372,6 +372,7 @@
 
   <script>
     const API_URL = "https://aasa-discord-bot-v-20-production.up.railway.app/api/status";
+    const LOCAL_STAFF_KEY = "adultasa_staff_whitelist";
 
     const SERVER_ORDER = [
       "Island",
@@ -443,9 +444,33 @@
       });
     }
 
+
+    function loadLocalStaff() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(LOCAL_STAFF_KEY) || "[]");
+        const staff = Array.isArray(saved) ? saved : [];
+        if (!staff.some((member) => String(member.name || "").trim().toLowerCase() === "pepper")) {
+          staff.unshift({ name: "Pepper", id: "", role: "Owner" });
+        }
+        return staff.map((member) => String(member.name || "").trim().toLowerCase() === "pepper" ? { ...member, name: "Pepper", role: "Owner" } : member);
+      } catch (error) {
+        return [{ name: "Pepper", id: "", role: "Owner" }];
+      }
+    }
+
+    function getLocalStaffMatch(playerName) {
+      const lowerName = String(playerName || "").trim().toLowerCase();
+      return loadLocalStaff().find((member) => String(member.name || "").trim().toLowerCase() === lowerName) || null;
+    }
+
     function normalizePlayer(player) {
       const normalized = typeof player === "string" ? { name: player } : { ...player };
       const name = String(normalized.name || "").trim();
+      const localStaff = getLocalStaffMatch(name);
+      if (localStaff) {
+        normalized.isStaff = true;
+        normalized.role = localStaff.role || "Mod";
+      }
       if (name.toLowerCase() === "pepper") {
         normalized.isStaff = true;
         normalized.role = "Owner";

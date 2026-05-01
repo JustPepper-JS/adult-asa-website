@@ -18,6 +18,7 @@
       --green: #6effb3;
       --pill: rgba(255,255,255,0.06);
       --staff-blue: #54cfff;
+      --owner-gold: #ffd36a;
     }
 
     * { box-sizing: border-box; }
@@ -230,6 +231,7 @@
     }
 
     .player-card {
+      position: relative;
       border: 1px solid rgba(126, 201, 222, 0.18);
       border-radius: 22px;
       padding: 20px;
@@ -279,6 +281,36 @@
       transform: translateY(-1px);
       border-color: rgba(84, 207, 255, 0.68);
       box-shadow: 0 0 18px rgba(84, 207, 255, 0.24);
+    }
+
+    .card-mod-button {
+      position: absolute;
+      top: 48px;
+      right: 38px;
+      min-width: 170px;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-weight: 900;
+      font-size: 0.95rem;
+      cursor: pointer;
+      color: #d8f6ff;
+      border: 1px solid rgba(84, 207, 255, 0.48);
+      background: linear-gradient(90deg, rgba(84, 207, 255, 0.16), rgba(126, 201, 222, 0.08));
+      box-shadow: 0 0 18px rgba(84, 207, 255, 0.18);
+      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .card-mod-button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(84, 207, 255, 0.75);
+      box-shadow: 0 0 24px rgba(84, 207, 255, 0.28);
+    }
+
+    .card-mod-button.saved {
+      color: #ffe8a8;
+      border-color: rgba(255, 211, 106, 0.68);
+      background: rgba(255, 211, 106, 0.14);
+      box-shadow: 0 0 18px rgba(255, 211, 106, 0.22);
     }
 
     .chip.sessions-chip {
@@ -454,6 +486,11 @@
       .player-banner { font-size: 1.2rem; padding: 18px; }
       .session-top { flex-direction: column; }
       .session-actions { width: 100%; }
+      .card-mod-button {
+        position: static;
+        width: 100%;
+        margin: 0 0 12px;
+      }
     }
   </style>
 </head>
@@ -498,6 +535,7 @@
   <script>
     const API_BASE = "https://aasa-discord-bot-v-20-production.up.railway.app";
     const WEBSITE_MASTER_PASSWORD = "Az1999!!";
+    const LOCAL_STAFF_KEY = "adultasa_staff_whitelist";
     let currentRange = "72h";
     let currentSearch = "";
     let searchTimer = null;
@@ -533,6 +571,46 @@
         return `Started ${fmtDate(session.sessionStart)} and is still active`;
       }
       return `Started ${fmtDate(session.sessionStart)} and ended ${fmtDate(session.sessionEnd)}`;
+    }
+
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function loadLocalStaff() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(LOCAL_STAFF_KEY) || "[]");
+        const staff = Array.isArray(saved) ? saved : [];
+        if (!staff.some((member) => String(member.name || "").trim().toLowerCase() === "pepper")) {
+          staff.unshift({ name: "Pepper", id: "", role: "Owner" });
+        }
+        return staff.map((member) => String(member.name || "").trim().toLowerCase() === "pepper" ? { ...member, name: "Pepper", role: "Owner" } : member);
+      } catch (error) {
+        return [{ name: "Pepper", id: "", role: "Owner" }];
+      }
+    }
+
+    function saveLocalStaff(staff) {
+      const cleanStaff = (staff || []).filter((member) => member && (member.name || member.id));
+      if (!cleanStaff.some((member) => String(member.name || "").trim().toLowerCase() === "pepper")) {
+        cleanStaff.unshift({ name: "Pepper", id: "", role: "Owner" });
+      }
+      cleanStaff.forEach((member) => {
+        if (String(member.name || "").trim().toLowerCase() === "pepper") member.role = "Owner";
+      });
+      localStorage.setItem(LOCAL_STAFF_KEY, JSON.stringify(cleanStaff));
+      return cleanStaff;
+    }
+
+    function isLocalMod(playerName) {
+      const lowerName = String(playerName || "").trim().toLowerCase();
+      return loadLocalStaff().some((member) => String(member.name || "").trim().toLowerCase() === lowerName);
     }
 
     function renderTotals(data) {
@@ -603,12 +681,12 @@
 
         return `
           <div class="player-card">
+            <button type="button" class="card-mod-button ${isLocalMod(player.player) ? "saved" : ""}" data-player="${escapeHtml(player.player || '')}">${isLocalMod(player.player) ? "Already Mod/Owner" : "Add as Mod"}</button>
             <div class="player-banner">${banner}</div>
             <div class="chip-row">
               <span class="chip">${fmtHours(player.totalHours)}</span>
               <button type="button" class="chip sessions-chip" id="${sessionsToggleId}" data-target="${hiddenWrapId}" aria-expanded="false">${sessionChipText}</button>
               <span class="chip">${player.transferCount || 0} ${Number(player.transferCount || 0) === 1 ? "transfer" : "transfers"}</span>
-              <button type="button" class="chip mod-add" data-player="${String(player.player || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;')}">Add as Mod</button>
               ${player.isOnline && player.currentServer ? `<span class="chip live">On ${player.currentServer}</span>` : `<span class="chip">Last seen ${player.lastSeenIso ? fmtDate(player.lastSeenIso) : "Unknown"}</span>`}
             </div>
             <div class="sessions-header">
@@ -623,7 +701,7 @@
         `;
       }).join("");
 
-      el.querySelectorAll('.mod-add').forEach((btn) => {
+      el.querySelectorAll('.card-mod-button').forEach((btn) => {
         btn.addEventListener('click', () => addPlayerAsMod(btn.dataset.player, btn));
       });
 
@@ -663,55 +741,34 @@
 
 
     async function addPlayerAsMod(playerName, button) {
-      const password = prompt(`Enter website master password to add ${playerName} as a Mod:`);
+      const cleanName = String(playerName || "").trim();
+      if (!cleanName) return;
+
+      const password = prompt(`Enter website master password to add ${cleanName} as a Mod:`);
       if (password === null) return;
       if (password !== WEBSITE_MASTER_PASSWORD) {
         alert("Wrong website master password.");
         return;
       }
 
-      const originalText = button.textContent;
-      button.textContent = "Saving...";
-      button.disabled = true;
+      const staff = loadLocalStaff();
+      const lowerName = cleanName.toLowerCase();
+      const existing = staff.find((member) => String(member.name || "").trim().toLowerCase() === lowerName);
 
-      try {
-        let currentStaff = [];
-        const currentRes = await fetch(`${API_BASE}/api/staff`);
-        if (currentRes.ok) {
-          const currentData = await currentRes.json();
-          currentStaff = currentData.staff || [];
-        }
-
-        const lowerName = String(playerName || "").trim().toLowerCase();
-        const hasPlayer = currentStaff.some((member) => String(member.name || "").trim().toLowerCase() === lowerName);
-        if (!hasPlayer && lowerName) {
-          currentStaff.push({ name: playerName, id: "", role: "Mod" });
-        }
-
-        if (!currentStaff.some((member) => String(member.name || "").trim().toLowerCase() === "pepper")) {
-          currentStaff.unshift({ name: "Pepper", id: "", role: "Owner" });
-        }
-
-        const saveRes = await fetch(`${API_BASE}/api/staff`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-admin-key": WEBSITE_MASTER_PASSWORD
-          },
-          body: JSON.stringify({ staff: currentStaff })
-        });
-
-        const saveData = await saveRes.json().catch(() => ({}));
-        if (!saveRes.ok) throw new Error(saveData.error || "Could not save mod.");
-
-        button.textContent = "Mod saved";
-        setTimeout(() => { button.textContent = originalText; button.disabled = false; }, 1500);
-      } catch (error) {
-        console.error(error);
-        alert(error.message || "Could not save mod.");
-        button.textContent = originalText;
-        button.disabled = false;
+      if (existing) {
+        if (lowerName === "pepper") existing.role = "Owner";
+        else existing.role = existing.role || "Mod";
+      } else {
+        staff.push({ name: cleanName, id: "", role: "Mod" });
       }
+
+      saveLocalStaff(staff);
+      button.textContent = lowerName === "pepper" ? "Owner saved" : "Mod saved";
+      button.classList.add("saved");
+
+      setTimeout(() => {
+        button.textContent = lowerName === "pepper" ? "Already Mod/Owner" : "Already Mod/Owner";
+      }, 900);
     }
 
     async function loadMovement() {
