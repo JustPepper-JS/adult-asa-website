@@ -195,6 +195,21 @@
       font-weight: 700;
     }
 
+    .pill.version {
+      background: linear-gradient(90deg, rgba(126, 201, 222, 0.14), rgba(255, 122, 20, 0.10));
+      color: #dff8ff;
+      border-color: rgba(126, 201, 222, 0.22);
+      font-weight: 800;
+      letter-spacing: 0.2px;
+    }
+
+    .pill.version.unknown {
+      color: rgba(255, 255, 255, 0.72);
+      background: rgba(255, 255, 255, 0.045);
+      border-color: rgba(255, 255, 255, 0.075);
+      font-weight: 700;
+    }
+
     .players-section {
       margin-top: 12px;
       padding-top: 14px;
@@ -496,6 +511,20 @@
         .replace(/'/g, "&#039;");
     }
 
+
+    function cleanVersion(value) {
+      const raw = String(value || "").trim();
+      if (!raw) return "";
+      if (/unknown|waiting|error|offline/i.test(raw)) return "";
+      return raw.replace(/^v/i, "");
+    }
+
+    function buildVersionPill(server) {
+      const version = cleanVersion(server.version || server.serverVersion || server.gameVersion);
+      if (!version) return `<span class="pill version unknown">Version unknown</span>`;
+      return `<span class="pill version">ASA v${escapeHtml(version)}</span>`;
+    }
+
     function buildPlayerTags(playerDetails, playerNames) {
       const players = (Array.isArray(playerDetails) && playerDetails.length
         ? playerDetails
@@ -531,6 +560,7 @@
           <div class="meta-row">
             <span class="pill ${statusClass}">${statusText}</span>
             <span class="pill">${server.players}/${server.maxPlayers} players</span>
+            ${buildVersionPill(server)}
           </div>
           <div class="players-section">
             <div class="players-label">Players</div>
