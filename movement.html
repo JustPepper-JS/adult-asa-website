@@ -664,10 +664,10 @@
 
 const isOwner = existing && String(existing.role || "").toLowerCase() === "owner";
 
-const modButtonText = isLocalMod(player.player)
+const modButtonText = existing
   ? (isOwner ? "Already Mod/Owner" : "Already Mod")
   : "Add as Mod";
-        const modButtonClass = isLocalMod(player.player) ? "saved" : "";
+        const modButtonClass = existing ? "saved" : "";
 
         const renderSessionCard = (session, sessionIndex, hidden = false) => {
           const detailsId = `details-${playerIndex}-${sessionIndex}-${hidden ? "extra" : "main"}`;
