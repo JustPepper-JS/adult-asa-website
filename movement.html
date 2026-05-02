@@ -658,7 +658,15 @@
         const sessionsToggleId = `sessions-toggle-${playerIndex}`;
         const hiddenWrapId = `hidden-sessions-${playerIndex}`;
         const sessionChipText = `${player.sessionCount || 0} ${Number(player.sessionCount || 0) === 1 ? "session" : "sessions"}`;
-        const modButtonText = isLocalMod(player.player) ? "Already Mod/Owner" : "Add as Mod";
+        const existing = loadLocalStaff().find(
+  m => String(m.name || "").trim().toLowerCase() === String(player.player || "").trim().toLowerCase()
+);
+
+const isOwner = existing && String(existing.role || "").toLowerCase() === "owner";
+
+const modButtonText = isLocalMod(player.player)
+  ? (isOwner ? "Already Mod/Owner" : "Already Mod")
+  : "Add as Mod";
         const modButtonClass = isLocalMod(player.player) ? "saved" : "";
 
         const renderSessionCard = (session, sessionIndex, hidden = false) => {
