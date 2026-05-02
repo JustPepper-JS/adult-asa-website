@@ -560,7 +560,8 @@
           <div class="meta-row">
             <span class="pill ${statusClass}">${statusText}</span>
             <span class="pill">${server.players}/${server.maxPlayers} players</span>
-            ${buildVersionPill(server)}
+<span class="pill">IP: ${server.ip || server.host}:${server.gamePort}</span>
+${buildVersionPill(server)}
           </div>
           <div class="players-section">
             <div class="players-label">Players</div>
