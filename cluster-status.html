@@ -160,9 +160,14 @@
 
     .meta-row {
       display: flex;
+      align-items: center;
       flex-wrap: wrap;
       gap: 10px;
       margin-bottom: 14px;
+    }
+
+    .meta-row .ip-pill {
+      margin-left: auto;
     }
 
     .pill {
@@ -198,6 +203,13 @@
       color: #ff8a8a;
       font-weight: 900;
       box-shadow: 0 0 14px rgba(255, 72, 72, 0.24);
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .pill.ip-pill:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 18px rgba(255, 72, 72, 0.32);
     }
 
     .pill.version {
@@ -553,10 +565,46 @@
       const ip = String(server.ip || "").trim();
 
       if (!ip) {
-        return `<span class="pill ip-pill">IP: Not available</span>`;
+        return `<span class="pill ip-pill" aria-disabled="true">IP: Not available</span>`;
       }
 
-      return `<span class="pill ip-pill">IP: ${escapeHtml(ip)}</span>`;
+      return `<button type="button" class="pill ip-pill" data-ip="${escapeHtml(ip)}" aria-label="Show and copy server IP">Show IP</button>`;
+    }
+
+    async function copyIpToClipboard(ip) {
+      if (!ip) return false;
+
+      try {
+        await navigator.clipboard.writeText(ip);
+        return true;
+      } catch (error) {
+        try {
+          const textArea = document.createElement("textarea");
+          textArea.value = ip;
+          textArea.setAttribute("readonly", "");
+          textArea.style.position = "fixed";
+          textArea.style.left = "-9999px";
+          document.body.appendChild(textArea);
+          textArea.select();
+          const copied = document.execCommand("copy");
+          document.body.removeChild(textArea);
+          return copied;
+        } catch (fallbackError) {
+          console.error("Failed to copy IP", fallbackError);
+          return false;
+        }
+      }
+    }
+
+    async function handleIpClick(event) {
+      const button = event.target.closest(".ip-pill[data-ip]");
+      if (!button) return;
+
+      const ip = button.dataset.ip || "";
+      button.textContent = `IP: ${ip}`;
+
+      const copied = await copyIpToClipboard(ip);
+      button.title = copied ? "Copied to clipboard" : "Could not copy automatically";
     }
 
     function buildPlayerTags(playerDetails, playerNames) {
@@ -604,8 +652,8 @@
           <div class="meta-row">
             <span class="pill ${statusClass}">${statusText}</span>
             <span class="pill">${Number(server.players || 0)}/${Number(server.maxPlayers || 0)} players</span>
-            ${buildIpPill(server)}
             ${buildVersionPill(server)}
+            ${buildIpPill(server)}
           </div>
 
           <div class="players-section">
@@ -637,6 +685,8 @@
         console.error(error);
       }
     }
+
+    document.getElementById("servers").addEventListener("click", handleIpClick);
 
     loadStatus();
     setInterval(loadStatus, 15000);
