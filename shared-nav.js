@@ -10,7 +10,8 @@ function renderNav(activePage) {
     { key: "tribe", href: "./tribe.html", label: "Tribe Up" },
     { key: "link", href: "./link-survivor.html", label: "Link Survivor" },
     { key: "boss", href: "./boss-roles.html", label: "Claim Boss Roles" },
-    { key: "stafflist", href: "./staff-whitelist.html", label: "Staff Whitelist" }
+    { key: "profile", href: "./profile.html", label: "Player Profile" },
+    { key: "admin", href: "./admin.html", label: "Admin Panel" }
   ];
 
   document.querySelectorAll('[data-shared-nav]').forEach((container) => {

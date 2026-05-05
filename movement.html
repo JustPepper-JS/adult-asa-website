@@ -532,7 +532,6 @@
 
   <script>
     const API_BASE = "https://aasa-discord-bot-v-20-production.up.railway.app";
-    const WEBSITE_MASTER_PASSWORD = "Az1999!!";
     const LOCAL_STAFF_KEY = "adultasa_staff_whitelist";
     let currentRange = "72h";
     let currentSearch = "";
@@ -664,10 +663,8 @@
 
 const isOwner = existing && String(existing.role || "").toLowerCase() === "owner";
 
-const modButtonText = existing
-  ? (isOwner ? "Already Mod/Owner" : "Already Mod")
-  : "Add as Mod";
-        const modButtonClass = existing ? "saved" : "";
+const modButtonText = "View Profile";
+        const modButtonClass = "";
 
         const renderSessionCard = (session, sessionIndex, hidden = false) => {
           const detailsId = `details-${playerIndex}-${sessionIndex}-${hidden ? "extra" : "main"}`;
@@ -721,7 +718,7 @@ const modButtonText = existing
 
               ${player.isOnline && player.currentServer ? `<span class="chip live">On ${player.currentServer}</span>` : `<span class="chip">Last seen ${player.lastSeenIso ? fmtDate(player.lastSeenIso) : "Unknown"}</span>`}
 
-              <button type="button" class="card-mod-button ${modButtonClass}" data-player="${escapeHtml(player.player || '')}">${modButtonText}</button>
+              <a class="card-mod-button ${modButtonClass}" href="./profile.html?name=${encodeURIComponent(player.player || '')}">${modButtonText}</a>
             </div>
 
             <div class="sessions-header">
@@ -738,9 +735,6 @@ const modButtonText = existing
         `;
       }).join("");
 
-      el.querySelectorAll('.card-mod-button').forEach((btn) => {
-        btn.addEventListener('click', () => addPlayerAsMod(btn.dataset.player, btn));
-      });
 
       el.querySelectorAll('.toggle-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
@@ -774,37 +768,6 @@ const modButtonText = existing
           syncSessionToggleState(btn.dataset.target, isOpen);
         });
       });
-    }
-
-    async function addPlayerAsMod(playerName, button) {
-      const cleanName = String(playerName || "").trim();
-      if (!cleanName) return;
-
-      const password = prompt(`Enter website master password to add ${cleanName} as a Mod:`);
-      if (password === null) return;
-      if (password !== WEBSITE_MASTER_PASSWORD) {
-        alert("Wrong website master password.");
-        return;
-      }
-
-      const staff = loadLocalStaff();
-      const lowerName = cleanName.toLowerCase();
-      const existing = staff.find((member) => String(member.name || "").trim().toLowerCase() === lowerName);
-
-      if (existing) {
-        if (lowerName === "pepper") existing.role = "Owner";
-        else existing.role = existing.role || "Mod";
-      } else {
-        staff.push({ name: cleanName, id: "", role: "Mod" });
-      }
-
-      saveLocalStaff(staff);
-      button.textContent = lowerName === "pepper" ? "Owner saved" : "Mod saved";
-      button.classList.add("saved");
-
-      setTimeout(() => {
-        button.textContent = lowerName === "pepper" ? "Already Mod/Owner" : "Already Mod";
-      }, 900);
     }
 
     async function loadMovement() {

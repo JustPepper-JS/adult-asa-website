@@ -275,6 +275,7 @@
 
     .player-tag {
       display: inline-block;
+      text-decoration: none;
       background: rgba(0, 255, 140, 0.08);
       border: 1px solid rgba(0, 255, 140, 0.35);
       color: var(--green);
@@ -678,7 +679,7 @@
           ? "owner"
           : (player.isStaff ? "staff" : "");
 
-        return `<span class="player-tag ${className}"${role}>${label}</span>`;
+        return `<a class="player-tag ${className}"${role} href="./profile.html?name=${encodeURIComponent(player.name || player)}">${label}</a>`;
       }).join("");
     }
 
