@@ -214,29 +214,46 @@
     }
 
     .pill.ip-pill .copied-bubble {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 5;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: linear-gradient(90deg, rgba(23, 26, 32, 0.96), rgba(17, 19, 24, 0.96));
-      border: 1px solid rgba(84, 207, 255, 0.55);
-      color: #c9f4ff;
-      font-size: 0.78rem;
-      font-weight: 900;
-      white-space: nowrap;
-      box-shadow: 0 0 16px rgba(84, 207, 255, 0.22);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.35s ease;
-    }
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%) translateY(6px);
 
-    .pill.ip-pill.copied .copied-bubble {
-      opacity: 1;
-      transform: translate(-50%, -50%);
-    }
+  z-index: 20;
+
+  padding: 7px 12px;
+  border-radius: 999px;
+
+  background: linear-gradient(
+    90deg,
+    rgba(88, 101, 242, 0.22),
+    rgba(126, 201, 222, 0.14)
+  );
+
+  border: 1px solid rgba(88, 101, 242, 0.38);
+
+  color: #f4fbff;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+
+  box-shadow:
+    0 0 18px rgba(88, 101, 242, 0.24),
+    0 0 10px rgba(126, 201, 222, 0.10);
+
+  opacity: 0;
+  pointer-events: none;
+
+  transition:
+    opacity 0.35s ease,
+    transform 0.35s ease;
+}
+
+.pill.ip-pill.copied .copied-bubble {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
 
     .pill.version {
       background: linear-gradient(90deg, rgba(126, 201, 222, 0.14), rgba(255, 122, 20, 0.10));
@@ -660,8 +677,13 @@
 
       requestAnimationFrame(() => button.classList.add("copied"));
 
-      setTimeout(() => button.classList.remove("copied"), 2350);
-      setTimeout(() => bubble.remove(), 2800);
+      setTimeout(() => {
+  button.classList.remove("copied");
+}, 2000);
+
+setTimeout(() => {
+  bubble.remove();
+}, 2600);
     }
 
     async function handleIpClick(event) {
