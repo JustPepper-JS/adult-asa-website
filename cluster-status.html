@@ -193,11 +193,42 @@
     }
 
     .pill.ip-pill {
-      background: rgba(255, 72, 72, 0.13);
-      border-color: rgba(255, 72, 72, 0.46);
-      color: #ff8a8a;
+      background: rgba(255, 122, 20, 0.12);
+      border-color: rgba(255, 122, 20, 0.38);
+      color: #ffd0aa;
       font-weight: 900;
-      box-shadow: 0 0 14px rgba(255, 72, 72, 0.24);
+      box-shadow: 0 0 14px rgba(255, 122, 20, 0.16);
+      cursor: pointer;
+      user-select: none;
+      margin-left: auto;
+    }
+
+    .pill.ip-pill:hover {
+      border-color: rgba(255, 122, 20, 0.7);
+      box-shadow: 0 0 16px rgba(255, 122, 20, 0.28);
+    }
+
+    .copy-toast {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 9999;
+      padding: 12px 16px;
+      border-radius: 999px;
+      background: rgba(0, 255, 140, 0.13);
+      border: 1px solid rgba(0, 255, 140, 0.45);
+      color: var(--green);
+      font-weight: 900;
+      box-shadow: 0 0 18px rgba(0, 255, 140, 0.20);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      pointer-events: none;
+    }
+
+    .copy-toast.show {
+      opacity: 1;
+      transform: translateY(0);
     }
 
     .pill.version {
@@ -395,6 +426,9 @@
   <script>
     const API_URL = "https://aasa-discord-bot-v-20-production.up.railway.app/api/status";
     const LOCAL_STAFF_KEY = "adultasa_staff_whitelist";
+    const revealedIps = new Map();
+    let copyToastTimeout = null;
+    let lastServers = [];
 
     const SERVER_ORDER = [
       "Island",
@@ -549,14 +583,82 @@
       return `<span class="pill version">ASA v${escapeHtml(version)}</span>`;
     }
 
+    function getServerKey(server) {
+      return cleanServerName(server.name || "");
+    }
+
     function buildIpPill(server) {
       const ip = String(server.ip || "").trim();
+      const key = getServerKey(server);
+      const isRevealed = ip && revealedIps.get(key) > Date.now();
 
       if (!ip) {
-        return `<span class="pill ip-pill">IP: Not available</span>`;
+        return `<span class="pill ip-pill" aria-disabled="true">Show IP</span>`;
       }
 
-      return `<span class="pill ip-pill">IP: ${escapeHtml(ip)}</span>`;
+      return `
+        <button
+          type="button"
+          class="pill ip-pill"
+          data-ip="${escapeHtml(ip)}"
+          data-server-key="${escapeHtml(key)}"
+          title="Click to copy server IP"
+        >${isRevealed ? `IP: ${escapeHtml(ip)}` : "Show IP"}</button>
+      `;
+    }
+
+    async function copyText(text) {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return;
+      }
+
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.style.position = "fixed";
+      textarea.style.left = "-9999px";
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      document.execCommand("copy");
+      textarea.remove();
+    }
+
+    function showCopyToast(message = "IP copied!") {
+      let toast = document.getElementById("copy-toast");
+      if (!toast) {
+        toast = document.createElement("div");
+        toast.id = "copy-toast";
+        toast.className = "copy-toast";
+        document.body.appendChild(toast);
+      }
+
+      toast.textContent = message;
+      toast.classList.add("show");
+
+      clearTimeout(copyToastTimeout);
+      copyToastTimeout = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 1000);
+    }
+
+    async function handleIpClick(event) {
+      const button = event.target.closest(".ip-pill[data-ip]");
+      if (!button) return;
+
+      const ip = button.dataset.ip;
+      const serverKey = button.dataset.serverKey;
+      if (!ip || !serverKey) return;
+
+      try {
+        await copyText(ip);
+        revealedIps.set(serverKey, Date.now() + 7500);
+        showCopyToast("IP copied!");
+        renderServers(lastServers);
+      } catch (error) {
+        showCopyToast("Copy failed");
+        console.error(error);
+      }
     }
 
     function buildPlayerTags(playerDetails, playerNames) {
@@ -627,8 +729,9 @@
 
         const data = await response.json();
 
+        lastServers = data.servers || [];
         renderSubtitle(data.totalOnline, data.updatedAt);
-        renderServers(data.servers || []);
+        renderServers(lastServers);
       } catch (error) {
         document.getElementById("subtitle").innerHTML = `
           <div class="sub-main">Could not load live server data</div>
@@ -638,8 +741,17 @@
       }
     }
 
+    document.getElementById("servers").addEventListener("click", handleIpClick);
+
     loadStatus();
     setInterval(loadStatus, 15000);
+    setInterval(() => {
+      const now = Date.now();
+      for (const [key, expiresAt] of revealedIps.entries()) {
+        if (expiresAt <= now) revealedIps.delete(key);
+      }
+      renderServers(lastServers);
+    }, 1000);
   </script>
 
   <script src="./shared-nav.js"></script>
