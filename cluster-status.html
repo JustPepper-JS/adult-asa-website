@@ -12,7 +12,10 @@
       --panel-bottom: #111318;
       --border: rgba(126, 201, 222, 0.08);
       --teal: #86c8da;
+      --teal-soft: #d0eef5;
       --orange: #ff7a14;
+      --text: #f4fbff;
+      --muted: #9bc1cc;
       --green: #6effb3;
       --staff-blue: #54cfff;
       --owner-gold: #ffd36a;
@@ -160,14 +163,9 @@
 
     .meta-row {
       display: flex;
-      align-items: center;
       flex-wrap: wrap;
       gap: 10px;
       margin-bottom: 14px;
-    }
-
-    .meta-row .ip-pill {
-      margin-left: auto;
     }
 
     .pill {
@@ -195,47 +193,6 @@
       color: #ff7d7d;
       border-color: rgba(255, 92, 92, 0.2);
       font-weight: 700;
-    }
-
-    .pill.ip-pill {
-      background: rgba(255, 72, 72, 0.13);
-      border-color: rgba(255, 72, 72, 0.46);
-      color: #ff8a8a;
-      font-weight: 900;
-      box-shadow: 0 0 14px rgba(255, 72, 72, 0.24);
-      cursor: pointer;
-      font-family: inherit;
-    }
-
-    .pill.ip-pill:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 0 18px rgba(255, 72, 72, 0.32);
-    }
-
-
-    .copy-popup {
-      position: fixed;
-      transform: translate(-50%, -100%);
-      padding: 6px 11px;
-      border-radius: 999px;
-      font-size: 0.8rem;
-      font-weight: 800;
-      background: rgba(17, 19, 24, 0.92);
-      color: #dff8ff;
-      border: 1px solid rgba(126, 201, 222, 0.22);
-      box-shadow:
-        0 0 18px rgba(0, 0, 0, 0.28),
-        0 0 14px rgba(126, 201, 222, 0.12);
-      opacity: 0;
-      transition: opacity 0.28s ease, transform 0.28s ease;
-      pointer-events: none;
-      z-index: 9999;
-      white-space: nowrap;
-    }
-
-    .copy-popup.show {
-      opacity: 1;
-      transform: translate(-50%, -140%);
     }
 
     .pill.version {
@@ -275,7 +232,6 @@
 
     .player-tag {
       display: inline-block;
-      text-decoration: none;
       background: rgba(0, 255, 140, 0.08);
       border: 1px solid rgba(0, 255, 140, 0.35);
       color: var(--green);
@@ -285,6 +241,7 @@
       line-height: 1.2;
       word-break: break-word;
     }
+
 
     .legend {
       display: inline-flex;
@@ -392,7 +349,6 @@
     }
   </style>
 </head>
-
 <body>
   <header>
     <h1>Adult ASA Cluster</h1>
@@ -407,13 +363,11 @@
 
     <div class="section">
       <h2>🌍 Cluster Status</h2>
-
       <div class="legend">
-        <span class="legend-pill"><span class="legend-dot survivor"></span>Players</span>
-        <span class="legend-pill"><span class="legend-dot staff"></span>Mods</span>
-        <span class="legend-pill"><span class="legend-dot owner"></span>Owner</span>
-      </div>
-
+  <span class="legend-pill"><span class="legend-dot survivor"></span>Players</span>
+  <span class="legend-pill"><span class="legend-dot staff"></span>Mods</span>
+  <span class="legend-pill"><span class="legend-dot owner"></span>Owner</span>
+</div>
       <div id="servers" class="servers"></div>
     </div>
 
@@ -474,11 +428,9 @@
       const bName = cleanServerName(b.name);
       const aIndex = SERVER_ORDER.indexOf(aName);
       const bIndex = SERVER_ORDER.indexOf(bName);
-
       if (aIndex === -1 && bIndex === -1) return aName.localeCompare(bName);
       if (aIndex === -1) return 1;
       if (bIndex === -1) return -1;
-
       return aIndex - bIndex;
     }
 
@@ -503,25 +455,19 @@
 
         if (aActive) return -1;
         if (bActive) return 1;
-
         return defaultServerCompare(a, b);
       });
     }
+
 
     function loadLocalStaff() {
       try {
         const saved = JSON.parse(localStorage.getItem(LOCAL_STAFF_KEY) || "[]");
         const staff = Array.isArray(saved) ? saved : [];
-
         if (!staff.some((member) => String(member.name || "").trim().toLowerCase() === "pepper")) {
           staff.unshift({ name: "Pepper", id: "", role: "Owner" });
         }
-
-        return staff.map((member) =>
-          String(member.name || "").trim().toLowerCase() === "pepper"
-            ? { ...member, name: "Pepper", role: "Owner" }
-            : member
-        );
+        return staff.map((member) => String(member.name || "").trim().toLowerCase() === "pepper" ? { ...member, name: "Pepper", role: "Owner" } : member);
       } catch (error) {
         return [{ name: "Pepper", id: "", role: "Owner" }];
       }
@@ -529,33 +475,27 @@
 
     function getLocalStaffMatch(playerName) {
       const lowerName = String(playerName || "").trim().toLowerCase();
-      return loadLocalStaff().find((member) =>
-        String(member.name || "").trim().toLowerCase() === lowerName
-      ) || null;
+      return loadLocalStaff().find((member) => String(member.name || "").trim().toLowerCase() === lowerName) || null;
     }
 
     function normalizePlayer(player) {
       const normalized = typeof player === "string" ? { name: player } : { ...player };
       const name = String(normalized.name || "").trim();
       const localStaff = getLocalStaffMatch(name);
-
       if (localStaff) {
         normalized.isStaff = true;
         normalized.role = localStaff.role || "Mod";
       }
-
       if (name.toLowerCase() === "pepper") {
         normalized.isStaff = true;
         normalized.role = "Owner";
       }
-
       return normalized;
     }
 
     function renderSubtitle(totalOnline, updatedAt) {
       const subtitle = document.getElementById("subtitle");
       const updated = updatedAt ? new Date(updatedAt).toLocaleString() : "Unknown";
-
       subtitle.innerHTML = `
         <div class="sub-main">${totalOnline} Survivors Online</div>
         <div class="sub-time">Last updated: ${updated}</div>
@@ -571,6 +511,7 @@
         .replace(/'/g, "&#039;");
     }
 
+
     function cleanVersion(value) {
       const raw = String(value || "").trim();
       if (!raw) return "";
@@ -579,90 +520,15 @@
     }
 
     function buildVersionPill(server) {
-      const version = cleanVersion(server.version || server.versionLabel || server.serverVersion || server.gameVersion);
-
-      if (!version) {
-        return `<span class="pill version unknown">Version unknown</span>`;
-      }
-
+      const version = cleanVersion(server.version || server.serverVersion || server.gameVersion);
+      if (!version) return `<span class="pill version unknown">Version unknown</span>`;
       return `<span class="pill version">ASA v${escapeHtml(version)}</span>`;
-    }
-
-    function buildIpPill(server) {
-      const ip = String(server.ip || "").trim();
-
-      if (!ip) {
-        return `<span class="pill ip-pill" aria-disabled="true">IP: Not available</span>`;
-      }
-
-      return `<button type="button" class="pill ip-pill" data-ip="${escapeHtml(ip)}" aria-label="Show and copy server IP">Show IP</button>`;
-    }
-
-    async function copyIpToClipboard(ip) {
-      if (!ip) return false;
-
-      try {
-        await navigator.clipboard.writeText(ip);
-        return true;
-      } catch (error) {
-        try {
-          const textArea = document.createElement("textarea");
-          textArea.value = ip;
-          textArea.setAttribute("readonly", "");
-          textArea.style.position = "fixed";
-          textArea.style.left = "-9999px";
-          document.body.appendChild(textArea);
-          textArea.select();
-          const copied = document.execCommand("copy");
-          document.body.removeChild(textArea);
-          return copied;
-        } catch (fallbackError) {
-          console.error("Failed to copy IP", fallbackError);
-          return false;
-        }
-      }
-    }
-
-    function showCopiedPopup(anchor, message = "Copied") {
-      const existingPopup = document.querySelector(".copy-popup");
-      if (existingPopup) existingPopup.remove();
-
-      const popup = document.createElement("div");
-      popup.className = "copy-popup";
-      popup.textContent = message;
-      document.body.appendChild(popup);
-
-      const rect = anchor.getBoundingClientRect();
-      popup.style.left = `${rect.left + rect.width / 2}px`;
-      popup.style.top = `${rect.top - 8}px`;
-
-      requestAnimationFrame(() => {
-        popup.classList.add("show");
-      });
-
-      setTimeout(() => {
-        popup.classList.remove("show");
-        setTimeout(() => popup.remove(), 350);
-      }, 1000);
-    }
-
-    async function handleIpClick(event) {
-      const button = event.target.closest(".ip-pill[data-ip]");
-      if (!button) return;
-
-      const ip = button.dataset.ip || "";
-      button.textContent = `IP: ${ip}`;
-
-      const copied = await copyIpToClipboard(ip);
-      button.title = copied ? "Copied to clipboard" : "Could not copy automatically";
-      showCopiedPopup(button, copied ? "Copied" : "Copy failed");
     }
 
     function buildPlayerTags(playerDetails, playerNames) {
       const players = (Array.isArray(playerDetails) && playerDetails.length
         ? playerDetails
-        : (playerNames || []).map((name) => ({ name, isStaff: false, role: null }))
-      ).map(normalizePlayer);
+        : (playerNames || []).map((name) => ({ name, isStaff: false, role: null }))).map(normalizePlayer);
 
       if (!players.length) {
         return `<span class="player-tag none">No players online</span>`;
@@ -671,42 +537,31 @@
       return players.map((player) => {
         const name = escapeHtml(player.name || player);
         const role = player.role ? ` title="${escapeHtml(player.role)}"` : "";
-        const label = player.isStaff && player.role
-          ? `${name} · ${escapeHtml(player.role)}`
-          : name;
-
-        const className = player.role && String(player.role).toLowerCase() === "owner"
-          ? "owner"
-          : (player.isStaff ? "staff" : "");
-
-        return `<a class="player-tag ${className}"${role} href="./profile.html?name=${encodeURIComponent(player.name || player)}">${label}</a>`;
+        const label = player.isStaff && player.role ? `${name} · ${escapeHtml(player.role)}` : name;
+        const className = player.role && String(player.role).toLowerCase() === "owner" ? "owner" : (player.isStaff ? "staff" : "");
+        return `<span class="player-tag ${className}"${role}>${label}</span>`;
       }).join("");
     }
 
     function renderServers(servers) {
       const serversEl = document.getElementById("servers");
       serversEl.innerHTML = "";
-
       const sortedServers = sortServers(servers);
 
       for (const server of sortedServers) {
         const card = document.createElement("div");
-        card.className = Number(server.players || 0) > 0 ? "card active" : "card";
-
+        card.className = server.players > 0 ? "card active" : "card";
         const displayName = cleanServerName(server.name);
         const statusClass = server.online ? "online" : "offline";
         const statusText = server.online ? "Online" : "Offline";
 
         card.innerHTML = `
-          <div class="server-name">${escapeHtml(displayName)}</div>
-
+          <div class="server-name">${displayName}</div>
           <div class="meta-row">
             <span class="pill ${statusClass}">${statusText}</span>
-            <span class="pill">${Number(server.players || 0)}/${Number(server.maxPlayers || 0)} players</span>
+            <span class="pill">${server.players}/${server.maxPlayers} players</span>
             ${buildVersionPill(server)}
-            ${buildIpPill(server)}
           </div>
-
           <div class="players-section">
             <div class="players-label">Players</div>
             <div class="player-tags">
@@ -723,9 +578,7 @@
       try {
         const response = await fetch(API_URL);
         if (!response.ok) throw new Error("Failed to fetch status");
-
         const data = await response.json();
-
         renderSubtitle(data.totalOnline, data.updatedAt);
         renderServers(data.servers || []);
       } catch (error) {
@@ -737,12 +590,9 @@
       }
     }
 
-    document.getElementById("servers").addEventListener("click", handleIpClick);
-
     loadStatus();
     setInterval(loadStatus, 15000);
   </script>
-
   <script src="./shared-nav.js"></script>
 </body>
 </html>
