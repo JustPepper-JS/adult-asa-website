@@ -16,6 +16,8 @@
       --green: #6effb3;
       --staff-blue: #54cfff;
       --owner-gold: #ffd36a;
+      --vip-blue: #5865f2;
+      --vip-teal: #86c8da;
     }
 
     * { box-sizing: border-box; }
@@ -214,12 +216,12 @@
     .pill.ip-pill .copied-bubble {
       position: absolute;
       left: 50%;
-      bottom: calc(100% + 8px);
-      transform: translateX(-50%) translateY(4px);
+      top: 50%;
+      transform: translate(-50%, -50%);
       z-index: 5;
       padding: 6px 10px;
       border-radius: 999px;
-      background: rgba(84, 207, 255, 0.16);
+      background: linear-gradient(90deg, rgba(23, 26, 32, 0.96), rgba(17, 19, 24, 0.96));
       border: 1px solid rgba(84, 207, 255, 0.55);
       color: #c9f4ff;
       font-size: 0.78rem;
@@ -228,12 +230,12 @@
       box-shadow: 0 0 16px rgba(84, 207, 255, 0.22);
       opacity: 0;
       pointer-events: none;
-      transition: opacity 1.35s ease, transform 1.35s ease;
+      transition: opacity 0.35s ease;
     }
 
     .pill.ip-pill.copied .copied-bubble {
       opacity: 1;
-      transform: translateX(-50%) translateY(0);
+      transform: translate(-50%, -50%);
     }
 
     .pill.version {
@@ -322,6 +324,10 @@
     .legend-dot.survivor { color: var(--green); background: var(--green); }
     .legend-dot.staff { color: var(--staff-blue); background: var(--staff-blue); }
     .legend-dot.owner { color: var(--owner-gold); background: var(--owner-gold); }
+    .legend-dot.vip {
+      color: var(--vip-blue);
+      background: linear-gradient(90deg, var(--vip-blue), var(--vip-teal));
+    }
 
     .player-tag.staff {
       background: rgba(84, 207, 255, 0.12);
@@ -335,6 +341,20 @@
       content: "✦";
       margin-right: 5px;
       color: var(--staff-blue);
+    }
+
+    .player-tag.vip {
+      background: linear-gradient(90deg, rgba(88, 101, 242, 0.22), rgba(126, 201, 222, 0.14));
+      border-color: rgba(88, 101, 242, 0.38);
+      color: #f4fbff;
+      box-shadow: 0 0 16px rgba(88, 101, 242, 0.24);
+      font-weight: 900;
+    }
+
+    .player-tag.vip::before {
+      content: "◆";
+      margin-right: 5px;
+      color: #9aa3ff;
     }
 
     .player-tag.owner {
@@ -409,6 +429,7 @@
         <span class="legend-pill"><span class="legend-dot survivor"></span>Players</span>
         <span class="legend-pill"><span class="legend-dot staff"></span>Mods</span>
         <span class="legend-pill"><span class="legend-dot owner"></span>Owner</span>
+        <span class="legend-pill"><span class="legend-dot vip"></span>VIP</span>
       </div>
 
       <div id="servers" class="servers"></div>
@@ -639,8 +660,8 @@
 
       requestAnimationFrame(() => button.classList.add("copied"));
 
-      setTimeout(() => button.classList.remove("copied"), 650);
-      setTimeout(() => bubble.remove(), 2000);
+      setTimeout(() => button.classList.remove("copied"), 2350);
+      setTimeout(() => bubble.remove(), 2800);
     }
 
     async function handleIpClick(event) {
@@ -680,11 +701,13 @@
           ? `${name} · ${escapeHtml(player.role)}`
           : name;
 
-        const className = player.role && String(player.role).toLowerCase() === "owner"
+        const roleLower = String(player.role || "").toLowerCase();
+        const className = roleLower === "owner"
           ? "owner"
-          : (player.isStaff ? "staff" : "");
+          : (roleLower === "vip" ? "vip" : (player.isStaff ? "staff" : ""));
 
-        return `<span class="player-tag ${className}"${role}>${label}</span>`;
+        const profileHref = `./profile.html?name=${encodeURIComponent(player.name || player)}`;
+        return `<a class="player-tag ${className}" href="${profileHref}"${role}>${label}</a>`;
       }).join("");
     }
 
