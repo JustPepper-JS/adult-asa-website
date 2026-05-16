@@ -166,57 +166,32 @@
       padding: 24px 12px;
     }
   </style>
-<style id="adultasa-secondary-page-no-huge-logo">
-  body:not(.adultasa-command-center) img,
-  body:not(.adultasa-command-center) picture,
-  body:not(.adultasa-command-center) .top-command,
-  body:not(.adultasa-command-center) .brand-mark,
-  body:not(.adultasa-command-center) .brand-orb,
-  body:not(.adultasa-command-center) .brand-orb-img,
-  body:not(.adultasa-command-center) .site-logo,
-  body:not(.adultasa-command-center) .logo,
-  body:not(.adultasa-command-center) .logo-wrap,
-  body:not(.adultasa-command-center) .hero-logo,
-  body:not(.adultasa-command-center) .page-logo,
-  body:not(.adultasa-command-center) .cluster-logo {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-    max-width: 0 !important;
-    max-height: 0 !important;
-    min-width: 0 !important;
-    min-height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-  }
-</style>
-<style id="adultasa-final-command-center-nav-css">
-  [data-shared-nav] > a:not(.top-nav-btn),
-  [data-shared-nav] .shared-nav-brand,
-  [data-shared-nav] .brand-mark,
-  [data-shared-nav] .brand-orb,
-  [data-shared-nav] .brand-orb-img {
-    display: none !important;
-  }
-
-  .top-nav-btn.command-center-link,
-  .top-links a.command-center-link {
-    min-width: 190px !important;
-    background: linear-gradient(90deg, rgba(88,101,242,.32), rgba(126,201,222,.18)) !important;
-    border-color: rgba(126,201,222,.42) !important;
-    color: #f4fbff !important;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.03), 0 12px 24px rgba(0,0,0,.18), 0 0 20px rgba(88,101,242,.20) !important;
-  }
-</style>
+<link rel="stylesheet" href="./adultasa-theme.css?v=revamp-1" />
 </head>
 <body>
-  <header>
-    <h1>Adult ASA Player Profiles</h1>
-    <div class="sub" id="subtitle">Loading player profiles...</div>
-  </header>
+<div class="top-command">
+  <div class="top-command-inner">
+    <a class="brand-mark" href="./index.html" aria-label="Adult ASA Command Center">
+      <div class="brand-orb">
+        <img class="brand-orb-img" data-adultasa-icon alt="Adult ASA Logo">
+      </div>
+      <div class="brand-title">Command Center</div>
+    </a>
+    <nav class="utility-nav" aria-label="Utility navigation">
+      <a href="./link-survivor.html">Link Survivor</a>
+      <a href="./admin.html" class="admin-link">Admin Panel</a>
+      <a href="https://discord.gg/adultasa" target="_blank" class="discord" rel="noopener">Join Our Discord</a>
+    </nav>
+  </div>
+</div>
+<div class="asa-page-shell">
+<section class="asa-page-hero" aria-labelledby="asa-page-title">
+  <div class="asa-hero-content">
+    <div class="asa-eyebrow"><span class="asa-pulse-dot"></span><span>👤 Command System</span></div>
+    <h1 id="asa-page-title">Player Profiles</h1>
+    <p class="asa-page-copy" id="subtitle">Search survivor profiles and review recent activity, map totals, and play history.</p>
+  </div>
+</section>
 
   <div class="wrap">
     <div class="top-nav" data-shared-nav data-page="players"></div>
@@ -342,6 +317,7 @@
       document.getElementById("subtitle").textContent = "Could not load player profiles.";
     });
   </script>
-<script src="./shared-nav.js?v=command-center-final-2"></script>
+<script src="./shared-nav.js?v=revamp-1"></script>
+</div>
 </body>
 </html>
