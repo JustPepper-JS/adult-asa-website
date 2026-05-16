@@ -498,37 +498,33 @@ body:not(.adultasa-command-center) .brand-orb-img {
 .player-tag.vip::before { content: "◆"; margin-right: 5px; color: #9aa3ff; }
 
 
-/* Adult ASA verified role pills */
-.pill.role-pill.mod,
-.pill.role-pill.admin {
-  background: rgba(84, 207, 255, 0.12) !important;
-  border-color: rgba(84, 207, 255, 0.58) !important;
-  color: #d8f6ff !important;
-  font-weight: 950 !important;
-}
 
-.pill.role-pill.owner {
-  background: rgba(255, 211, 106, 0.14) !important;
-  border-color: rgba(255, 211, 106, 0.68) !important;
-  color: #ffe8a8 !important;
-  font-weight: 950 !important;
-}
-
-.pill.role-pill.vip {
-  background: linear-gradient(90deg, rgba(88, 101, 242, 0.24), rgba(126, 201, 222, 0.15)) !important;
-  border-color: rgba(88, 101, 242, 0.44) !important;
-  color: #f4fbff !important;
-  font-weight: 950 !important;
-}
-
+/* FINAL: remove player-name underlines everywhere */
+.players-section a,
+.players-section a:link,
+.players-section a:visited,
+.players-section a:hover,
+.players-section a:active,
+.players-section a *,
+.player-tags a,
+.player-tags a:link,
+.player-tags a:visited,
+.player-tags a:hover,
+.player-tags a:active,
+.player-tags a *,
 .player-tag,
 .player-tag:link,
 .player-tag:visited,
 .player-tag:hover,
-.player-tag:active {
-  text-decoration: none !important;
-}
-
+.player-tag:active,
+.player-tag *,
 .player-tag .role-mini {
   text-decoration: none !important;
+  text-decoration-line: none !important;
+  text-decoration-style: solid !important;
+  text-decoration-color: transparent !important;
+}
+
+.player-tag {
+  border-bottom: 0 !important;
 }
