@@ -27,49 +27,22 @@
     pointer-events: none !important;
   }
 </style>
-</head><body><header><h1>Adult ASA Cluster</h1><div class="sub">Link your in-game survivor with Discord.</div></header><div class="wrap"><div class="top-nav" data-shared-nav data-page="link"></div><section class="panel"><h2>Link Survivor</h2><p>This page is staged for survivor linking. For now, players can copy the command below and run it in Discord. Later, this can become a full website-based Discord login flow.</p><div class="copy-box"><code id="linkCommand">/link your-survivor-name</code><button class="copy-btn" id="copyCommand">Copy command</button></div></section></div><script src="./shared-nav.js"></script><script>document.getElementById("copyCommand")?.addEventListener("click",async()=>{const t=document.getElementById("linkCommand").textContent;await navigator.clipboard.writeText(t);const b=document.getElementById("copyCommand");b.textContent="Copied";setTimeout(()=>b.textContent="Copy command",1200);});</script><script id="adultasa-secondary-page-no-huge-logo-script">
-(function () {
-  function isHome() {
-    var path = String(location.pathname || "").toLowerCase();
-    return path === "/" || path.endsWith("/index.html") || path.endsWith("/");
+<style id="adultasa-final-command-center-nav-css">
+  [data-shared-nav] > a:not(.top-nav-btn),
+  [data-shared-nav] .shared-nav-brand,
+  [data-shared-nav] .brand-mark,
+  [data-shared-nav] .brand-orb,
+  [data-shared-nav] .brand-orb-img {
+    display: none !important;
   }
 
-  if (isHome()) {
-    document.body.classList.add("adultasa-command-center");
-    return;
+  .top-nav-btn.command-center-link,
+  .top-links a.command-center-link {
+    min-width: 190px !important;
+    background: linear-gradient(90deg, rgba(88,101,242,.32), rgba(126,201,222,.18)) !important;
+    border-color: rgba(126,201,222,.42) !important;
+    color: #f4fbff !important;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.03), 0 12px 24px rgba(0,0,0,.18), 0 0 20px rgba(88,101,242,.20) !important;
   }
-
-  document.body.classList.remove("adultasa-command-center");
-
-  function removeHugeBranding() {
-    var selectors = [
-      ".top-command",
-      ".brand-mark",
-      ".brand-orb",
-      ".brand-orb-img",
-      ".site-logo",
-      ".logo",
-      ".logo-wrap",
-      ".hero-logo",
-      ".page-logo",
-      ".cluster-logo",
-      "img",
-      "picture"
-    ];
-
-    document.querySelectorAll(selectors.join(",")).forEach(function (el) {
-      el.remove();
-    });
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", removeHugeBranding);
-  } else {
-    removeHugeBranding();
-  }
-
-  setTimeout(removeHugeBranding, 250);
-  setTimeout(removeHugeBranding, 1000);
-})();
-</script>
-</body></html>
+</style>
+</head><body><header><h1>Adult ASA Cluster</h1><div class="sub">Link your in-game survivor with Discord.</div></header><div class="wrap"><div class="top-nav" data-shared-nav data-page="link"></div><section class="panel"><h2>Link Survivor</h2><p>This page is staged for survivor linking. For now, players can copy the command below and run it in Discord. Later, this can become a full website-based Discord login flow.</p><div class="copy-box"><code id="linkCommand">/link your-survivor-name</code><button class="copy-btn" id="copyCommand">Copy command</button></div></section></div><script src="./shared-nav.js?v=command-center-final-2"></script><script>document.getElementById("copyCommand")?.addEventListener("click",async()=>{const t=document.getElementById("linkCommand").textContent;await navigator.clipboard.writeText(t);const b=document.getElementById("copyCommand");b.textContent="Copied";setTimeout(()=>b.textContent="Copy command",1200);});</script></body></html>

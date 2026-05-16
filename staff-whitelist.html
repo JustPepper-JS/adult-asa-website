@@ -27,7 +27,25 @@
     pointer-events: none !important;
   }
 </style>
-</head><body><header><h1>Adult ASA Cluster</h1><div class="sub">Owner/admin staff whitelist manager.</div></header><div class="wrap"><div class="top-nav" data-shared-nav data-page="stafflist"></div><section class="panel"><h2>Staff Whitelist</h2><p>Add staff by survivor name and/or in-game ID. Pepper is always treated as Owner. Mods show blue on Cluster Status when online. This website-only whitelist uses the master password and saves in this browser.</p><div class="form-grid"><input class="input" id="adminKey" type="password" placeholder="Website master password"/><textarea class="textarea" id="staffText" spellcheck="false" placeholder="One staff member per line:\nPepper | 00029a9b42fc4f2d902869f97320ecb5 | Owner\nRa3nb0w | optional-id | Admin"></textarea><div class="button-row"><button class="btn" id="loadBtn">Load current list</button><button class="btn purple" id="saveBtn">Save staff whitelist</button></div></div><div class="note">Format: <strong>Survivor Name | In-game ID | Role</strong>. Use <strong>Owner</strong> for Pepper and <strong>Mod</strong> for staff. You can leave the ID blank if you only want name matching.</div><div class="status" id="statusText"></div><div class="staff-preview" id="preview"></div></section></div><script src="./shared-nav.js"></script><script>
+<style id="adultasa-final-command-center-nav-css">
+  [data-shared-nav] > a:not(.top-nav-btn),
+  [data-shared-nav] .shared-nav-brand,
+  [data-shared-nav] .brand-mark,
+  [data-shared-nav] .brand-orb,
+  [data-shared-nav] .brand-orb-img {
+    display: none !important;
+  }
+
+  .top-nav-btn.command-center-link,
+  .top-links a.command-center-link {
+    min-width: 190px !important;
+    background: linear-gradient(90deg, rgba(88,101,242,.32), rgba(126,201,222,.18)) !important;
+    border-color: rgba(126,201,222,.42) !important;
+    color: #f4fbff !important;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.03), 0 12px 24px rgba(0,0,0,.18), 0 0 20px rgba(88,101,242,.20) !important;
+  }
+</style>
+</head><body><header><h1>Adult ASA Cluster</h1><div class="sub">Owner/admin staff whitelist manager.</div></header><div class="wrap"><div class="top-nav" data-shared-nav data-page="stafflist"></div><section class="panel"><h2>Staff Whitelist</h2><p>Add staff by survivor name and/or in-game ID. Pepper is always treated as Owner. Mods show blue on Cluster Status when online. This website-only whitelist uses the master password and saves in this browser.</p><div class="form-grid"><input class="input" id="adminKey" type="password" placeholder="Website master password"/><textarea class="textarea" id="staffText" spellcheck="false" placeholder="One staff member per line:\nPepper | 00029a9b42fc4f2d902869f97320ecb5 | Owner\nRa3nb0w | optional-id | Admin"></textarea><div class="button-row"><button class="btn" id="loadBtn">Load current list</button><button class="btn purple" id="saveBtn">Save staff whitelist</button></div></div><div class="note">Format: <strong>Survivor Name | In-game ID | Role</strong>. Use <strong>Owner</strong> for Pepper and <strong>Mod</strong> for staff. You can leave the ID blank if you only want name matching.</div><div class="status" id="statusText"></div><div class="staff-preview" id="preview"></div></section></div><script src="./shared-nav.js?v=command-center-final-2"></script><script>
 const WEBSITE_MASTER_PASSWORD="Az1999!!";
 const LOCAL_STAFF_KEY="adultasa_staff_whitelist";
 const keyInput=document.getElementById("adminKey");const staffText=document.getElementById("staffText");const statusText=document.getElementById("statusText");const preview=document.getElementById("preview");
@@ -41,49 +59,4 @@ function loadStaff(){statusText.textContent="Loading website whitelist...";const
 ");renderPreview(staff);statusText.textContent="Loaded website whitelist."}
 function saveStaff(){const key=keyInput.value.trim();if(key!==WEBSITE_MASTER_PASSWORD){throw new Error("Wrong website master password.");}localStorage.setItem("adultasa_website_master_password",key);const staff=parseLines();localStorage.setItem(LOCAL_STAFF_KEY,JSON.stringify(staff));renderPreview(staff);statusText.textContent="Saved on this website/browser. Cluster Status will update on refresh."}
 document.getElementById("loadBtn").addEventListener("click",()=>{try{loadStaff()}catch(e){statusText.textContent=e.message}});document.getElementById("saveBtn").addEventListener("click",()=>{try{saveStaff()}catch(e){statusText.textContent=e.message}});staffText.addEventListener("input",()=>renderPreview(parseLines()));loadStaff();
-</script><script id="adultasa-secondary-page-no-huge-logo-script">
-(function () {
-  function isHome() {
-    var path = String(location.pathname || "").toLowerCase();
-    return path === "/" || path.endsWith("/index.html") || path.endsWith("/");
-  }
-
-  if (isHome()) {
-    document.body.classList.add("adultasa-command-center");
-    return;
-  }
-
-  document.body.classList.remove("adultasa-command-center");
-
-  function removeHugeBranding() {
-    var selectors = [
-      ".top-command",
-      ".brand-mark",
-      ".brand-orb",
-      ".brand-orb-img",
-      ".site-logo",
-      ".logo",
-      ".logo-wrap",
-      ".hero-logo",
-      ".page-logo",
-      ".cluster-logo",
-      "img",
-      "picture"
-    ];
-
-    document.querySelectorAll(selectors.join(",")).forEach(function (el) {
-      el.remove();
-    });
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", removeHugeBranding);
-  } else {
-    removeHugeBranding();
-  }
-
-  setTimeout(removeHugeBranding, 250);
-  setTimeout(removeHugeBranding, 1000);
-})();
-</script>
-</body></html>
+</script></body></html>
