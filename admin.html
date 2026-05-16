@@ -1,15 +1,54 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><title>Adult ASA Admin Panel</title><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="robots" content="noindex,nofollow"/><style>
-:root{--bg:#0b0d14;--panel-top:#171a20;--panel-bottom:#111318;--border:rgba(126,201,222,.12);--teal:#86c8da;--orange:#ff7a14;--green:#6effb3;--red:#ff7777;--muted:#9bc1cc}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:radial-gradient(circle at top,rgba(31,143,163,.08),transparent 28%),linear-gradient(180deg,#090b11 0%,#0b0d14 100%);color:white}header{padding:30px 20px;text-align:center;background:linear-gradient(90deg,#163e47,#214f59);box-shadow:0 8px 30px rgba(0,0,0,.35)}h1{margin:0;font-size:3rem;color:#dff8ff}.wrap{max-width:1400px;margin:0 auto;padding:26px 18px 50px}.top-nav{display:flex;justify-content:center;flex-wrap:wrap;gap:12px;margin:0 auto 26px}.top-nav-btn{display:inline-flex;align-items:center;justify-content:center;min-width:170px;padding:12px 18px;border-radius:999px;text-decoration:none;font-weight:700;color:#f4fbff;background:linear-gradient(180deg,rgba(23,26,32,.96),rgba(17,19,24,.96));border:1px solid rgba(126,201,222,.14)}.top-nav-btn.primary{background:linear-gradient(90deg,rgba(126,201,222,.24),rgba(255,122,20,.18))}.top-nav-btn.discord{background:linear-gradient(90deg,rgba(88,101,242,.22),rgba(126,201,222,.14))}.panel,.profile{background:linear-gradient(180deg,var(--panel-top),var(--panel-bottom));border:1px solid var(--border);border-radius:22px;padding:22px;box-shadow:0 0 18px rgba(0,0,0,.18);margin-bottom:16px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.input,select{width:100%;padding:13px 15px;border-radius:14px;border:1px solid rgba(126,201,222,.16);background:rgba(255,255,255,.04);color:white;font-size:1rem}.btn{cursor:pointer;border-radius:999px;padding:11px 16px;font-weight:900;border:1px solid rgba(126,201,222,.24);background:linear-gradient(90deg,rgba(126,201,222,.22),rgba(255,122,20,.14));color:white;text-decoration:none}.btn.red{border-color:rgba(255,90,90,.4);background:rgba(255,70,70,.16);color:#ffd6d6}.btn.green{border-color:rgba(0,255,140,.35);background:rgba(0,255,140,.10);color:var(--green)}.hidden{display:none}.pill-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.pill{border-radius:999px;padding:7px 10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);font-weight:800}.pill.live{color:var(--green);background:rgba(0,255,140,.08);border-color:rgba(0,255,140,.35)}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.status{font-weight:900;color:#dff8ff;margin-top:12px}.small{color:var(--muted);line-height:1.5;font-size:.92rem}.profile h3{margin:0;font-size:1.35rem;color:#f7fbff}@media(max-width:700px){h1{font-size:2.35rem}.top-nav-btn{min-width:145px}}
+:root{--bg:#0b0d14;--panel-top:#171a20;--panel-bottom:#111318;--border:rgba(126,201,222,.12);--teal:#86c8da;--orange:#ff7a14;--green:#6effb3;--red:#ff7777;--muted:#9bc1cc}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:radial-gradient(circle at top,rgba(31,143,163,.08),transparent 28%),linear-gradient(180deg,#090b11 0%,#0b0d14 100%);color:white}header{padding:30px 20px;text-align:center;background:linear-gradient(90deg,#163e47,#214f59);box-shadow:0 8px 30px rgba(0,0,0,.35)}h1{margin:0;font-size:3rem;color:#dff8ff}.wrap{max-width:1400px;margin:0 auto;padding:26px 18px 50px}.top-nav{display:flex;justify-content:center;flex-wrap:wrap;gap:12px;margin:0 auto 26px}.top-nav-btn{display:inline-flex;align-items:center;justify-content:center;min-width:170px;padding:12px 18px;border-radius:999px;text-decoration:none;font-weight:700;color:#f4fbff;background:linear-gradient(180deg,rgba(23,26,32,.96),rgba(17,19,24,.96));border:1px solid rgba(126,201,222,.14)}.top-nav-btn.primary{background:linear-gradient(90deg,rgba(126,201,222,.24),rgba(255,122,20,.18))}.top-nav-btn.discord{background:linear-gradient(90deg,rgba(88,101,242,.22),rgba(126,201,222,.14))}.panel,.profile{background:linear-gradient(180deg,var(--panel-top),var(--panel-bottom));border:1px solid var(--border);border-radius:22px;padding:22px;box-shadow:0 0 18px rgba(0,0,0,.18);margin-bottom:16px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.input,select{width:100%;padding:13px 15px;border-radius:14px;border:1px solid rgba(126,201,222,.16);background:rgba(255,255,255,.04);color:white;font-size:1rem}.btn{cursor:pointer;border-radius:999px;padding:11px 16px;font-weight:900;border:1px solid rgba(126,201,222,.24);background:linear-gradient(90deg,rgba(126,201,222,.22),rgba(255,122,20,.14));color:white;text-decoration:none}.btn.red{border-color:rgba(255,90,90,.4);background:rgba(255,70,70,.16);color:#ffd6d6}.btn.green{border-color:rgba(0,255,140,.35);background:rgba(0,255,140,.10);color:var(--green)}.hidden{display:none}.pill-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.pill{border-radius:999px;padding:7px 10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);font-weight:800}.pill.live{color:var(--green);background:rgba(0,255,140,.08);border-color:rgba(0,255,140,.35)}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.status{font-weight:900;color:#dff8ff;margin-top:12px}.small{color:var(--muted);line-height:1.5;font-size:.92rem}.profile h3{margin:0;font-size:1.35rem;color:#f7fbff}
+.icon-manager{display:grid;grid-template-columns:220px minmax(0,1fr);gap:18px;align-items:center}
+.icon-preview-wrap{display:grid;place-items:center;min-height:180px;border-radius:22px;background:radial-gradient(circle at center,rgba(126,201,222,.10),rgba(255,255,255,.025));border:1px solid rgba(126,201,222,.14)}
+.icon-preview{width:150px;height:150px;border-radius:50%;object-fit:cover;border:2px solid rgba(126,201,222,.42);background:#070a10;box-shadow:0 0 24px rgba(126,201,222,.18),0 0 34px rgba(255,122,20,.12)}
+.icon-upload-box{padding:18px;border-radius:20px;background:rgba(255,255,255,.035);border:1px solid rgba(126,201,222,.10)}
+.file-input{width:100%;padding:14px;border-radius:14px;border:1px dashed rgba(126,201,222,.28);background:rgba(255,255,255,.035);color:#dff8ff}
+.icon-help{margin-top:12px;color:var(--muted);line-height:1.5;font-size:.94rem}
+.icon-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+@media(max-width:700px){h1{font-size:2.35rem}.top-nav-btn{min-width:145px}.icon-manager{grid-template-columns:1fr}.icon-preview{width:128px;height:128px}}
 </style></head><body><header><h1>Adult ASA Cluster</h1></header><div class="wrap"><div class="top-nav hidden" id="adminNav" data-shared-nav data-page="admin"></div>
 <section class="panel" id="loginPanel"><h2>Admin Login</h2><div class="grid"><input class="input" id="password" type="password" placeholder="Website admin password"/><button class="btn" id="loginBtn">Unlock Admin Panel</button></div><div class="status" id="loginStatus"></div></section>
 <section class="panel hidden" id="adminPanel"><h2>Profile Tools</h2><div class="grid"><div><input class="input" id="createName" placeholder="Create/find profile name"/><button class="btn" id="createBtn">Create Profile</button></div><div><input class="input" id="primaryName" placeholder="Primary profile/player name"/><input class="input" id="linkNames" placeholder="Other account names, comma separated" style="margin-top:8px"/><button class="btn" id="linkBtn">Link / Merge Accounts</button></div><div><input class="input" id="modName" placeholder="Player name to make mod"/><select id="modRole" style="margin-top:8px"><option value="Mod">Mod</option><option value="Admin">Admin</option><option value="Owner">Owner</option><option value="VIP">VIP</option></select><button class="btn green" id="modBtn">Add Mod</button></div></div><div class="status" id="statusText"></div></section>
+
+<section class="panel hidden" id="iconPanel"><h2>Site Icon</h2><div class="icon-manager"><div class="icon-preview-wrap"><img id="siteIconPreview" class="icon-preview" src="./adult-asa-logo.png" alt="Current Adult ASA icon"/></div><div class="icon-upload-box"><input class="file-input" id="siteIconInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif"/><div class="icon-help">Upload the Adult ASA icon used in the top-left brand area and browser tab. Max image dimensions: <strong>1500 x 1500</strong>. Square PNG/WebP works best.</div><div class="icon-actions"><button class="btn green" id="saveSiteIconBtn">Save Site Icon</button><button class="btn red" id="resetSiteIconBtn">Reset Icon</button></div><div class="status" id="iconStatus">Current icon loaded.</div></div></div></section>
+
 <section class="panel hidden" id="profilesPanel"><h2>All User Profiles</h2><input class="input" id="filter" placeholder="Filter profiles"/><div id="profiles" style="margin-top:16px"></div></section></div>
 <script>
 const API_BASE="https://aasa-discord-bot-v-20-production.up.railway.app";let adminPassword="";let profiles=[];
+
+const SITE_ICON_KEY="adultasa_site_icon";
+let pendingSiteIconData=null;
+function getSiteIcon(){try{return localStorage.getItem(SITE_ICON_KEY)||"./adult-asa-logo.png"}catch(error){return"./adult-asa-logo.png"}}
+function setIconStatus(message){const el=document.getElementById("iconStatus");if(el)el.textContent=message}
+function renderSiteIconManager(){const preview=document.getElementById("siteIconPreview");if(preview)preview.src=getSiteIcon();if(typeof applyAdultAsaSiteIcon==="function")applyAdultAsaSiteIcon()}
+function validateAndReadIcon(file){
+  return new Promise((resolve,reject)=>{
+    if(!file)return reject(new Error("Choose an image first."));
+    if(!/^image\//.test(file.type))return reject(new Error("Please upload an image file."));
+    const reader=new FileReader();
+    reader.onerror=()=>reject(new Error("Could not read that image."));
+    reader.onload=()=>{
+      const img=new Image();
+      img.onerror=()=>reject(new Error("Could not preview that image."));
+      img.onload=()=>{
+        if(img.naturalWidth>1500||img.naturalHeight>1500){
+          reject(new Error(`Image is ${img.naturalWidth}x${img.naturalHeight}. Max allowed is 1500x1500.`));
+          return;
+        }
+        resolve(reader.result);
+      };
+      img.src=reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 function esc(v){return String(v||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;").replace(/'/g,"&#039;")}
 function setStatus(t){document.getElementById("statusText").textContent=t;document.getElementById("loginStatus").textContent=t}
 async function api(path,opts={}){const init={...opts,headers:{"Content-Type":"application/json",...(opts.headers||{})}};const res=await fetch(`${API_BASE}${path}`,init);const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data.error||"Request failed");return data}
-async function loadProfiles(){const data=await api(`/api/player-profiles/admin?password=${encodeURIComponent(adminPassword)}`);profiles=data.profiles||[];document.getElementById("loginPanel").classList.add("hidden");document.getElementById("adminNav").classList.remove("hidden");document.getElementById("adminPanel").classList.remove("hidden");document.getElementById("profilesPanel").classList.remove("hidden");renderProfiles();setStatus(`Loaded ${profiles.length} profiles.`)}
+async function loadProfiles(){const data=await api(`/api/player-profiles/admin?password=${encodeURIComponent(adminPassword)}`);profiles=data.profiles||[];document.getElementById("loginPanel").classList.add("hidden");document.getElementById("adminNav").classList.remove("hidden");document.getElementById("adminPanel").classList.remove("hidden");document.getElementById("iconPanel").classList.remove("hidden");document.getElementById("profilesPanel").classList.remove("hidden");renderProfiles();renderSiteIconManager();setStatus(`Loaded ${profiles.length} profiles.`)}
 function renderProfiles(){const q=document.getElementById("filter").value.trim().toLowerCase();const list=profiles.filter(p=>!q||[p.player,p.role,...(p.aka||[]),...(p.linkedNames||[])].join(" ").toLowerCase().includes(q));document.getElementById("profiles").innerHTML=list.map(p=>`
 <div class="profile">
   <h3>${esc(p.player)}</h3>
@@ -21,4 +60,35 @@ async function addMod(name,role){await api('/api/player-profiles/admin/mod',{met
 function prefillLink(name){document.getElementById("primaryName").value=name;document.getElementById("linkNames").focus()}function quickMod(name){document.getElementById("modName").value=name;addMod(name,document.getElementById("modRole").value.trim()||"Mod").catch(e=>setStatus(e.message))}
 async function deleteProfile(id,name){const pin=prompt(`Enter delete PIN to delete ${name}:`);if(pin===null)return;await api('/api/player-profiles/admin/delete',{method:'POST',body:JSON.stringify({password:adminPassword,pin,id})});await loadProfiles()}
 document.getElementById("loginBtn").onclick=()=>{adminPassword=document.getElementById("password").value;loadProfiles().catch(e=>setStatus(e.message))};document.getElementById("createBtn").onclick=()=>createProfile().catch(e=>setStatus(e.message));document.getElementById("linkBtn").onclick=()=>linkProfiles().catch(e=>setStatus(e.message));document.getElementById("modBtn").onclick=()=>addMod(document.getElementById("modName").value.trim(),document.getElementById("modRole").value.trim()).catch(e=>setStatus(e.message));document.getElementById("filter").oninput=renderProfiles;
+
+document.getElementById("siteIconInput")?.addEventListener("change",async(event)=>{
+  try{
+    pendingSiteIconData=await validateAndReadIcon(event.target.files[0]);
+    document.getElementById("siteIconPreview").src=pendingSiteIconData;
+    setIconStatus("Preview ready. Click Save Site Icon to apply it.");
+  }catch(error){
+    pendingSiteIconData=null;
+    event.target.value="";
+    setIconStatus(error.message);
+  }
+});
+document.getElementById("saveSiteIconBtn")?.addEventListener("click",()=>{
+  if(!pendingSiteIconData){setIconStatus("Choose and preview an icon first.");return;}
+  try{
+    localStorage.setItem(SITE_ICON_KEY,pendingSiteIconData);
+    renderSiteIconManager();
+    setIconStatus("Saved. Refresh the homepage if you already have it open.");
+  }catch(error){
+    setIconStatus("Could not save icon. Try a smaller image file.");
+  }
+});
+document.getElementById("resetSiteIconBtn")?.addEventListener("click",()=>{
+  localStorage.removeItem(SITE_ICON_KEY);
+  pendingSiteIconData=null;
+  const input=document.getElementById("siteIconInput");
+  if(input)input.value="";
+  renderSiteIconManager();
+  setIconStatus("Icon reset to ./adult-asa-logo.png.");
+});
+
 </script><script src="./shared-nav.js"></script></body></html>

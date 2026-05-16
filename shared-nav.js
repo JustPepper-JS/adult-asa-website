@@ -1,3 +1,28 @@
+function getAdultAsaSiteIcon() {
+  try {
+    return localStorage.getItem("adultasa_site_icon") || "./adult-asa-logo.png";
+  } catch (error) {
+    return "./adult-asa-logo.png";
+  }
+}
+
+function applyAdultAsaSiteIcon() {
+  const iconSrc = getAdultAsaSiteIcon();
+
+  document.querySelectorAll("[data-adultasa-icon], .site-brand-logo").forEach((img) => {
+    if (img && img.tagName === "IMG") img.src = iconSrc;
+  });
+
+  let favicon = document.querySelector('link[rel="icon"]');
+  if (!favicon) {
+    favicon = document.createElement("link");
+    favicon.rel = "icon";
+    favicon.type = "image/png";
+    document.head.appendChild(favicon);
+  }
+  favicon.href = iconSrc;
+}
+
 function renderNav(activePage) {
   const navItems = [
     { key: "home", href: "./index.html", label: "Home", group: "core" },
@@ -27,7 +52,7 @@ function renderNav(activePage) {
 
     const brand = page === "home" ? "" : `
       <a href="./index.html" class="site-brand" aria-label="Adult ASA Cluster Home">
-        <img src="./adult-asa-logo.png" class="site-brand-logo" alt="Adult ASA Logo">
+        <img src="${getAdultAsaSiteIcon()}" class="site-brand-logo" data-adultasa-icon alt="Adult ASA Logo">
         <div class="site-brand-text">
           <div class="site-brand-title">Adult ASA Cluster</div>
           <div class="site-brand-sub">PvE Cluster Command Center</div>
@@ -43,10 +68,12 @@ function renderNav(activePage) {
 
     if (compact) container.classList.add("compact-nav");
   });
+
+  applyAdultAsaSiteIcon();
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   const container = document.querySelector('[data-shared-nav]');
-  if (!container) return;
-  renderNav(container.dataset.page || "");
+  if (container) renderNav(container.dataset.page || "");
+  applyAdultAsaSiteIcon();
 });
