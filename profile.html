@@ -28,7 +28,79 @@ function render(p){document.getElementById("subtitle").textContent=`${p.player} 
   <div class="section-title">Linked Accounts</div><div class="grid">${(p.accounts||[]).map(a=>`<div class="card"><strong>${esc(a.name)}</strong><br>${Number(a.totalHours||0).toFixed(2)}h<br><span class="small">${a.currentServer?`Online on ${esc(a.currentServer)}`:`Last seen ${fmtDate(a.lastSeen)}`}</span></div>`).join("")||`<div class="card">No linked accounts.</div>`}</div>
   <div class="section-title">Maps Visited</div><div class="grid">${(p.mapTotals||[]).map(m=>`<div class="card"><strong>${esc(m.map)}</strong><br>${Number(m.hours||0).toFixed(2)}h</div>`).join("")||`<div class="card">No map history yet.</div>`}</div>
   <div class="section-title">Recent Sessions</div><div class="grid">${(p.recentSessions||[]).slice(0,12).map(s=>`<div class="card"><strong>${esc(s.server)}</strong><br>${fmtDate(s.start)}<br><span class="small">${s.isActive?"Still online":`Stayed ${fmtDurationMs(s.durationMs)}`}</span></div>`).join("")||`<div class="card">No recent sessions yet.</div>`}</div>`}
-async function loadProfile(name){const root=document.getElementById("profileRoot");root.innerHTML='<div class="empty">Loading...</div>';const qs=name?`name=${encodeURIComponent(name)}`:"";const res=await fetch(`${API_BASE}/api/player-profile?${qs}`);if(!res.ok){root.innerHTML='<div class="empty">Profile not found. Search a survivor name above.</div>';document.getElementById("subtitle").textContent="Search a player profile";return;}const data=await res.json();render(data.profile)}
-document.getElementById("searchBtn").addEventListener("click",()=>{const name=document.getElementById("profileSearch").value.trim();if(name)location.href=`./profile.html?name=${encodeURIComponent(name)}`});document.getElementById("profileSearch").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("searchBtn").click()});loadProfile(getQueryName()).catch(()=>{document.getElementById("profileRoot").innerHTML='<div class="empty">Could not load profile.</div>'});
+function normalizeProfileFromPlayer(player){
+  return {
+    player: player.player || player.name || "Unknown",
+    aka: player.aka || [],
+    linkedNames: player.linkedNames || [],
+    accounts: player.accounts || [],
+    totalHours: Number(player.totalHours || 0),
+    timesJoined: player.timesJoined || player.joins || 0,
+    currentServer: player.currentServer || "",
+    lastSeenIso: player.lastSeenIso || player.lastSeen || "",
+    lastSeen: player.lastSeen || player.lastSeenIso || "",
+    firstSeen: player.firstSeen || "",
+    isMod: Boolean(player.isMod || player.isStaff),
+    role: player.role || "",
+    mapTotals: player.mapTotals || [],
+    recentSessions: player.recentSessions || []
+  };
+}
+
+function findBestPlayerMatch(players, name){
+  const cleanName = String(name || "").trim().toLowerCase();
+  if (!cleanName) return players[0] || null;
+
+  return players.find((player) => String(player.player || player.name || "").trim().toLowerCase() === cleanName)
+    || players.find((player) => String(player.player || player.name || "").trim().toLowerCase().includes(cleanName))
+    || players[0]
+    || null;
+}
+
+async function loadProfileFromPlayersEndpoint(name){
+  const res = await fetch(`${API_BASE}/api/players?q=${encodeURIComponent(name || "")}`);
+  if (!res.ok) throw new Error("Failed to load players endpoint");
+
+  const data = await res.json();
+  const player = findBestPlayerMatch(data.players || [], name);
+  if (!player) throw new Error("No matching player found");
+
+  render(normalizeProfileFromPlayer(player));
+}
+
+async function loadProfile(name){
+  const root=document.getElementById("profileRoot");
+  root.innerHTML='<div class="empty">Loading...</div>';
+  document.getElementById("profileSearch").value=name||"";
+
+  if(!name){
+    root.innerHTML='<div class="empty">Search a survivor name above.</div>';
+    document.getElementById("subtitle").textContent="Search a player profile";
+    return;
+  }
+
+  try{
+    const res=await fetch(`${API_BASE}/api/player-profile?name=${encodeURIComponent(name)}`);
+    if(res.ok){
+      const data=await res.json();
+      if(data.profile){
+        render(data.profile);
+        return;
+      }
+    }
+  }catch(error){
+    console.warn("Detailed profile endpoint failed, trying player list fallback.", error);
+  }
+
+  try{
+    await loadProfileFromPlayersEndpoint(name);
+  }catch(error){
+    console.error(error);
+    root.innerHTML='<div class="empty">Profile not found. Try checking the spelling or open the player from Cluster Status again.</div>';
+    document.getElementById("subtitle").textContent="Search a player profile";
+  }
+}
+
+document.getElementById("searchBtn").addEventListener("click",()=>{const name=document.getElementById("profileSearch").value.trim();if(name)location.href=`./profile.html?name=${encodeURIComponent(name)}`});document.getElementById("profileSearch").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("searchBtn").click()});loadProfile(getQueryName());
 </script><script src="./shared-nav.js"></script>
 </body></html>
