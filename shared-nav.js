@@ -15,6 +15,11 @@ const ADULT_ASA_NAV_ITEMS = [
   { key: "admin", href: "./admin.html", label: "Admin Panel", group: "utility" }
 ];
 
+function isAdultAsaCommandCenterPage() {
+  const path = String(location.pathname || "").toLowerCase();
+  return path === "/" || path.endsWith("/index.html") || path.endsWith("/");
+}
+
 function getAdultAsaSiteIcon() {
   try {
     const saved = localStorage.getItem("adultasa_site_icon");
@@ -26,6 +31,7 @@ function getAdultAsaSiteIcon() {
 
 function injectAdultAsaNavSafetyStyles() {
   if (document.getElementById("adultasa-nav-safety-styles")) return;
+
   const style = document.createElement("style");
   style.id = "adultasa-nav-safety-styles";
   style.textContent = `
@@ -48,12 +54,38 @@ function injectAdultAsaNavSafetyStyles() {
       min-height: 0 !important;
     }
 
-    body:not(.adultasa-command-center) img[data-adultasa-icon] {
+    body:not(.adultasa-command-center) img,
+    body:not(.adultasa-command-center) picture,
+    body:not(.adultasa-command-center) .top-command,
+    body:not(.adultasa-command-center) .brand-mark,
+    body:not(.adultasa-command-center) .brand-orb,
+    body:not(.adultasa-command-center) .brand-orb-img,
+    body:not(.adultasa-command-center) .site-logo,
+    body:not(.adultasa-command-center) .logo,
+    body:not(.adultasa-command-center) .logo-wrap,
+    body:not(.adultasa-command-center) .hero-logo,
+    body:not(.adultasa-command-center) .page-logo,
+    body:not(.adultasa-command-center) .cluster-logo {
       display: none !important;
       width: 0 !important;
       height: 0 !important;
       max-width: 0 !important;
       max-height: 0 !important;
+      min-width: 0 !important;
+      min-height: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+
+    body:not(.adultasa-command-center) header {
+      margin-top: 0 !important;
+    }
+
+    body:not(.adultasa-command-center) [style*="background-image"] {
+      background-image: none !important;
     }
   `;
   document.head.appendChild(style);
@@ -61,17 +93,24 @@ function injectAdultAsaNavSafetyStyles() {
 
 function applyAdultAsaSiteIcon() {
   const iconSrc = getAdultAsaSiteIcon();
+  const isCommandCenter = isAdultAsaCommandCenterPage();
 
-  document.querySelectorAll("img[data-adultasa-icon]").forEach((img) => {
-    const isCommandCenterLogo = img.closest(".top-command") || img.closest(".brand-orb");
-    if (!isCommandCenterLogo) return;
+  if (isCommandCenter) {
+    document.querySelectorAll("img[data-adultasa-icon]").forEach((img) => {
+      const isCommandCenterLogo = img.closest(".top-command") || img.closest(".brand-orb");
+      if (!isCommandCenterLogo) return;
 
-    img.onerror = () => {
-      img.onerror = null;
-      img.src = DEFAULT_ADULT_ASA_SITE_ICON;
-    };
-    img.src = iconSrc;
-  });
+      img.onerror = () => {
+        img.onerror = null;
+        img.src = DEFAULT_ADULT_ASA_SITE_ICON;
+      };
+      img.src = iconSrc;
+    });
+  } else {
+    document.querySelectorAll("img, picture").forEach((el) => {
+      el.remove();
+    });
+  }
 
   let favicon = document.querySelector('link[rel="icon"]');
   if (!favicon) {
@@ -83,8 +122,40 @@ function applyAdultAsaSiteIcon() {
   favicon.href = iconSrc;
 }
 
+function removeSecondaryPageBranding() {
+  if (isAdultAsaCommandCenterPage()) return;
+
+  const selectors = [
+    ".top-command",
+    ".brand-mark",
+    ".brand-orb",
+    ".brand-orb-img",
+    ".site-logo",
+    ".logo",
+    ".logo-wrap",
+    ".hero-logo",
+    ".page-logo",
+    ".cluster-logo",
+    "img",
+    "picture"
+  ];
+
+  document.querySelectorAll(selectors.join(",")).forEach((el) => {
+    if (el.closest(".panel") && !el.matches("img, picture")) return;
+    el.remove();
+  });
+
+  document.querySelectorAll("[style]").forEach((el) => {
+    const style = String(el.getAttribute("style") || "");
+    if (/background-image|url\(/i.test(style)) {
+      el.style.backgroundImage = "none";
+    }
+  });
+}
+
 function renderNav(activePage = "") {
   injectAdultAsaNavSafetyStyles();
+  removeSecondaryPageBranding();
 
   document.querySelectorAll("[data-shared-nav]").forEach((container) => {
     const page = container.dataset.page || activePage || "";
@@ -101,10 +172,17 @@ function renderNav(activePage = "") {
   });
 
   applyAdultAsaSiteIcon();
+  removeSecondaryPageBranding();
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  document.body.classList.toggle("adultasa-command-center", /(^|\/)index\.html$/.test(location.pathname) || location.pathname === "/" || location.pathname.endsWith("/"));
+  document.body.classList.toggle("adultasa-command-center", isAdultAsaCommandCenterPage());
+  injectAdultAsaNavSafetyStyles();
+  removeSecondaryPageBranding();
+
   const firstNav = document.querySelector("[data-shared-nav]");
   renderNav(firstNav ? firstNav.dataset.page || "" : "");
+
+  setTimeout(removeSecondaryPageBranding, 250);
+  setTimeout(removeSecondaryPageBranding, 1000);
 });

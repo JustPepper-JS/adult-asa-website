@@ -166,6 +166,33 @@
       padding: 24px 12px;
     }
   </style>
+<style id="adultasa-secondary-page-no-huge-logo">
+  body:not(.adultasa-command-center) img,
+  body:not(.adultasa-command-center) picture,
+  body:not(.adultasa-command-center) .top-command,
+  body:not(.adultasa-command-center) .brand-mark,
+  body:not(.adultasa-command-center) .brand-orb,
+  body:not(.adultasa-command-center) .brand-orb-img,
+  body:not(.adultasa-command-center) .site-logo,
+  body:not(.adultasa-command-center) .logo,
+  body:not(.adultasa-command-center) .logo-wrap,
+  body:not(.adultasa-command-center) .hero-logo,
+  body:not(.adultasa-command-center) .page-logo,
+  body:not(.adultasa-command-center) .cluster-logo {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    max-width: 0 !important;
+    max-height: 0 !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+</style>
 </head>
 <body>
   <header>
@@ -301,5 +328,50 @@
       document.getElementById("subtitle").textContent = "Could not load player profiles.";
     });
   </script>
+<script id="adultasa-secondary-page-no-huge-logo-script">
+(function () {
+  function isHome() {
+    var path = String(location.pathname || "").toLowerCase();
+    return path === "/" || path.endsWith("/index.html") || path.endsWith("/");
+  }
+
+  if (isHome()) {
+    document.body.classList.add("adultasa-command-center");
+    return;
+  }
+
+  document.body.classList.remove("adultasa-command-center");
+
+  function removeHugeBranding() {
+    var selectors = [
+      ".top-command",
+      ".brand-mark",
+      ".brand-orb",
+      ".brand-orb-img",
+      ".site-logo",
+      ".logo",
+      ".logo-wrap",
+      ".hero-logo",
+      ".page-logo",
+      ".cluster-logo",
+      "img",
+      "picture"
+    ];
+
+    document.querySelectorAll(selectors.join(",")).forEach(function (el) {
+      el.remove();
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", removeHugeBranding);
+  } else {
+    removeHugeBranding();
+  }
+
+  setTimeout(removeHugeBranding, 250);
+  setTimeout(removeHugeBranding, 1000);
+})();
+</script>
 </body>
 </html>
