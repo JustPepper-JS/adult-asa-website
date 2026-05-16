@@ -520,3 +520,15 @@ body:not(.adultasa-command-center) .brand-orb-img {
   color: #f4fbff !important;
   font-weight: 950 !important;
 }
+
+.player-tag,
+.player-tag:link,
+.player-tag:visited,
+.player-tag:hover,
+.player-tag:active {
+  text-decoration: none !important;
+}
+
+.player-tag .role-mini {
+  text-decoration: none !important;
+}
