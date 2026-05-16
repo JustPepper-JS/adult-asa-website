@@ -55,21 +55,18 @@ function injectAdultAsaNavSafetyStyles() {
     }
 
     .top-nav-btn.command-center-link {
-      background: linear-gradient(90deg, rgba(154, 163, 255, 0.26), rgba(126, 201, 222, 0.16));
-      border-color: rgba(154, 163, 255, 0.36);
-      color: #f4fbff;
+      background: linear-gradient(90deg, rgba(88, 101, 242, 0.24), rgba(126, 201, 222, 0.14));
+      border-color: rgba(88, 101, 242, 0.34);
       box-shadow:
-        inset 0 0 0 1px rgba(255,255,255,0.025),
-        0 12px 24px rgba(0,0,0,0.18),
-        0 0 18px rgba(154, 163, 255, 0.12);
+        0 0 16px rgba(88, 101, 242, 0.18),
+        inset 0 0 0 1px rgba(255,255,255,0.025);
     }
 
     .top-nav-btn.command-center-link:hover {
-      border-color: rgba(154, 163, 255, 0.58);
+      border-color: rgba(88, 101, 242, 0.56);
       box-shadow:
-        inset 0 0 0 1px rgba(255,255,255,0.035),
-        0 16px 30px rgba(0,0,0,0.24),
-        0 0 22px rgba(154, 163, 255, 0.18);
+        0 0 22px rgba(88, 101, 242, 0.24),
+        0 0 14px rgba(126, 201, 222, 0.10);
     }
 
     body:not(.adultasa-command-center) img,
@@ -179,21 +176,24 @@ function renderNav(activePage = "") {
     const page = container.dataset.page || activePage || "";
     const compact = container.dataset.navStyle === "compact";
 
+    const normalizedPage = String(page || "").trim().toLowerCase();
+    const isCommandCenterNav =
+      isAdultAsaCommandCenterPage() ||
+      normalizedPage === "home" ||
+      normalizedPage === "index" ||
+      normalizedPage === "command-center";
+
     const navItems = ADULT_ASA_NAV_ITEMS.filter((item) => {
-      // On the Command Center page, do not show a duplicate Command Center/Home pill
-      // inside Core Systems. Everywhere else, show Command Center as the return-home pill.
-      return !(isAdultAsaCommandCenterPage() && item.key === "home");
+      return !(isCommandCenterNav && item.key === "home");
     });
 
     container.innerHTML = navItems.map((item) => {
-      const activeClass = page === item.key ? "primary" : "";
+      const activeClass = (!isCommandCenterNav && page === item.key) ? "primary" : "";
       const utilityClass = item.group === "utility" ? "utility-link" : "";
       const adminClass = item.key === "admin" ? "admin-link" : "";
       const commandClass = item.key === "home" ? "command-center-link" : "";
       return `<a class="top-nav-btn ${activeClass} ${utilityClass} ${adminClass} ${commandClass}" href="${item.href}">${item.label}</a>`;
-    }).join("
-") + `
-<a class="top-nav-btn discord" href="https://discord.gg/adultasa" target="_blank" rel="noopener">Join Our Discord</a>`;
+    }).join("\n") + `\n<a class="top-nav-btn discord" href="https://discord.gg/adultasa" target="_blank" rel="noopener">Join Our Discord</a>`;
 
     container.classList.toggle("compact-nav", compact);
   });
