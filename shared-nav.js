@@ -1,8 +1,11 @@
+const DEFAULT_ADULT_ASA_SITE_ICON = "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%20512%20512%27%3E%0A%3Cdefs%3E%0A%3CradialGradient%20id%3D%27g%27%20cx%3D%2750%25%27%20cy%3D%2738%25%27%20r%3D%2770%25%27%3E%0A%3Cstop%20offset%3D%270%25%27%20stop-color%3D%27%231f3340%27/%3E%0A%3Cstop%20offset%3D%2755%25%27%20stop-color%3D%27%230b1118%27/%3E%0A%3Cstop%20offset%3D%27100%25%27%20stop-color%3D%27%2305070b%27/%3E%0A%3C/radialGradient%3E%0A%3ClinearGradient%20id%3D%27r%27%20x1%3D%270%25%27%20y1%3D%270%25%27%20x2%3D%27100%25%27%20y2%3D%27100%25%27%3E%0A%3Cstop%20offset%3D%270%25%27%20stop-color%3D%27%2386c8da%27/%3E%0A%3Cstop%20offset%3D%2755%25%27%20stop-color%3D%27%231f8fa3%27/%3E%0A%3Cstop%20offset%3D%27100%25%27%20stop-color%3D%27%23ff7a14%27/%3E%0A%3C/linearGradient%3E%0A%3C/defs%3E%0A%3Ccircle%20cx%3D%27256%27%20cy%3D%27256%27%20r%3D%27244%27%20fill%3D%27url%28%23g%29%27%20stroke%3D%27url%28%23r%29%27%20stroke-width%3D%2718%27/%3E%0A%3Ccircle%20cx%3D%27256%27%20cy%3D%27256%27%20r%3D%27198%27%20fill%3D%27none%27%20stroke%3D%27rgba%28126%2C201%2C222%2C.28%29%27%20stroke-width%3D%276%27/%3E%0A%3Cpath%20d%3D%27M127%20330c42-95%2081-154%20129-154s87%2059%20129%20154h-60l-23-54h-92l-23%2054h-60zm102-100h54l-27-62-27%2062z%27%20fill%3D%27%23dff8ff%27/%3E%0A%3Ctext%20x%3D%27256%27%20y%3D%27124%27%20text-anchor%3D%27middle%27%20font-family%3D%27Arial%2C%20Helvetica%2C%20sans-serif%27%20font-size%3D%2758%27%20font-weight%3D%27900%27%20fill%3D%27%2386c8da%27%3EADULT%20ASA%3C/text%3E%0A%3Ctext%20x%3D%27256%27%20y%3D%27405%27%20text-anchor%3D%27middle%27%20font-family%3D%27Arial%2C%20Helvetica%2C%20sans-serif%27%20font-size%3D%2746%27%20font-weight%3D%27900%27%20fill%3D%27%23ff9a4d%27%3EPVE%20CLUSTER%3C/text%3E%0A%3C/svg%3E";
+
 function getAdultAsaSiteIcon() {
   try {
-    return localStorage.getItem("adultasa_site_icon") || "./adult-asa-logo.png";
+    const saved = localStorage.getItem("adultasa_site_icon");
+    return saved && saved.startsWith("data:image/") ? saved : DEFAULT_ADULT_ASA_SITE_ICON;
   } catch (error) {
-    return "./adult-asa-logo.png";
+    return DEFAULT_ADULT_ASA_SITE_ICON;
   }
 }
 
@@ -10,7 +13,13 @@ function applyAdultAsaSiteIcon() {
   const iconSrc = getAdultAsaSiteIcon();
 
   document.querySelectorAll("[data-adultasa-icon], .site-brand-logo").forEach((img) => {
-    if (img && img.tagName === "IMG") img.src = iconSrc;
+    if (img && img.tagName === "IMG") {
+      img.onerror = () => {
+        img.onerror = null;
+        img.src = DEFAULT_ADULT_ASA_SITE_ICON;
+      };
+      img.src = iconSrc;
+    }
   });
 
   let favicon = document.querySelector('link[rel="icon"]');
