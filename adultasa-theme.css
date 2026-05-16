@@ -572,7 +572,7 @@ body:not(.adultasa-command-center) .brand-orb-img {
 }
 
 
-/* Survivor default role fix */
+/* Force default role to Survivor, not Mod */
 .player-tag.survivor,
 .player-tag:not(.staff):not(.admin):not(.owner):not(.vip):not(.none) {
   background: rgba(0, 255, 140, 0.08) !important;
@@ -580,6 +580,7 @@ body:not(.adultasa-command-center) .brand-orb-img {
   color: var(--asa-green) !important;
   box-shadow: none !important;
   font-weight: 850 !important;
+  text-decoration: none !important;
 }
 
 .player-tag.survivor::before,

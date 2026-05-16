@@ -349,16 +349,16 @@
 
 
     .player-tag.survivor {
-      background: rgba(0, 255, 140, 0.08);
-      border-color: rgba(0, 255, 140, 0.35);
-      color: var(--green);
-      box-shadow: none;
-      font-weight: 800;
+      background: rgba(0, 255, 140, 0.08) !important;
+      border-color: rgba(0, 255, 140, 0.35) !important;
+      color: var(--green) !important;
+      box-shadow: none !important;
+      font-weight: 800 !important;
     }
 
     .player-tag.survivor::before {
-      content: "";
-      margin: 0;
+      content: "" !important;
+      margin: 0 !important;
     }
 
     .player-tag.admin {
@@ -485,7 +485,7 @@
 }
 
   </style>
-<link rel="stylesheet" href="./adultasa-theme.css?v=survivor-default-role-1" />
+<link rel="stylesheet" href="./adultasa-theme.css?v=force-survivor-final" />
 </head>
 
 <body>
@@ -622,7 +622,7 @@
     }
 
     const LOCAL_STAFF_KEY = "adultasa_staff_whitelist";
-    const ROLE_TRUTH_CACHE_KEY = "adultasa_role_truth_cache_v5";
+    const ROLE_TRUTH_CACHE_KEY = "adultasa_role_truth_cache_v6";
     let knownRoleMap = new Map();
 
     function normalizeAdultAsaRole(role) {
@@ -667,56 +667,45 @@
       ].filter(Boolean).map((value) => String(value).trim().toLowerCase());
     }
 
+    function clearBadRoleCaches() {
+      [
+        "adultasa_staff_whitelist",
+        "adultasa_role_cache_v2",
+        "adultasa_role_truth_cache_v3",
+        "adultasa_role_truth_cache_v4",
+        "adultasa_role_truth_cache_v5",
+        "adultasa_admin_profile_roles_cache"
+      ].forEach((key) => localStorage.removeItem(key));
+    }
+
     function addKnownRole(name, role, id = "") {
       const cleanName = String(name || "").trim();
       const cleanRole = normalizeAdultAsaRole(role);
       if (!cleanName || !cleanRole) return;
+
       knownRoleMap.set(cleanName.toLowerCase(), {
         role: cleanRole,
         id: String(id || "").trim().toLowerCase()
       });
     }
 
-    function clearOldBadRoleCaches() {
-      [
-        "adultasa_role_cache_v2",
-        "adultasa_role_truth_cache_v3",
-        "adultasa_role_truth_cache_v4",
-        "adultasa_admin_profile_roles_cache"
-      ].forEach((key) => localStorage.removeItem(key));
-    }
+    function loadAdminRoleTruthOnly() {
+      knownRoleMap = new Map();
 
-    function loadRoleTruthCache() {
+      // Hard reset the old bad localStorage records that were making everybody Mod.
+      clearBadRoleCaches();
+
+      // Only this new v6 cache can assign visible roles.
       try {
         const cache = JSON.parse(localStorage.getItem(ROLE_TRUTH_CACHE_KEY) || "{}");
         if (cache && typeof cache === "object" && !Array.isArray(cache)) {
-          Object.values(cache).forEach((entry) => addKnownRole(entry.name, entry.role, entry.id));
+          Object.values(cache).forEach((entry) => {
+            addKnownRole(entry.name, entry.role, entry.id);
+          });
         }
       } catch (error) {}
-    }
 
-    function loadAdminPanelRolesOnly() {
-      try {
-        const staff = JSON.parse(localStorage.getItem(LOCAL_STAFF_KEY) || "[]");
-        if (!Array.isArray(staff)) return;
-
-        staff.forEach((member) => {
-          const role = normalizeAdultAsaRole(member.role);
-          if (!role) return;
-          addKnownRole(member.name || member.player, role, member.id || member.playerId || "");
-        });
-      } catch (error) {}
-    }
-
-    async function loadVerifiedRoles() {
-      knownRoleMap = new Map();
-      clearOldBadRoleCaches();
-
-      // IMPORTANT:
-      // Cluster Status only trusts roles saved by the Admin Panel / Staff Whitelist.
-      // It does NOT trust live server player data to decide who is Mod/VIP/Admin/Owner.
-      loadAdminPanelRolesOnly();
-      loadRoleTruthCache();
+      // Pepper stays Owner.
       addKnownRole("Pepper", "Owner", "");
     }
 
@@ -735,9 +724,6 @@
         }
       }
 
-      if (names.includes("pepper")) return "Owner";
-
-      // Default state: no admin role found = Survivor.
       return "Survivor";
     }
 
@@ -760,11 +746,12 @@
     function renderPlayerTag(player) {
       const normalized = normalizePlayer(player);
       const name = String(normalized.name || "").trim();
-      const role = normalizeAdultAsaRole(normalized.role || "") || "Survivor";
+      const role = normalized.role || "Survivor";
       const roleClass = roleClassFor(role);
-      const showRole = role && role !== "Survivor";
+      const showRole = role !== "Survivor";
       const title = showRole ? ` title="${escapeHtml(role)}"` : ` title="Survivor"`;
       const roleLabel = showRole ? ` <span class="role-mini">${escapeHtml(role)}</span>` : "";
+
       return `<a class="player-tag ${roleClass}" style="text-decoration:none!important;text-decoration-line:none!important;"${title} href="./profile.html?name=${encodeURIComponent(name)}">${escapeHtml(name)}${roleLabel}</a>`;
     }
 
@@ -941,7 +928,7 @@ setTimeout(() => {
         if (!response.ok) throw new Error("Failed to fetch status");
 
         const data = await response.json();
-        await loadVerifiedRoles();
+        loadAdminRoleTruthOnly();
 
         lastServers = data.servers || [];
         renderSubtitle(data.totalOnline, data.updatedAt);
@@ -974,7 +961,7 @@ setTimeout(() => {
     }, 1000);
   </script>
 
-  <script src="./shared-nav.js?v=survivor-default-role-1"></script>
+  <script src="./shared-nav.js?v=force-survivor-final"></script>
 </div>
 </body>
 </html>
