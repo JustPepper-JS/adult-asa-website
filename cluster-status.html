@@ -346,6 +346,21 @@
       background: linear-gradient(90deg, var(--vip-blue), var(--vip-teal));
     }
 
+
+    .player-tag.admin {
+      background: rgba(84, 207, 255, 0.12);
+      border-color: rgba(84, 207, 255, 0.58);
+      color: #d8f6ff;
+      box-shadow: 0 0 14px rgba(84, 207, 255, 0.26);
+      font-weight: 900;
+    }
+
+    .player-tag.admin::before {
+      content: "✦";
+      margin-right: 5px;
+      color: var(--staff-blue);
+    }
+
     .player-tag.staff {
       background: rgba(84, 207, 255, 0.12);
       border-color: rgba(84, 207, 255, 0.58);
@@ -425,7 +440,7 @@
       }
     }
   </style>
-<link rel="stylesheet" href="./adultasa-theme.css?v=revamp-1" />
+<link rel="stylesheet" href="./adultasa-theme.css?v=roles-sync-1" />
 </head>
 
 <body>
@@ -485,7 +500,6 @@
 
   <script>
     const API_URL = "https://aasa-discord-bot-v-20-production.up.railway.app/api/status";
-    const LOCAL_STAFF_KEY = "adultasa_staff_whitelist";
     const revealedIps = new Map();
     let lastServers = [];
 
@@ -562,48 +576,123 @@
       });
     }
 
+    const LOCAL_STAFF_KEY = "adultasa_staff_whitelist";
+    const ADMIN_PROFILE_CACHE_KEY = "adultasa_admin_profile_roles_cache";
+
+    function normalizeAdultAsaRole(role) {
+      const clean = String(role || "").trim().toLowerCase();
+      if (clean === "owner") return "Owner";
+      if (clean === "admin") return "Admin";
+      if (clean === "vip") return "VIP";
+      if (clean === "staff" || clean === "mod" || clean === "moderator") return "Mod";
+      return clean ? clean.charAt(0).toUpperCase() + clean.slice(1) : "";
+    }
+
+    function roleClassFor(role) {
+      const clean = normalizeAdultAsaRole(role);
+      if (clean === "Owner") return "owner";
+      if (clean === "VIP") return "vip";
+      if (clean === "Admin" || clean === "Mod") return "staff";
+      return "";
+    }
+
+    function ensurePepperOwner(staff) {
+      const cleanStaff = (staff || []).filter((member) => member && (member.name || member.id || member.player));
+      if (!cleanStaff.some((member) => String(member.name || member.player || "").trim().toLowerCase() === "pepper")) {
+        cleanStaff.unshift({ name: "Pepper", id: "", role: "Owner" });
+      }
+      cleanStaff.forEach((member) => {
+        member.name = String(member.name || member.player || "").trim();
+        member.id = String(member.id || member.playerId || member.steamId || "").trim();
+        if (member.name.toLowerCase() === "pepper") {
+          member.name = "Pepper";
+          member.role = "Owner";
+        } else {
+          member.role = normalizeAdultAsaRole(member.role || "Mod") || "Mod";
+        }
+      });
+      return cleanStaff;
+    }
+
     function loadLocalStaff() {
       try {
         const saved = JSON.parse(localStorage.getItem(LOCAL_STAFF_KEY) || "[]");
-        const staff = Array.isArray(saved) ? saved : [];
-
-        if (!staff.some((member) => String(member.name || "").trim().toLowerCase() === "pepper")) {
-          staff.unshift({ name: "Pepper", id: "", role: "Owner" });
-        }
-
-        return staff.map((member) =>
-          String(member.name || "").trim().toLowerCase() === "pepper"
-            ? { ...member, name: "Pepper", role: "Owner" }
-            : member
-        );
+        return ensurePepperOwner(Array.isArray(saved) ? saved : []);
       } catch (error) {
-        return [{ name: "Pepper", id: "", role: "Owner" }];
+        return ensurePepperOwner([]);
       }
     }
 
-    function getLocalStaffMatch(playerName) {
-      const lowerName = String(playerName || "").trim().toLowerCase();
-      return loadLocalStaff().find((member) =>
-        String(member.name || "").trim().toLowerCase() === lowerName
-      ) || null;
+    function namesForPlayer(player) {
+      if (typeof player === "string") return [player];
+      return [
+        player?.name,
+        player?.player,
+        player?.survivor,
+        player?.characterName,
+        player?.displayName,
+        ...(Array.isArray(player?.aka) ? player.aka : []),
+        ...(Array.isArray(player?.linkedNames) ? player.linkedNames : [])
+      ].filter(Boolean).map((value) => String(value).trim()).filter(Boolean);
+    }
+
+    function idsForPlayer(player) {
+      if (!player || typeof player === "string") return [];
+      return [
+        player.id,
+        player.playerId,
+        player.steamId,
+        player.eosId,
+        player.uniqueId,
+        player.accountId
+      ].filter(Boolean).map((value) => String(value).trim().toLowerCase());
+    }
+
+    function getLocalStaffMatch(player) {
+      const names = namesForPlayer(player).map((name) => name.toLowerCase());
+      const ids = idsForPlayer(player);
+      return loadLocalStaff().find((member) => {
+        const memberName = String(member.name || "").trim().toLowerCase();
+        const memberId = String(member.id || "").trim().toLowerCase();
+        return (memberName && names.includes(memberName)) || (memberId && ids.includes(memberId));
+      }) || null;
     }
 
     function normalizePlayer(player) {
       const normalized = typeof player === "string" ? { name: player } : { ...player };
-      const name = String(normalized.name || "").trim();
-      const localStaff = getLocalStaffMatch(name);
+      const names = namesForPlayer(normalized);
+      const name = names[0] || "";
+      normalized.name = name;
 
-      if (localStaff) {
-        normalized.isStaff = true;
-        normalized.role = localStaff.role || "Mod";
+      const localStaff = getLocalStaffMatch(normalized);
+      const apiRole = normalizeAdultAsaRole(normalized.role || normalized.staffRole || normalized.rank);
+      const role = localStaff ? normalizeAdultAsaRole(localStaff.role) : apiRole;
+
+      if (localStaff || ["Owner", "Admin", "VIP", "Mod"].includes(role)) {
+        normalized.isStaff = role !== "VIP";
+        normalized.isMod = role === "Mod" || role === "Admin";
+        normalized.isOwner = role === "Owner";
+        normalized.isVip = role === "VIP";
+        normalized.role = role || "Mod";
       }
 
       if (name.toLowerCase() === "pepper") {
         normalized.isStaff = true;
+        normalized.isOwner = true;
         normalized.role = "Owner";
       }
 
       return normalized;
+    }
+
+
+    function renderPlayerTag(player) {
+      const normalized = normalizePlayer(player);
+      const name = String(normalized.name || "").trim();
+      const role = normalizeAdultAsaRole(normalized.role || "");
+      const roleClass = roleClassFor(role);
+      const title = role ? ` title="${escapeHtml(role)}"` : "";
+      return `<a class="player-tag ${roleClass}"${title} href="./profile.html?name=${encodeURIComponent(name)}">${escapeHtml(name)}</a>`;
     }
 
     function renderSubtitle(totalOnline, updatedAt) {
@@ -825,7 +914,7 @@ setTimeout(() => {
     }, 1000);
   </script>
 
-  <script src="./shared-nav.js?v=revamp-1"></script>
+  <script src="./shared-nav.js?v=roles-sync-1"></script>
 </div>
 </body>
 </html>

@@ -460,3 +460,39 @@ body:not(.adultasa-command-center) .brand-orb-img {
   .utility-nav a { flex: 1 1 140px; }
   .top-nav-btn { width: 100%; min-height: 44px; }
 }
+
+
+
+.player-tag.admin,
+.pill.admin,
+.staff-chip.admin {
+  background: rgba(84, 207, 255, 0.12) !important;
+  border-color: rgba(84, 207, 255, 0.58) !important;
+  color: #d8f6ff !important;
+  box-shadow: 0 0 14px rgba(84, 207, 255, 0.26) !important;
+  font-weight: 900 !important;
+}
+
+.player-tag.owner,
+.pill.owner,
+.staff-chip.owner {
+  background: rgba(255, 211, 106, 0.14) !important;
+  border-color: rgba(255, 211, 106, 0.68) !important;
+  color: #ffe8a8 !important;
+  box-shadow: 0 0 16px rgba(255, 211, 106, 0.28) !important;
+  font-weight: 900 !important;
+}
+
+.player-tag.vip,
+.pill.vip,
+.staff-chip.vip {
+  background: linear-gradient(90deg, rgba(88, 101, 242, 0.24), rgba(126, 201, 222, 0.15)) !important;
+  border-color: rgba(88, 101, 242, 0.42) !important;
+  color: #f4fbff !important;
+  box-shadow: 0 0 16px rgba(88, 101, 242, 0.24) !important;
+  font-weight: 900 !important;
+}
+
+.player-tag.admin::before { content: "✦"; margin-right: 5px; color: #54cfff; }
+.player-tag.owner::before { content: "♛"; margin-right: 5px; color: #ffd36a; }
+.player-tag.vip::before { content: "◆"; margin-right: 5px; color: #9aa3ff; }
