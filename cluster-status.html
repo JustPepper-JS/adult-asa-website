@@ -347,6 +347,20 @@
     }
 
 
+
+    .player-tag.survivor {
+      background: rgba(0, 255, 140, 0.08);
+      border-color: rgba(0, 255, 140, 0.35);
+      color: var(--green);
+      box-shadow: none;
+      font-weight: 800;
+    }
+
+    .player-tag.survivor::before {
+      content: "";
+      margin: 0;
+    }
+
     .player-tag.admin {
       background: rgba(84, 207, 255, 0.12);
       border-color: rgba(84, 207, 255, 0.58);
@@ -471,7 +485,7 @@
 }
 
   </style>
-<link rel="stylesheet" href="./adultasa-theme.css?v=admin-role-truth-5" />
+<link rel="stylesheet" href="./adultasa-theme.css?v=survivor-default-role-1" />
 </head>
 
 <body>
@@ -506,7 +520,7 @@
       <h2>🌍 Cluster Status</h2>
 
       <div class="legend">
-        <span class="legend-pill"><span class="legend-dot survivor"></span>Players</span>
+        <span class="legend-pill"><span class="legend-dot survivor"></span>Survivors</span>
         <span class="legend-pill"><span class="legend-dot staff"></span>Mods</span>
         <span class="legend-pill"><span class="legend-dot owner"></span>Owner</span>
         <span class="legend-pill"><span class="legend-dot vip"></span>VIP</span>
@@ -625,7 +639,7 @@
       if (clean === "Owner") return "owner";
       if (clean === "VIP") return "vip";
       if (clean === "Admin" || clean === "Mod") return "staff";
-      return "";
+      return "survivor";
     }
 
     function namesForPlayer(player) {
@@ -712,15 +726,19 @@
 
       for (const name of names) {
         const hit = knownRoleMap.get(name);
-        if (hit) return hit.role;
+        if (hit && normalizeAdultAsaRole(hit.role)) return normalizeAdultAsaRole(hit.role);
       }
 
       for (const hit of knownRoleMap.values()) {
-        if (hit.id && ids.includes(hit.id)) return hit.role;
+        if (hit.id && ids.includes(hit.id) && normalizeAdultAsaRole(hit.role)) {
+          return normalizeAdultAsaRole(hit.role);
+        }
       }
 
       if (names.includes("pepper")) return "Owner";
-      return "";
+
+      // Default state: no admin role found = Survivor.
+      return "Survivor";
     }
 
     function normalizePlayer(player) {
@@ -728,12 +746,13 @@
       const names = namesForPlayer(normalized);
       normalized.name = names[0] || "";
 
-      const role = getVerifiedRoleForPlayer(normalized);
+      const role = getVerifiedRoleForPlayer(normalized) || "Survivor";
       normalized.role = role;
-      normalized.isStaff = !!role && role !== "VIP";
+      normalized.isStaff = role === "Mod" || role === "Admin" || role === "Owner";
       normalized.isMod = role === "Mod" || role === "Admin";
       normalized.isOwner = role === "Owner";
       normalized.isVip = role === "VIP";
+      normalized.isSurvivor = role === "Survivor";
 
       return normalized;
     }
@@ -741,10 +760,11 @@
     function renderPlayerTag(player) {
       const normalized = normalizePlayer(player);
       const name = String(normalized.name || "").trim();
-      const role = normalizeAdultAsaRole(normalized.role || "");
+      const role = normalizeAdultAsaRole(normalized.role || "") || "Survivor";
       const roleClass = roleClassFor(role);
-      const title = role ? ` title="${escapeHtml(role)}"` : "";
-      const roleLabel = role ? ` <span class="role-mini">${escapeHtml(role)}</span>` : "";
+      const showRole = role && role !== "Survivor";
+      const title = showRole ? ` title="${escapeHtml(role)}"` : ` title="Survivor"`;
+      const roleLabel = showRole ? ` <span class="role-mini">${escapeHtml(role)}</span>` : "";
       return `<a class="player-tag ${roleClass}" style="text-decoration:none!important;text-decoration-line:none!important;"${title} href="./profile.html?name=${encodeURIComponent(name)}">${escapeHtml(name)}${roleLabel}</a>`;
     }
 
@@ -954,7 +974,7 @@ setTimeout(() => {
     }, 1000);
   </script>
 
-  <script src="./shared-nav.js?v=admin-role-truth-5"></script>
+  <script src="./shared-nav.js?v=survivor-default-role-1"></script>
 </div>
 </body>
 </html>
