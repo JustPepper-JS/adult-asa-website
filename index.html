@@ -1,3 +1,1206 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><title>Adult ASA Cluster</title><meta name="viewport" content="width=device-width, initial-scale=1.0"/><style>
-:root{--bg:#0b0d14;--panel-top:#171a20;--panel-bottom:#111318;--border:rgba(126,201,222,.08);--teal:#86c8da;--teal-soft:#d0eef5;--orange:#ff7a14;--text:#f4fbff;--muted:#9bc1cc}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:radial-gradient(circle at top,rgba(31,143,163,.08),transparent 28%),linear-gradient(180deg,#090b11 0%,#0b0d14 100%);color:white}header{padding:30px 20px;text-align:center;background:linear-gradient(90deg,#163e47,#214f59);box-shadow:0 8px 30px rgba(0,0,0,.35)}h1{margin:0;font-size:3rem;color:#dff8ff;letter-spacing:.5px}.sub{opacity:.95;margin-top:12px;line-height:1.5;color:#d0eef5}.wrap{max-width:1300px;margin:0 auto;padding:26px 18px 40px}.top-nav{display:flex;justify-content:center;flex-wrap:wrap;gap:12px;margin:0 auto 26px}.top-nav-btn{display:inline-flex;align-items:center;justify-content:center;min-width:170px;padding:12px 18px;border-radius:999px;text-decoration:none;font-weight:700;font-size:.98rem;color:#f4fbff;background:linear-gradient(180deg,rgba(23,26,32,.96),rgba(17,19,24,.96));border:1px solid rgba(126,201,222,.14);box-shadow:0 0 16px rgba(0,0,0,.18),inset 0 0 0 1px rgba(255,255,255,.02);transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease}.top-nav-btn:hover{transform:translateY(-1px);border-color:rgba(126,201,222,.28);box-shadow:0 0 20px rgba(0,0,0,.22),0 0 18px rgba(126,201,222,.08)}.top-nav-btn.primary{background:linear-gradient(90deg,rgba(126,201,222,.24),rgba(255,122,20,.18));border-color:rgba(126,201,222,.24)}.top-nav-btn.discord{background:linear-gradient(90deg,rgba(88,101,242,.22),rgba(126,201,222,.14));border-color:rgba(88,101,242,.28)}.panel{background:linear-gradient(180deg,var(--panel-top),var(--panel-bottom));border:1px solid var(--border);border-radius:22px;padding:28px;box-shadow:0 0 18px rgba(0,0,0,.18)}.panel h2{margin:0 0 12px;color:var(--teal);font-size:2rem}.panel p{color:#d8f6ff;line-height:1.7;margin:0}.quick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:22px}.quick-card{background:rgba(255,255,255,.035);border:1px solid rgba(126,201,222,.10);border-radius:18px;padding:20px;text-align:left;color:#e8fbff}.quick-card strong{color:#ffb070}.copy-box{margin-top:18px;display:flex;gap:10px;flex-wrap:wrap}.copy-box code{padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);color:#fff}.copy-btn{cursor:pointer;border-radius:999px;padding:10px 16px;font-weight:700;border:1px solid rgba(126,201,222,.18);background:linear-gradient(90deg,rgba(126,201,222,.22),rgba(255,122,20,.14));color:white}@media(max-width:700px){h1{font-size:2.35rem}.top-nav-btn{min-width:145px;padding:11px 15px;font-size:.92rem}}
-</style></head><body><header><h1>Adult ASA Cluster</h1><div class="sub">Welcome home, Survivor.</div></header><div class="wrap"><div class="top-nav" data-shared-nav data-page="home"></div><section class="panel"><h2>Home</h2><p>This page is ready for the photo/gallery section later. For now, use the cards above to jump into cluster status, heat map, activity, movement history, mods, staff, tribe up, or survivor linking.</p><div class="quick-grid"><div class="quick-card"><strong>Coming soon:</strong><br>Server screenshots, event photos, and community highlights.</div><div class="quick-card"><strong>Live tools:</strong><br>Cluster Status, Heat Map, Cluster Activity, and Movement History are still available from the navigation.</div><div class="quick-card"><strong>Community:</strong><br>Staff, Tribe Up, Active Mods, and Link Survivor pages are staged for the next updates.</div></div></section></div><script src="./shared-nav.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Adult ASA Cluster</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #070a10;
+      --bg-2: #0b0d14;
+      --panel-top: rgba(23, 26, 32, 0.92);
+      --panel-bottom: rgba(12, 15, 22, 0.94);
+      --glass: rgba(255, 255, 255, 0.045);
+      --border: rgba(126, 201, 222, 0.12);
+      --border-strong: rgba(126, 201, 222, 0.24);
+      --teal: #86c8da;
+      --teal-soft: #d0eef5;
+      --orange: #ff7a14;
+      --orange-soft: #ffb070;
+      --green: #6effb3;
+      --red: #ff7777;
+      --purple: #9aa3ff;
+      --text: #f4fbff;
+      --muted: #9bc1cc;
+      --shadow: 0 28px 70px rgba(0, 0, 0, 0.38);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 16% 8%, rgba(126, 201, 222, 0.16), transparent 24rem),
+        radial-gradient(circle at 82% 0%, rgba(88, 101, 242, 0.14), transparent 26rem),
+        radial-gradient(circle at 70% 46%, rgba(255, 122, 20, 0.08), transparent 32rem),
+        linear-gradient(180deg, #06080e 0%, #0b0d14 42%, #070a10 100%);
+      overflow-x: hidden;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -2;
+    }
+
+    body::before {
+      opacity: 0.34;
+      background-image:
+        radial-gradient(circle, rgba(255,255,255,0.34) 0 1px, transparent 1px),
+        radial-gradient(circle, rgba(126,201,222,0.22) 0 1px, transparent 1px);
+      background-size: 96px 96px, 141px 141px;
+      background-position: 0 0, 34px 22px;
+    }
+
+    body::after {
+      z-index: -1;
+      background:
+        linear-gradient(180deg, rgba(6, 8, 14, 0.05), rgba(6, 8, 14, 0.84)),
+        repeating-linear-gradient(90deg, rgba(126,201,222,0.03) 0 1px, transparent 1px 90px),
+        repeating-linear-gradient(180deg, rgba(126,201,222,0.025) 0 1px, transparent 1px 90px);
+      mask-image: linear-gradient(180deg, transparent, black 18%, black 86%, transparent);
+    }
+
+    a { color: inherit; }
+
+    .site-shell {
+      width: min(1540px, calc(100% - 36px));
+      margin: 0 auto;
+      padding: 18px 0 56px;
+    }
+
+    .top-command {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      margin: 0 calc((100vw - min(1540px, calc(100vw - 36px))) / -2);
+      padding: 14px max(18px, calc((100vw - 1540px) / 2));
+      background: rgba(5, 8, 13, 0.72);
+      border-bottom: 1px solid rgba(126, 201, 222, 0.10);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.24);
+    }
+
+    .top-command-inner {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: center;
+      width: min(1540px, calc(100% - 36px));
+      margin: 0 auto;
+    }
+
+    .brand-mark {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-orb {
+      width: 43px;
+      height: 43px;
+      border-radius: 15px;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at 35% 30%, rgba(255,255,255,0.28), transparent 30%),
+        linear-gradient(135deg, rgba(126,201,222,0.36), rgba(255,122,20,0.18));
+      border: 1px solid rgba(126,201,222,0.28);
+      box-shadow: 0 0 28px rgba(126,201,222,0.15);
+      font-size: 1.35rem;
+    }
+
+    .brand-title {
+      font-size: 1.08rem;
+      font-weight: 950;
+      letter-spacing: 0.4px;
+      color: #effbff;
+      white-space: nowrap;
+    }
+
+    .brand-subtitle {
+      color: var(--muted);
+      font-size: 0.82rem;
+      margin-top: 3px;
+    }
+
+    .utility-nav {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 9px;
+    }
+
+    .utility-nav a,
+    .top-nav-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 11px 16px;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 900;
+      font-size: 0.88rem;
+      color: #f4fbff;
+      background: linear-gradient(180deg, rgba(23, 26, 32, 0.88), rgba(12, 15, 22, 0.92));
+      border: 1px solid rgba(126, 201, 222, 0.13);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02), 0 12px 24px rgba(0,0,0,0.18);
+      transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
+    }
+
+    .utility-nav a:hover,
+    .top-nav-btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(126, 201, 222, 0.32);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.025), 0 16px 30px rgba(0,0,0,0.22), 0 0 18px rgba(126,201,222,0.08);
+    }
+
+    .utility-nav .discord,
+    .top-nav-btn.discord {
+      background: linear-gradient(90deg, rgba(88,101,242,0.25), rgba(126,201,222,0.13));
+      border-color: rgba(88,101,242,0.34);
+    }
+
+    .utility-nav .admin-link {
+      background: linear-gradient(90deg, rgba(255,122,20,0.16), rgba(126,201,222,0.09));
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      margin-top: 28px;
+      border-radius: 34px;
+      border: 1px solid rgba(126, 201, 222, 0.18);
+      background:
+        linear-gradient(120deg, rgba(11, 15, 24, 0.82), rgba(9, 14, 23, 0.95) 45%, rgba(18, 24, 32, 0.82)),
+        radial-gradient(circle at 78% 28%, rgba(126,201,222,0.24), transparent 24rem),
+        radial-gradient(circle at 25% 80%, rgba(255,122,20,0.13), transparent 25rem);
+      box-shadow: var(--shadow);
+      min-height: 560px;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      background:
+        radial-gradient(circle at 78% 36%, rgba(126,201,222,0.14), transparent 20rem),
+        linear-gradient(90deg, transparent 0 58%, rgba(126,201,222,0.06) 58% 59%, transparent 59% 100%);
+      pointer-events: none;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -9rem;
+      top: 3rem;
+      width: 36rem;
+      height: 36rem;
+      border-radius: 50%;
+      border: 1px solid rgba(126,201,222,0.10);
+      box-shadow:
+        inset 0 0 70px rgba(126,201,222,0.05),
+        0 0 80px rgba(126,201,222,0.08);
+      background:
+        repeating-conic-gradient(from 15deg, rgba(126,201,222,0.09) 0deg 8deg, transparent 8deg 23deg),
+        radial-gradient(circle, transparent 0 48%, rgba(126,201,222,0.04) 49% 50%, transparent 51%);
+      opacity: 0.72;
+      pointer-events: none;
+    }
+
+    .hero-grid {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: minmax(0, 1.06fr) minmax(420px, 0.74fr);
+      gap: 24px;
+      padding: clamp(24px, 4.2vw, 62px);
+      align-items: stretch;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      width: fit-content;
+      padding: 9px 13px;
+      border-radius: 999px;
+      color: var(--teal-soft);
+      background: rgba(126,201,222,0.08);
+      border: 1px solid rgba(126,201,222,0.17);
+      font-weight: 950;
+      letter-spacing: 0.28px;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+    }
+
+    .pulse-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 99px;
+      background: var(--green);
+      box-shadow: 0 0 14px rgba(110,255,179,0.65);
+    }
+
+    .hero h1 {
+      margin: 22px 0 12px;
+      font-size: clamp(3.2rem, 7vw, 7.6rem);
+      line-height: 0.9;
+      letter-spacing: -4px;
+      color: #f4fbff;
+      text-shadow: 0 0 34px rgba(126,201,222,0.14);
+    }
+
+    .hero h1 span {
+      display: block;
+      color: var(--teal-soft);
+    }
+
+    .hero-copy {
+      max-width: 760px;
+      color: #d8f6ff;
+      font-size: clamp(1rem, 1.45vw, 1.22rem);
+      line-height: 1.68;
+      margin: 0 0 26px;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 24px 0 28px;
+    }
+
+    .cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      min-height: 50px;
+      padding: 14px 20px;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 950;
+      letter-spacing: 0.2px;
+      border: 1px solid rgba(126,201,222,0.2);
+      transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+    }
+
+    .cta:hover { transform: translateY(-2px); }
+
+    .cta.primary {
+      background: linear-gradient(90deg, rgba(255,122,20,0.96), rgba(255,154,77,0.92));
+      color: #170d06;
+      box-shadow: 0 16px 36px rgba(255,122,20,0.18);
+      border-color: rgba(255,177,112,0.34);
+    }
+
+    .cta.secondary {
+      background: linear-gradient(90deg, rgba(126,201,222,0.18), rgba(88,101,242,0.16));
+      color: #f4fbff;
+      border-color: rgba(126,201,222,0.24);
+    }
+
+    .trait-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .trait {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.045);
+      border: 1px solid rgba(255,255,255,0.07);
+      color: #e6f8ff;
+      font-size: 0.9rem;
+      font-weight: 850;
+    }
+
+    .command-card {
+      position: relative;
+      overflow: hidden;
+      min-height: 100%;
+      padding: 22px;
+      border-radius: 28px;
+      background:
+        linear-gradient(180deg, rgba(23,26,32,0.78), rgba(11,14,20,0.92)),
+        radial-gradient(circle at top right, rgba(126,201,222,0.16), transparent 18rem);
+      border: 1px solid rgba(126,201,222,0.16);
+      box-shadow: 0 18px 44px rgba(0,0,0,0.28), inset 0 0 0 1px rgba(255,255,255,0.02);
+      backdrop-filter: blur(14px);
+    }
+
+    .command-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .command-title {
+      font-weight: 950;
+      color: #f4fbff;
+      letter-spacing: 0.25px;
+    }
+
+    .live-pill {
+      padding: 8px 10px;
+      border-radius: 999px;
+      color: var(--green);
+      background: rgba(110,255,179,0.08);
+      border: 1px solid rgba(110,255,179,0.22);
+      font-weight: 950;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+    }
+
+    .big-number {
+      font-size: clamp(4.5rem, 8vw, 7rem);
+      line-height: 0.9;
+      font-weight: 950;
+      letter-spacing: -5px;
+      color: #f4fbff;
+    }
+
+    .big-label {
+      margin-top: 12px;
+      color: var(--teal-soft);
+      font-weight: 950;
+      font-size: 1.05rem;
+    }
+
+    .mini-metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .mini-metric {
+      padding: 15px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+    }
+
+    .mini-metric strong {
+      display: block;
+      font-size: 1.5rem;
+      line-height: 1;
+      color: var(--orange-soft);
+    }
+
+    .mini-metric span {
+      display: block;
+      margin-top: 7px;
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 0.82rem;
+    }
+
+    .map-pulse-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .map-pulse {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 13px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.035);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .map-pulse-name {
+      font-weight: 900;
+      color: #f2fbff;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .map-pulse-count {
+      color: var(--green);
+      font-weight: 950;
+    }
+
+    .nav-stage {
+      margin: 22px 0 0;
+    }
+
+    .nav-label {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 950;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .top-nav {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 0 auto;
+    }
+
+    .top-nav-btn.primary {
+      background: linear-gradient(90deg, rgba(126,201,222,0.26), rgba(255,122,20,0.18));
+      border-color: rgba(126,201,222,0.27);
+      box-shadow: 0 0 18px rgba(126,201,222,0.08);
+    }
+
+    .top-nav-btn.utility-link {
+      opacity: 0.88;
+    }
+
+    .top-nav-btn.admin-link {
+      background: linear-gradient(90deg, rgba(255,122,20,0.14), rgba(126,201,222,0.10));
+    }
+
+    .section {
+      margin-top: 28px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 16px;
+    }
+
+    .section h2 {
+      margin: 0;
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      color: #f4fbff;
+      letter-spacing: -0.5px;
+    }
+
+    .section-head p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      line-height: 1.5;
+      max-width: 680px;
+    }
+
+    .section-link {
+      color: var(--orange-soft);
+      text-decoration: none;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .stat-card,
+    .feature-card,
+    .feed-card,
+    .server-card,
+    .community-card {
+      border-radius: 24px;
+      background: linear-gradient(180deg, var(--panel-top), var(--panel-bottom));
+      border: 1px solid var(--border);
+      box-shadow: 0 16px 38px rgba(0,0,0,0.24), inset 0 0 0 1px rgba(255,255,255,0.018);
+      overflow: hidden;
+    }
+
+    .stat-card {
+      min-height: 150px;
+      padding: 20px;
+      position: relative;
+    }
+
+    .stat-card::after {
+      content: "";
+      position: absolute;
+      inset: auto 18px 0 18px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(126,201,222,0.38), rgba(255,122,20,0.22), transparent);
+    }
+
+    .stat-icon {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 15px;
+      background: rgba(126,201,222,0.09);
+      border: 1px solid rgba(126,201,222,0.13);
+      margin-bottom: 18px;
+    }
+
+    .stat-value {
+      font-size: 2.25rem;
+      font-weight: 950;
+      letter-spacing: -1.5px;
+      color: #f4fbff;
+    }
+
+    .stat-label {
+      margin-top: 6px;
+      color: var(--muted);
+      font-weight: 850;
+      font-size: 0.9rem;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .feature-card {
+      position: relative;
+      min-height: 250px;
+      padding: 24px;
+      text-decoration: none;
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(126,201,222,0.30);
+      box-shadow: 0 24px 54px rgba(0,0,0,0.34), 0 0 28px rgba(126,201,222,0.08);
+    }
+
+    .feature-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 82% 18%, rgba(126,201,222,0.15), transparent 12rem),
+        radial-gradient(circle at 18% 90%, rgba(255,122,20,0.09), transparent 12rem);
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    .feature-card > * { position: relative; z-index: 1; }
+
+    .feature-icon {
+      width: 56px;
+      height: 56px;
+      display: grid;
+      place-items: center;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.055);
+      border: 1px solid rgba(255,255,255,0.08);
+      font-size: 1.5rem;
+      margin-bottom: 28px;
+    }
+
+    .feature-card h3 {
+      margin: 0 0 10px;
+      font-size: 1.45rem;
+      color: #f4fbff;
+    }
+
+    .feature-card p {
+      margin: 0;
+      color: #bfdce5;
+      line-height: 1.55;
+    }
+
+    .feature-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 24px;
+    }
+
+    .meta-chip {
+      display: inline-flex;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.055);
+      border: 1px solid rgba(255,255,255,0.07);
+      color: #e8fbff;
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.7fr);
+      gap: 16px;
+    }
+
+    .server-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .server-card {
+      padding: 16px;
+      min-height: 134px;
+      border-radius: 20px;
+    }
+
+    .server-topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .server-name {
+      font-weight: 950;
+      color: #f4fbff;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .server-status {
+      width: 11px;
+      height: 11px;
+      border-radius: 999px;
+      background: var(--green);
+      box-shadow: 0 0 12px rgba(110,255,179,0.5);
+      flex: 0 0 auto;
+    }
+
+    .server-status.offline {
+      background: var(--red);
+      box-shadow: 0 0 12px rgba(255,119,119,0.42);
+    }
+
+    .server-players {
+      color: var(--orange-soft);
+      font-size: 1.55rem;
+      font-weight: 950;
+    }
+
+    .server-sub {
+      margin-top: 8px;
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 0.84rem;
+    }
+
+    .feed-card {
+      padding: 20px;
+      min-height: 100%;
+    }
+
+    .feed-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .feed-item {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .feed-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 99px;
+      margin-top: 5px;
+      background: var(--green);
+      box-shadow: 0 0 12px rgba(110,255,179,0.45);
+    }
+
+    .feed-item strong {
+      color: #f4fbff;
+    }
+
+    .feed-item span {
+      display: block;
+      color: var(--muted);
+      margin-top: 4px;
+      font-size: 0.86rem;
+      line-height: 1.4;
+    }
+
+    .community-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .community-card {
+      padding: 20px;
+      text-decoration: none;
+      min-height: 170px;
+      transition: transform .16s ease, border-color .16s ease;
+    }
+
+    .community-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(126,201,222,0.28);
+    }
+
+    .community-card strong {
+      display: block;
+      margin-bottom: 9px;
+      color: #f4fbff;
+      font-size: 1.08rem;
+    }
+
+    .community-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 0.94rem;
+    }
+
+    .loading-text,
+    .muted { color: var(--muted); }
+
+    .empty-state {
+      color: var(--muted);
+      text-align: center;
+      padding: 20px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.035);
+      border: 1px solid rgba(255,255,255,0.055);
+    }
+
+    footer {
+      color: rgba(208,238,245,0.62);
+      text-align: center;
+      padding: 36px 16px 4px;
+      font-size: 0.86rem;
+    }
+
+    @media (max-width: 1180px) {
+      .hero-grid,
+      .content-grid { grid-template-columns: 1fr; }
+      .hero { min-height: 0; }
+      .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .server-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .community-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 760px) {
+      .site-shell { width: min(100% - 24px, 1540px); }
+      .top-command-inner { grid-template-columns: 1fr; }
+      .utility-nav { justify-content: flex-start; }
+      .hero h1 { letter-spacing: -2.4px; }
+      .hero-grid { padding: 22px; }
+      .stats-grid,
+      .feature-grid,
+      .server-grid,
+      .community-grid,
+      .mini-metrics { grid-template-columns: 1fr; }
+      .section-head { display: block; }
+      .section-link { display: inline-flex; margin-top: 12px; }
+      .top-nav-btn { width: 100%; min-height: 44px; }
+      .utility-nav a { flex: 1 1 140px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-command">
+    <div class="top-command-inner">
+      <a class="brand-mark" href="./index.html" aria-label="Adult ASA Cluster Home">
+        <div class="brand-orb">🦖</div>
+        <div>
+          <div class="brand-title">Adult ASA Cluster</div>
+          <div class="brand-subtitle">PvE Cluster Command Center</div>
+        </div>
+      </a>
+
+      <nav class="utility-nav" aria-label="Utility navigation">
+        <a href="./link-survivor.html">Link Survivor</a>
+        <a href="./admin.html" class="admin-link">Admin Panel</a>
+        <a href="https://discord.gg/adultasa" target="_blank" class="discord" rel="noopener">Join Our Discord</a>
+      </nav>
+    </div>
+  </div>
+
+  <main class="site-shell">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-grid">
+        <div>
+          <div class="eyebrow"><span class="pulse-dot"></span><span id="heroLiveState">Loading live cluster data</span></div>
+          <h1 id="hero-title">Adult ASA <span>Cluster</span></h1>
+          <p class="hero-copy">
+            Welcome home, Survivor. Track the cluster, check live server health, follow player movement, watch activity trends, and jump into the community from one clean command center.
+          </p>
+
+          <div class="hero-actions">
+            <a class="cta primary" href="./cluster-status.html">View Cluster Status →</a>
+            <a class="cta secondary" href="./movement.html">Open Movement History</a>
+          </div>
+
+          <div class="trait-row" aria-label="Cluster highlights">
+            <span class="trait">🔥 No wipes ever</span>
+            <span class="trait">🌍 Cross-map transfers</span>
+            <span class="trait">🛡️ Admin support</span>
+            <span class="trait">📡 Live tracking</span>
+          </div>
+
+          <div class="nav-stage">
+            <div class="nav-label">Core Systems</div>
+            <div class="top-nav" data-shared-nav data-page="home"></div>
+          </div>
+        </div>
+
+        <aside class="command-card" aria-label="Live cluster snapshot">
+          <div class="command-head">
+            <div class="command-title">Live Cluster Snapshot</div>
+            <div class="live-pill" id="snapshotState">Syncing</div>
+          </div>
+
+          <div class="big-number" id="heroOnline">--</div>
+          <div class="big-label">Survivors Online</div>
+
+          <div class="mini-metrics">
+            <div class="mini-metric"><strong id="heroServers">--</strong><span>Servers tracked</span></div>
+            <div class="mini-metric"><strong id="heroActive">--</strong><span>Active maps</span></div>
+            <div class="mini-metric"><strong id="heroVersion">--</strong><span>Latest ASA version</span></div>
+            <div class="mini-metric"><strong id="heroUpdated">--</strong><span>Last update</span></div>
+          </div>
+
+          <div class="map-pulse-list" id="heroMapPulse">
+            <div class="empty-state">Waiting for server data...</div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="stats-title">
+      <div class="section-head">
+        <div>
+          <h2 id="stats-title">Cluster Intel</h2>
+          <p>Fast live readout for the whole cluster without needing to leave the homepage.</p>
+        </div>
+        <a class="section-link" href="./cluster-status.html">Full status page →</a>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">🟢</div><div class="stat-value" id="statOnline">--</div><div class="stat-label">Survivors Online</div></div>
+        <div class="stat-card"><div class="stat-icon">🌍</div><div class="stat-value" id="statServers">--</div><div class="stat-label">Servers Online</div></div>
+        <div class="stat-card"><div class="stat-icon">🔥</div><div class="stat-value" id="statHotMap">--</div><div class="stat-label">Most Active Map</div></div>
+        <div class="stat-card"><div class="stat-icon">⚡</div><div class="stat-value" id="statVersion">--</div><div class="stat-label">Newest Version</div></div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="features-title">
+      <div class="section-head">
+        <div>
+          <h2 id="features-title">Main Tools</h2>
+          <p>The pages players will use most, now treated like the core systems they are.</p>
+        </div>
+      </div>
+
+      <div class="feature-grid">
+        <a class="feature-card" href="./cluster-status.html">
+          <div class="feature-icon">📡</div>
+          <h3>Cluster Status</h3>
+          <p>See every map, online survivors, player names, server versions, and quick IP access.</p>
+          <div class="feature-meta"><span class="meta-chip">Live population</span><span class="meta-chip">Server health</span></div>
+        </a>
+
+        <a class="feature-card" href="./movement.html">
+          <div class="feature-icon">🧭</div>
+          <h3>Movement History</h3>
+          <p>Track sessions, transfers, last seen data, total hours, and jump into survivor profiles.</p>
+          <div class="feature-meta"><span class="meta-chip">Profiles</span><span class="meta-chip">Transfers</span></div>
+        </a>
+
+        <a class="feature-card" href="./heatmap.html">
+          <div class="feature-icon">🔥</div>
+          <h3>Heat Map</h3>
+          <p>Find peak activity windows and see which maps are carrying the cluster during each hour.</p>
+          <div class="feature-meta"><span class="meta-chip">1-hour blocks</span><span class="meta-chip">Map presence</span></div>
+        </a>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="live-title">
+      <div class="section-head">
+        <div>
+          <h2 id="live-title">Live Operations</h2>
+          <p>A quick command-center view of active servers and current survivor presence.</p>
+        </div>
+        <a class="section-link" href="./tracker.html">Open activity tracker →</a>
+      </div>
+
+      <div class="content-grid">
+        <div class="server-grid" id="serverGrid">
+          <div class="empty-state">Loading server cards...</div>
+        </div>
+
+        <aside class="feed-card">
+          <div class="command-head">
+            <div class="command-title">Current Activity Feed</div>
+            <div class="live-pill">Live</div>
+          </div>
+          <div class="feed-list" id="activityFeed">
+            <div class="empty-state">Waiting for player activity...</div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="community-title">
+      <div class="section-head">
+        <div>
+          <h2 id="community-title">Community Hub</h2>
+          <p>Everything outside the live data: staff, mods, tribes, boss roles, and survivor linking.</p>
+        </div>
+      </div>
+
+      <div class="community-grid">
+        <a class="community-card" href="./staff.html"><strong>Meet the Staff</strong><p>Put faces and roles to the people helping run the cluster.</p></a>
+        <a class="community-card" href="./mods.html"><strong>Active Mods</strong><p>Keep the mod list clean, visible, and easy for players to check.</p></a>
+        <a class="community-card" href="./tribe.html"><strong>Tribe Up</strong><p>Give solo players a place to find people and build groups.</p></a>
+        <a class="community-card" href="./boss-roles.html"><strong>Claim Boss Roles</strong><p>Central hub for boss clears, milestones, and role claiming.</p></a>
+      </div>
+    </section>
+
+    <footer>© 2026 Adult ASA Cluster · Built for Survivors</footer>
+  </main>
+
+  <script src="./shared-nav.js"></script>
+  <script>
+    const API_BASE = "https://aasa-discord-bot-v-20-production.up.railway.app";
+    const STATUS_URL = `${API_BASE}/api/status`;
+    const TRACKER_URL = `${API_BASE}/api/tracker?range=24h`;
+
+    const SERVER_ORDER = [
+      "Island",
+      "Scorched Earth",
+      "Aberration",
+      "Extinction",
+      "Lost Colony",
+      "Ragnarok",
+      "Valguero",
+      "The Center",
+      "Astraeos"
+    ];
+
+    function cleanServerName(name) {
+      let cleaned = String(name || "").replace(/^Adult ASA\s*-\s*/i, "").trim();
+      const map = {
+        SE: "Scorched Earth",
+        ScorchedEarth_WP: "Scorched Earth",
+        "The Island": "Island",
+        TheIsland_WP: "Island",
+        TheCenter_WP: "The Center",
+        Center: "The Center",
+        LC: "Lost Colony",
+        LostColony: "Lost Colony",
+        LostColony_WP: "Lost Colony",
+        Rag: "Ragnarok",
+        Ragnarok_WP: "Ragnarok",
+        Val: "Valguero",
+        Valguero_WP: "Valguero",
+        Aberration_WP: "Aberration",
+        Abberation: "Aberration",
+        Extinction_WP: "Extinction",
+        Astraeos_WP: "Astraeos"
+      };
+      return map[cleaned] || cleaned;
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function cleanVersion(value) {
+      const raw = String(value || "").trim();
+      if (!raw || /unknown|waiting|error|offline/i.test(raw)) return "";
+      return raw.replace(/^v/i, "");
+    }
+
+    function formatUpdate(value) {
+      if (!value) return "--";
+      return new Date(value).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    }
+
+    function compareServers(a, b) {
+      const aName = cleanServerName(a.name);
+      const bName = cleanServerName(b.name);
+      const aPlayers = Number(a.players || 0);
+      const bPlayers = Number(b.players || 0);
+      if (bPlayers !== aPlayers) return bPlayers - aPlayers;
+      const aIndex = SERVER_ORDER.indexOf(aName);
+      const bIndex = SERVER_ORDER.indexOf(bName);
+      if (aIndex === -1 && bIndex === -1) return aName.localeCompare(bName);
+      if (aIndex === -1) return 1;
+      if (bIndex === -1) return -1;
+      return aIndex - bIndex;
+    }
+
+    function playerList(server) {
+      if (Array.isArray(server.playerDetails) && server.playerDetails.length) {
+        return server.playerDetails.map((p) => typeof p === "string" ? p : p.name).filter(Boolean);
+      }
+      return Array.isArray(server.playerNames) ? server.playerNames : [];
+    }
+
+    function newestVersion(servers) {
+      const versions = servers.map((server) => cleanVersion(server.version || server.versionLabel || server.serverVersion || server.gameVersion)).filter(Boolean);
+      if (!versions.length) return "--";
+      return versions.sort((a, b) => b.localeCompare(a, undefined, { numeric: true }))[0];
+    }
+
+    function updateText(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    }
+
+    function renderMapPulse(activeServers) {
+      const el = document.getElementById("heroMapPulse");
+      if (!activeServers.length) {
+        el.innerHTML = `<div class="empty-state">No survivors online right now.</div>`;
+        return;
+      }
+
+      el.innerHTML = activeServers.slice(0, 5).map((server) => `
+        <div class="map-pulse">
+          <div class="map-pulse-name">${escapeHtml(cleanServerName(server.name))}</div>
+          <div class="map-pulse-count">${Number(server.players || 0)}/${Number(server.maxPlayers || 0)}</div>
+        </div>
+      `).join("");
+    }
+
+    function renderServerGrid(servers) {
+      const el = document.getElementById("serverGrid");
+      const sorted = [...servers].sort(compareServers);
+
+      if (!sorted.length) {
+        el.innerHTML = `<div class="empty-state">No server data available.</div>`;
+        return;
+      }
+
+      el.innerHTML = sorted.map((server) => {
+        const isOnline = typeof server.online === "boolean" ? server.online : true;
+        const players = Number(server.players || 0);
+        const maxPlayers = Number(server.maxPlayers || 0);
+        const names = playerList(server).slice(0, 3);
+        const nameText = names.length ? names.join(", ") : (players > 0 ? "Survivors online" : "Empty");
+
+        return `
+          <div class="server-card">
+            <div class="server-topline">
+              <div class="server-name">${escapeHtml(cleanServerName(server.name))}</div>
+              <span class="server-status ${isOnline ? "" : "offline"}"></span>
+            </div>
+            <div class="server-players">${players}/${maxPlayers}</div>
+            <div class="server-sub">${escapeHtml(nameText)}${playerList(server).length > 3 ? " + more" : ""}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderActivityFeed(servers) {
+      const el = document.getElementById("activityFeed");
+      const items = [];
+
+      [...servers].sort(compareServers).forEach((server) => {
+        const names = playerList(server);
+        names.slice(0, 3).forEach((name) => {
+          items.push({ name, server: cleanServerName(server.name), count: Number(server.players || 0) });
+        });
+      });
+
+      if (!items.length) {
+        el.innerHTML = `<div class="empty-state">No current survivor activity to show.</div>`;
+        return;
+      }
+
+      el.innerHTML = items.slice(0, 8).map((item) => `
+        <div class="feed-item">
+          <span class="feed-dot"></span>
+          <div>
+            <strong>${escapeHtml(item.name)}</strong>
+            <span>Currently active on ${escapeHtml(item.server)}</span>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderStatus(data) {
+      const servers = data.servers || [];
+      const activeServers = servers.filter((server) => Number(server.players || 0) > 0).sort(compareServers);
+      const onlineServers = servers.filter((server) => typeof server.online === "boolean" ? server.online : true);
+      const totalOnline = Number(data.totalOnline || activeServers.reduce((sum, server) => sum + Number(server.players || 0), 0));
+      const version = newestVersion(servers);
+      const hottest = activeServers[0] ? cleanServerName(activeServers[0].name) : "None";
+
+      updateText("heroLiveState", `${totalOnline} Survivors Online`);
+      updateText("snapshotState", "Live");
+      updateText("heroOnline", totalOnline);
+      updateText("heroServers", servers.length || "--");
+      updateText("heroActive", activeServers.length);
+      updateText("heroVersion", version === "--" ? "--" : `v${version}`);
+      updateText("heroUpdated", formatUpdate(data.updatedAt));
+
+      updateText("statOnline", totalOnline);
+      updateText("statServers", `${onlineServers.length}/${servers.length || 0}`);
+      updateText("statHotMap", hottest);
+      updateText("statVersion", version === "--" ? "--" : `v${version}`);
+
+      renderMapPulse(activeServers);
+      renderServerGrid(servers);
+      renderActivityFeed(servers);
+    }
+
+    async function loadStatus() {
+      try {
+        const response = await fetch(STATUS_URL);
+        if (!response.ok) throw new Error("Failed to fetch cluster status");
+        const data = await response.json();
+        renderStatus(data);
+      } catch (error) {
+        console.error(error);
+        updateText("heroLiveState", "Live data unavailable");
+        updateText("snapshotState", "Offline");
+        document.getElementById("heroMapPulse").innerHTML = `<div class="empty-state">Could not load cluster data. Try again shortly.</div>`;
+        document.getElementById("serverGrid").innerHTML = `<div class="empty-state">Could not load server cards.</div>`;
+        document.getElementById("activityFeed").innerHTML = `<div class="empty-state">Could not load activity feed.</div>`;
+      }
+    }
+
+    loadStatus();
+    setInterval(loadStatus, 15000);
+  </script>
+</body>
+</html>
