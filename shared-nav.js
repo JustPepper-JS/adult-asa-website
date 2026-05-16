@@ -179,13 +179,21 @@ function renderNav(activePage = "") {
     const page = container.dataset.page || activePage || "";
     const compact = container.dataset.navStyle === "compact";
 
-    container.innerHTML = ADULT_ASA_NAV_ITEMS.map((item) => {
+    const navItems = ADULT_ASA_NAV_ITEMS.filter((item) => {
+      // On the Command Center page, do not show a duplicate Command Center/Home pill
+      // inside Core Systems. Everywhere else, show Command Center as the return-home pill.
+      return !(isAdultAsaCommandCenterPage() && item.key === "home");
+    });
+
+    container.innerHTML = navItems.map((item) => {
       const activeClass = page === item.key ? "primary" : "";
       const utilityClass = item.group === "utility" ? "utility-link" : "";
       const adminClass = item.key === "admin" ? "admin-link" : "";
       const commandClass = item.key === "home" ? "command-center-link" : "";
       return `<a class="top-nav-btn ${activeClass} ${utilityClass} ${adminClass} ${commandClass}" href="${item.href}">${item.label}</a>`;
-    }).join("\n") + `\n<a class="top-nav-btn discord" href="https://discord.gg/adultasa" target="_blank" rel="noopener">Join Our Discord</a>`;
+    }).join("
+") + `
+<a class="top-nav-btn discord" href="https://discord.gg/adultasa" target="_blank" rel="noopener">Join Our Discord</a>`;
 
     container.classList.toggle("compact-nav", compact);
   });
