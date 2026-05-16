@@ -12,7 +12,10 @@ function getAdultAsaSiteIcon() {
 function applyAdultAsaSiteIcon() {
   const iconSrc = getAdultAsaSiteIcon();
 
-  document.querySelectorAll("[data-adultasa-icon], .site-brand-logo").forEach((img) => {
+  // Only update images that are already intentionally placed in the HTML.
+  // This keeps the logo on the home page top-left brand and prevents a huge
+  // logo from being injected into every other page.
+  document.querySelectorAll("[data-adultasa-icon]").forEach((img) => {
     if (img && img.tagName === "IMG") {
       img.onerror = () => {
         img.onerror = null;
@@ -29,6 +32,7 @@ function applyAdultAsaSiteIcon() {
     favicon.type = "image/png";
     document.head.appendChild(favicon);
   }
+
   favicon.href = iconSrc;
 }
 
@@ -48,7 +52,7 @@ function renderNav(activePage) {
     { key: "admin", href: "./admin.html", label: "Admin Panel", group: "utility" }
   ];
 
-  document.querySelectorAll('[data-shared-nav]').forEach((container) => {
+  document.querySelectorAll("[data-shared-nav]").forEach((container) => {
     const page = container.dataset.page || activePage || "";
     const compact = container.dataset.navStyle === "compact";
 
@@ -56,21 +60,15 @@ function renderNav(activePage) {
       const activeClass = page === item.key ? "primary" : "";
       const utilityClass = item.group === "utility" ? "utility-link" : "";
       const adminClass = item.key === "admin" ? "admin-link" : "";
+
       return `<a class="top-nav-btn ${activeClass} ${utilityClass} ${adminClass}" href="${item.href}">${item.label}</a>`;
     }).join("\n");
 
-    const brand = page === "home" ? "" : `
-      <a href="./index.html" class="site-brand" aria-label="Adult ASA Cluster Home">
-        <img src="${getAdultAsaSiteIcon()}" class="site-brand-logo" data-adultasa-icon alt="Adult ASA Logo">
-        <div class="site-brand-text">
-          <div class="site-brand-title">Adult ASA Cluster</div>
-          <div class="site-brand-sub">PvE Cluster Command Center</div>
-        </div>
-      </a>
-    `;
-
+    // IMPORTANT:
+    // Do not inject any logo/brand image here.
+    // The shared nav appears on every page, and injected images can become huge
+    // on pages that do not have the home page logo CSS.
     container.innerHTML = `
-      ${brand}
       ${links}
       <a class="top-nav-btn discord" href="https://discord.gg/adultasa" target="_blank" rel="noopener">Join Our Discord</a>
     `;
@@ -82,7 +80,7 @@ function renderNav(activePage) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const container = document.querySelector('[data-shared-nav]');
+  const container = document.querySelector("[data-shared-nav]");
   if (container) renderNav(container.dataset.page || "");
   applyAdultAsaSiteIcon();
 });
