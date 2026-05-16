@@ -25,7 +25,18 @@ function renderNav(activePage) {
       return `<a class="top-nav-btn ${activeClass} ${utilityClass} ${adminClass}" href="${item.href}">${item.label}</a>`;
     }).join("\n");
 
+    const brand = page === "home" ? "" : `
+      <a href="./index.html" class="site-brand" aria-label="Adult ASA Cluster Home">
+        <img src="./adult-asa-logo.png" class="site-brand-logo" alt="Adult ASA Logo">
+        <div class="site-brand-text">
+          <div class="site-brand-title">Adult ASA Cluster</div>
+          <div class="site-brand-sub">PvE Cluster Command Center</div>
+        </div>
+      </a>
+    `;
+
     container.innerHTML = `
+      ${brand}
       ${links}
       <a class="top-nav-btn discord" href="https://discord.gg/adultasa" target="_blank" rel="noopener">Join Our Discord</a>
     `;
