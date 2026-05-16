@@ -53,12 +53,10 @@ function adultAsaInjectNavStyles() {
     [data-shared-nav] > a:not(.top-nav-btn),
     [data-shared-nav] .shared-nav-brand,
     [data-shared-nav] .brand-mark,
-    [data-shared-nav] .brand-orb,
-    [data-shared-nav] .brand-orb-img,
-    [data-shared-nav] img,
-    [data-shared-nav] picture {
-      display: none !important;
-    }
+    [data-shared-nav] > a:not(.top-nav-btn),
+[data-shared-nav] .shared-nav-brand {
+  display: none !important;
+}
 
     .top-nav-btn.command-center-link,
     .top-links a.command-center-link {
