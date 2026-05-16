@@ -111,12 +111,21 @@
       border-radius: 15px;
       display: grid;
       place-items: center;
+      overflow: hidden;
       background:
-        radial-gradient(circle at 35% 30%, rgba(255,255,255,0.28), transparent 30%),
-        linear-gradient(135deg, rgba(126,201,222,0.36), rgba(255,122,20,0.18));
+        radial-gradient(circle at 35% 30%, rgba(255,255,255,0.18), transparent 30%),
+        linear-gradient(135deg, rgba(126,201,222,0.18), rgba(255,122,20,0.10));
       border: 1px solid rgba(126,201,222,0.28);
       box-shadow: 0 0 28px rgba(126,201,222,0.15);
-      font-size: 1.35rem;
+      flex: 0 0 auto;
+    }
+
+    .brand-orb-img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      border-radius: inherit;
     }
 
     .brand-title {
@@ -832,7 +841,9 @@
   <div class="top-command">
     <div class="top-command-inner">
       <a class="brand-mark" href="./index.html" aria-label="Adult ASA Cluster Home">
-        <div class="brand-orb">🦖</div>
+        <div class="brand-orb">
+          <img class="brand-orb-img" data-adultasa-icon alt="Adult ASA Logo">
+        </div>
         <div>
           <div class="brand-title">Adult ASA Cluster</div>
           <div class="brand-subtitle">PvE Cluster Command Center</div>
