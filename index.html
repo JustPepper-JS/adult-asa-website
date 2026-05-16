@@ -99,10 +99,24 @@
     }
 
     .brand-mark {
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
+      width: fit-content;
       min-width: 0;
+      padding: 8px 12px;
+      border-radius: 999px;
+      text-decoration: none;
+      background: linear-gradient(90deg, rgba(154,163,255,0.22), rgba(126,201,222,0.14));
+      border: 1px solid rgba(154,163,255,0.34);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02), 0 12px 24px rgba(0,0,0,0.18), 0 0 18px rgba(154,163,255,0.10);
+      transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+    }
+
+    .brand-mark:hover {
+      transform: translateY(-1px);
+      border-color: rgba(154,163,255,0.56);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03), 0 16px 30px rgba(0,0,0,0.24), 0 0 22px rgba(154,163,255,0.16);
     }
 
     .brand-orb {
@@ -129,17 +143,15 @@
     }
 
     .brand-title {
-      font-size: 1.08rem;
+      font-size: 0.9rem;
       font-weight: 950;
-      letter-spacing: 0.4px;
+      letter-spacing: 0.2px;
       color: #effbff;
       white-space: nowrap;
     }
 
     .brand-subtitle {
-      color: var(--muted);
-      font-size: 0.82rem;
-      margin-top: 3px;
+      display: none;
     }
 
     .utility-nav {
@@ -844,10 +856,7 @@
         <div class="brand-orb">
           <img class="brand-orb-img" data-adultasa-icon alt="Adult ASA Logo">
         </div>
-        <div>
-          <div class="brand-title">Adult ASA Cluster</div>
-          <div class="brand-subtitle">PvE Cluster Command Center</div>
-        </div>
+        <div class="brand-title">Command Center</div>
       </a>
 
       <nav class="utility-nav" aria-label="Utility navigation">
