@@ -166,7 +166,7 @@
       padding: 24px 12px;
     }
   </style>
-<link rel="stylesheet" href="./adultasa-theme.css?v=roles-sync-1" />
+<link rel="stylesheet" href="./adultasa-theme.css?v=verified-role-sync-3" />
 </head>
 <body>
 <div class="top-command">
@@ -206,6 +206,29 @@
 
   <script>
     const API_BASE = "https://aasa-discord-bot-v-20-production.up.railway.app";
+
+const ROLE_TRUTH_CACHE_KEY="adultasa_role_truth_cache_v3";
+function normalizeAdultAsaRole(role){
+  const clean=String(role||"").trim().toLowerCase();
+  if(clean==="owner")return"Owner";
+  if(clean==="admin")return"Admin";
+  if(clean==="vip")return"VIP";
+  if(clean==="staff"||clean==="mod"||clean==="moderator")return"Mod";
+  return "";
+}
+function cachedRoleForName(name){
+  try{
+    const cache=JSON.parse(localStorage.getItem(ROLE_TRUTH_CACHE_KEY)||"{}");
+    const hit=cache[String(name||"").trim().toLowerCase()];
+    return normalizeAdultAsaRole(hit&&hit.role);
+  }catch(error){return "";}
+}
+function verifiedPlayerRole(player){
+  const role=normalizeAdultAsaRole(player.role||player.staffRole||player.rank||"");
+  if(role&&(player.isMod||player.isOwner||player.isVip||player.isStaff||role==="Owner"||role==="Admin"||role==="VIP"))return role;
+  return cachedRoleForName(player.player||player.name);
+}
+
     let searchTimer = null;
     let currentSearch = "";
 
@@ -254,7 +277,7 @@
               <span class="pill">${player.totalHours}h total</span>
               <span class="pill">${player.timesJoined || 0} joins</span>
               <span class="pill">Last seen ${fmtAgo(player.lastSeenIso || player.lastSeen)}</span>
-              ${player.currentServer ? `<span class="pill live">On ${player.currentServer}</span>` : ""}
+              ${player.currentServer ? `<span class="pill live">On ${player.currentServer}</span>` : ""}${verifiedPlayerRole(player)?`<span class="pill role-pill ${verifiedPlayerRole(player).toLowerCase()}">${verifiedPlayerRole(player)}</span>`:""}
             </div>
           </div>
 
@@ -317,7 +340,7 @@
       document.getElementById("subtitle").textContent = "Could not load player profiles.";
     });
   </script>
-<script src="./shared-nav.js?v=roles-sync-1"></script>
+<script src="./shared-nav.js?v=verified-role-sync-3"></script>
 </div>
 </body>
 </html>
