@@ -166,7 +166,7 @@
       padding: 24px 12px;
     }
   </style>
-<link rel="stylesheet" href="./adultasa-theme.css?v=no-underlines-final" />
+<link rel="stylesheet" href="./adultasa-theme.css?v=admin-role-truth-5" />
 </head>
 <body>
 <div class="top-command">
@@ -206,6 +206,46 @@
 
   <script>
     const API_BASE = "https://aasa-discord-bot-v-20-production.up.railway.app";
+
+const ROLE_TRUTH_CACHE_KEY="adultasa_role_truth_cache_v5";
+const LOCAL_STAFF_KEY="adultasa_staff_whitelist";
+
+function normalizeAdultAsaRole(role){
+  const clean=String(role||"").trim().toLowerCase();
+  if(clean==="owner")return"Owner";
+  if(clean==="admin")return"Admin";
+  if(clean==="vip")return"VIP";
+  if(clean==="staff"||clean==="mod"||clean==="moderator")return"Mod";
+  return "";
+}
+
+function cachedRoleForName(name){
+  const key=String(name||"").trim().toLowerCase();
+
+  try{
+    const cache=JSON.parse(localStorage.getItem(ROLE_TRUTH_CACHE_KEY)||"{}");
+    const hit=cache[key];
+    const role=normalizeAdultAsaRole(hit&&hit.role);
+    if(role)return role;
+  }catch(error){}
+
+  try{
+    const staff=JSON.parse(localStorage.getItem(LOCAL_STAFF_KEY)||"[]");
+    if(Array.isArray(staff)){
+      const hit=staff.find(member=>String(member.name||member.player||"").trim().toLowerCase()===key);
+      const role=normalizeAdultAsaRole(hit&&hit.role);
+      if(role)return role;
+    }
+  }catch(error){}
+
+  if(key==="pepper")return"Owner";
+  return "";
+}
+
+function verifiedPlayerRole(player){
+  return cachedRoleForName(player.player||player.name);
+}
+
     let searchTimer = null;
     let currentSearch = "";
 
@@ -254,7 +294,7 @@
               <span class="pill">${player.totalHours}h total</span>
               <span class="pill">${player.timesJoined || 0} joins</span>
               <span class="pill">Last seen ${fmtAgo(player.lastSeenIso || player.lastSeen)}</span>
-              ${player.currentServer ? `<span class="pill live">On ${player.currentServer}</span>` : ""}
+              ${player.currentServer ? `<span class="pill live">On ${player.currentServer}</span>` : ""}${verifiedPlayerRole(player)?`<span class="pill role-pill ${verifiedPlayerRole(player).toLowerCase()}">${verifiedPlayerRole(player)}</span>`:""}
             </div>
           </div>
 
@@ -317,7 +357,7 @@
       document.getElementById("subtitle").textContent = "Could not load player profiles.";
     });
   </script>
-<script src="./shared-nav.js?v=no-underlines-final"></script>
+<script src="./shared-nav.js?v=admin-role-truth-5"></script>
 </div>
 </body>
 </html>
