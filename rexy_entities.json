@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "entities": [
+    {
+      "id": "adult asa",
+      "name": "Adult ASA",
+      "type": "server_cluster",
+      "aliases": [
+        "AASA",
+        "Adult ASA PvE"
+      ],
+      "facts": [
+        "ASA is the default context, not ASE.",
+        "Base Guardians are unavailable on Extinction and Astraeos.",
+        "LudopARK Casino is only on Valguero.",
+        "Adult ASA website/player movement data overrides guesses for player hours, maps, movements, and current stats."
+      ],
+      "confidence": 1.0,
+      "sources": [
+        "Phase 5.1 seed"
+      ],
+      "createdAt": "2026-06-15T00:00:00.000Z",
+      "updatedAt": "2026-06-15T00:00:00.000Z"
+    }
+  ]
+}
