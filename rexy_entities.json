@@ -2,50 +2,24 @@
   "version": 1,
   "entities": [
     {
-      "id": "rexy_phase_6_priorities",
-      "name": "Rexy Phase 6 Priorities",
-      "type": "system_directive",
+      "id": "rexy_conversation_memory",
+      "name": "Rexy Conversation Memory",
+      "type": "system_capability",
       "aliases": [
-        "Phase 6",
-        "Phase Six"
+        "conversation timeline",
+        "user memory",
+        "topic memory"
       ],
       "facts": [
-        "Answer from evidence, not vibes.",
-        "Use source priority: staff corrections, Adult ASA website/API, live source snapshots, brain, saved facts, Discord history, ASA wiki/internet, general knowledge.",
-        "Continuously refresh website source snapshots and preserve conversation context per user/channel.",
-        "Personality should be bouncy, funny, smarter, faster, but never annoying or inaccurate."
+        "Rexy stores every visible Discord message into a long-term conversation timeline.",
+        "Rexy summarizes users, topics, channels, and recent messages for later recall.",
+        "Rexy uses conversation memory to resolve follow-ups like they, them, it, what about, and you missed."
       ],
-      "confidence": 1.0,
-      "priority": 950,
+      "confidence": 1,
+      "priority": 900,
       "sources": [
-        "Phase 6 seed"
-      ],
-      "createdAt": "2026-06-16T00:00:00.000Z",
-      "updatedAt": "2026-06-16T00:00:00.000Z"
-    },
-    {
-      "id": "adult_asa",
-      "name": "Adult ASA",
-      "type": "server_cluster",
-      "aliases": [
-        "AASA",
-        "Adult ASA PvE"
-      ],
-      "facts": [
-        "ASA is the default context; do not answer with ASE information unless explicitly asked.",
-        "Base Guardians are unavailable on Extinction and Astraeos.",
-        "LudopARK Casino is only on Valguero.",
-        "Level 150 Acro on Adult ASA usually needs about 10-15 Bio Toxin; bring 50 to be safe.",
-        "Cyber Structures pull range should be 500 foundations.",
-        "Website/player movement API should override guesses for playtime, map totals, joins, transfers, and player history."
-      ],
-      "confidence": 1.0,
-      "priority": 1000,
-      "sources": [
-        "Phase 6 seed"
-      ],
-      "createdAt": "2026-06-16T00:00:00.000Z",
-      "updatedAt": "2026-06-16T00:00:00.000Z"
+        "Phase 6.1 upgrade"
+      ]
     }
   ]
 }
