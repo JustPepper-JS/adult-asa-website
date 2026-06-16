@@ -2,40 +2,11 @@
   "version": 1,
   "tasks": [
     {
-      "id": "build-sqlite-vector-brain-for-phase-6-5",
-      "title": "Build SQLite/vector brain for Phase 6.5",
-      "status": "open",
+      "id": "phase6_1_conversation_timeline",
+      "title": "Use long-term conversation timeline for follow-ups and recall",
+      "status": "active",
       "priority": "high",
-      "source": "Phase 6 seed",
-      "createdAt": "2026-06-16T00:00:00.000Z",
-      "updatedAt": "2026-06-16T00:00:00.000Z"
-    },
-    {
-      "id": "improve-player-identity-linking-between-discord-names-and-ark-survivor-names",
-      "title": "Improve player identity linking between Discord names and ARK survivor names",
-      "status": "open",
-      "priority": "high",
-      "source": "Phase 6 seed",
-      "createdAt": "2026-06-16T00:00:00.000Z",
-      "updatedAt": "2026-06-16T00:00:00.000Z"
-    },
-    {
-      "id": "add-dododex-mod-page-retrieval-for-taming-and-modded-creature-questions",
-      "title": "Add Dododex/mod-page retrieval for taming and modded creature questions",
-      "status": "open",
-      "priority": "high",
-      "source": "Phase 6 seed",
-      "createdAt": "2026-06-16T00:00:00.000Z",
-      "updatedAt": "2026-06-16T00:00:00.000Z"
-    },
-    {
-      "id": "add-confidence-labels-when-sources-conflict",
-      "title": "Add confidence labels when sources conflict",
-      "status": "open",
-      "priority": "high",
-      "source": "Phase 6 seed",
-      "createdAt": "2026-06-16T00:00:00.000Z",
-      "updatedAt": "2026-06-16T00:00:00.000Z"
+      "source": "Phase 6.1 upgrade"
     }
   ]
 }

@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Rexy AI - Phase 6.0
+ * Rexy AI - Phase 6.1
  * Adult ASA Discord AI helper
  *
  * Behavior:
@@ -74,9 +74,9 @@ const BRAIN_ENTITIES_FILE = path.join(DATA_DIR, 'rexy_entities.json');
 const BRAIN_RELATIONSHIPS_FILE = path.join(DATA_DIR, 'rexy_relationships.json');
 const BRAIN_TASKS_FILE = path.join(DATA_DIR, 'rexy_tasks.json');
 const CONVERSATION_MEMORY_FILE = path.join(DATA_DIR, 'rexy_conversations.json');
-const SOURCE_SNAPSHOT_FILE = path.join(DATA_DIR, 'rexy_source_snapshot.json');
+const CONVERSATION_TIMELINE_FILE = path.join(DATA_DIR, 'rexy_conversation_timeline.ndjson');
+const CONVERSATION_SUMMARY_FILE = path.join(DATA_DIR, 'rexy_conversation_summary.json');
 const STAFF_CORRECTIONS_FILE = path.join(DATA_DIR, 'rexy_staff_corrections.json');
-const PHASE6_REFRESH_SECONDS = Math.max(60, Number(process.env.REXY_PHASE6_REFRESH_SECONDS || 300));
 const PENDING_GIVE_REQUESTS = new Map();
 const PENDING_GIVE_TIMERS = new Map();
 
@@ -199,7 +199,7 @@ const KNOWN_ROLE_IDS = {
 
 const ADMIN_ROLE_IDS = new Set([KNOWN_ROLE_IDS.overseer, KNOWN_ROLE_IDS.mods, KNOWN_ROLE_IDS.rexy].filter(Boolean));
 const REXY_COMMAND_PATTERN = /^rexy\s*[,.:;!?-]?\s*/i;
-const ADMIN_COMMANDS = new Set(['status', 'index', 'memory', 'say', 'learn', 'reload', 'start', 'stop', 'restart', 'kick', 'register', 'give', 'brain', 'audit', 'source', 'context']);
+const ADMIN_COMMANDS = new Set(['status', 'index', 'memory', 'say', 'learn', 'reload', 'start', 'stop', 'restart', 'kick', 'register', 'give']);
 
 // =====================
 // BASIC HELPERS
@@ -322,7 +322,7 @@ async function fetchNitrado(action, serviceId) {
     const res = await fetch(`https://api.nitrado.net/services/${encodeURIComponent(serviceId)}/gameservers/${action}`, {
       method: 'POST',
       signal: controller.signal,
-      headers: { Authorization: `Bearer ${NITRADO_TOKEN}`, Accept: 'application/json', 'User-Agent': 'AdultASA-Rexy/6.0' },
+      headers: { Authorization: `Bearer ${NITRADO_TOKEN}`, Accept: 'application/json', 'User-Agent': 'AdultASA-Rexy/6.1' },
     });
     const text = await res.text().catch(() => '');
     let body = null;
@@ -1286,389 +1286,6 @@ function buildGreeting(user) {
 }
 
 // =====================
-// PHASE 6 BRAIN / CONTEXT ENGINE
-// =====================
-function phase6ReadJson(dataFile, repoFile, fallback) {
-  try {
-    if (fs.existsSync(dataFile)) {
-      const raw = fs.readFileSync(dataFile, 'utf8');
-      if (raw.trim()) return JSON.parse(raw);
-    }
-    if (repoFile && fs.existsSync(repoFile)) {
-      const raw = fs.readFileSync(repoFile, 'utf8');
-      const parsed = raw.trim() ? JSON.parse(raw) : fallback;
-      writeJsonFile(dataFile, parsed);
-      return parsed;
-    }
-  } catch (error) {
-    console.warn('[REXY PHASE6 READ]', dataFile, error?.message || error);
-  }
-  return fallback;
-}
-
-function phase6EnsureArrayCollection(collection, key) {
-  if (!collection || typeof collection !== 'object') collection = { version: 1, [key]: [] };
-  if (!Array.isArray(collection[key])) collection[key] = [];
-  if (!collection.version) collection.version = 1;
-  return collection;
-}
-
-function loadBrain() {
-  return {
-    entities: phase6EnsureArrayCollection(phase6ReadJson(BRAIN_ENTITIES_FILE, path.join(__dirname, 'rexy_entities.json'), { version: 1, entities: [] }), 'entities'),
-    relationships: phase6EnsureArrayCollection(phase6ReadJson(BRAIN_RELATIONSHIPS_FILE, path.join(__dirname, 'rexy_relationships.json'), { version: 1, relationships: [] }), 'relationships'),
-    tasks: phase6EnsureArrayCollection(phase6ReadJson(BRAIN_TASKS_FILE, path.join(__dirname, 'rexy_tasks.json'), { version: 1, tasks: [] }), 'tasks'),
-  };
-}
-
-function saveBrain(brain) {
-  if (brain?.entities) writeJsonFile(BRAIN_ENTITIES_FILE, brain.entities);
-  if (brain?.relationships) writeJsonFile(BRAIN_RELATIONSHIPS_FILE, brain.relationships);
-  if (brain?.tasks) writeJsonFile(BRAIN_TASKS_FILE, brain.tasks);
-}
-
-function brainKey(value) {
-  return normalizeQuestionKey(value).replace(/\s+/g, '_') || `item_${Date.now()}`;
-}
-
-function upsertBrainEntity(name, patch = {}) {
-  const cleanName = cleanContent(name);
-  if (!cleanName) return null;
-  const brain = loadBrain();
-  const id = patch.id || brainKey(cleanName);
-  let entity = brain.entities.entities.find((item) => item.id === id || normalizeQuestionKey(item.name) === normalizeQuestionKey(cleanName));
-  if (!entity) {
-    entity = {
-      id,
-      name: cleanName,
-      type: patch.type || 'entity',
-      aliases: [],
-      facts: [],
-      confidence: Number(patch.confidence || 0.75),
-      priority: Number(patch.priority || 50),
-      sources: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    brain.entities.entities.unshift(entity);
-  }
-  entity.type = patch.type || entity.type || 'entity';
-  entity.confidence = Math.max(Number(entity.confidence || 0), Number(patch.confidence || 0));
-  entity.priority = Math.max(Number(entity.priority || 0), Number(patch.priority || 0));
-  entity.aliases = Array.from(new Set([...(entity.aliases || []), ...(patch.aliases || [])].filter(Boolean)));
-  entity.facts = Array.from(new Set([...(entity.facts || []), ...(patch.facts || [])].filter(Boolean))).slice(0, 80);
-  entity.sources = Array.from(new Set([...(entity.sources || []), ...(patch.sources || [])].filter(Boolean))).slice(0, 40);
-  for (const [key, value] of Object.entries(patch)) {
-    if (!['id','name','type','aliases','facts','confidence','priority','sources'].includes(key)) entity[key] = value;
-  }
-  entity.updatedAt = new Date().toISOString();
-  saveBrain(brain);
-  return entity;
-}
-
-function rememberRelationship(subject, predicate, object, patch = {}) {
-  const cleanSubject = cleanContent(subject);
-  const cleanPredicate = cleanContent(predicate);
-  const cleanObject = cleanContent(object);
-  if (!cleanSubject || !cleanPredicate || !cleanObject) return null;
-  const brain = loadBrain();
-  const key = `${brainKey(cleanSubject)}|${brainKey(cleanPredicate)}|${brainKey(cleanObject)}`;
-  let rel = brain.relationships.relationships.find((item) => item.key === key);
-  if (!rel) {
-    rel = { key, subject: cleanSubject, predicate: cleanPredicate, object: cleanObject, confidence: Number(patch.confidence || 0.8), priority: Number(patch.priority || 50), source: patch.source || 'Rexy brain', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
-    brain.relationships.relationships.unshift(rel);
-  }
-  Object.assign(rel, patch, { updatedAt: new Date().toISOString() });
-  saveBrain(brain);
-  return rel;
-}
-
-function rememberTask(title, patch = {}) {
-  const cleanTitle = cleanContent(title);
-  if (!cleanTitle) return null;
-  const brain = loadBrain();
-  const task = { id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`, title: cleanTitle, status: patch.status || 'open', priority: patch.priority || 'normal', source: patch.source || 'Rexy brain', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), ...patch };
-  brain.tasks.tasks.unshift(task);
-  saveBrain(brain);
-  return task;
-}
-
-function loadConversationMemory() {
-  const data = readJsonFile(CONVERSATION_MEMORY_FILE, { version: 1, threads: {} });
-  if (!data.threads || typeof data.threads !== 'object') data.threads = {};
-  return data;
-}
-
-function saveConversationMemory(data) {
-  writeJsonFile(CONVERSATION_MEMORY_FILE, data);
-}
-
-function conversationKey(message) {
-  return `${message.channelId}:${message.author.id}`;
-}
-
-function recordConversationTurn(message, question, answer = null) {
-  try {
-    const data = loadConversationMemory();
-    const key = conversationKey(message);
-    const thread = data.threads[key] || { key, channelId: message.channelId, userId: message.author.id, displayName: message.member?.displayName || message.author.tag, turns: [], updatedAt: null };
-    thread.displayName = message.member?.displayName || message.author.tag;
-    thread.channelName = message.channel?.name || null;
-    thread.turns.unshift({ at: new Date().toISOString(), question: sanitize(question || ''), answer: answer ? sanitize(answer) : null });
-    thread.turns = thread.turns.slice(0, 25);
-    thread.updatedAt = new Date().toISOString();
-    data.threads[key] = thread;
-    saveConversationMemory(data);
-  } catch (error) {
-    console.warn('[REXY CONVERSATION MEMORY]', error?.message || error);
-  }
-}
-
-function getConversationContext(message, questionText) {
-  const data = loadConversationMemory();
-  const thread = data.threads[conversationKey(message)];
-  if (!thread || !Array.isArray(thread.turns) || !thread.turns.length) return 'No prior conversation thread with this user in this channel.';
-  const q = normalizeQuestionKey(questionText);
-  const isFollowUp = /^(what about|and|also|how about|what if|then|that|those|it|they|them|where|why|how many|how much)\b/i.test(cleanContent(questionText));
-  const turns = thread.turns.slice(0, isFollowUp ? 8 : 5).map((turn, i) => `${i + 1}. User: ${turn.question}${turn.answer ? ` | Rexy: ${turn.answer}` : ''}`);
-  return `Recent conversation thread with ${thread.displayName}:\n${turns.join('\n')}`;
-}
-
-function loadStaffCorrections() {
-  const data = readJsonFile(STAFF_CORRECTIONS_FILE, []);
-  return Array.isArray(data) ? data : [];
-}
-
-function saveStaffCorrection(entry) {
-  const rows = loadStaffCorrections();
-  rows.unshift(entry);
-  writeJsonFile(STAFF_CORRECTIONS_FILE, rows.slice(0, 1500));
-}
-
-function getStaffCorrectionContext(questionText, maxItems = 10) {
-  const rows = loadStaffCorrections();
-  if (!rows.length) return 'No staff corrections stored yet.';
-  const terms = normalizeQuestionKey(questionText).split(/\s+/).filter((w) => w.length >= 3).slice(0, 18);
-  const scored = rows.map((row) => {
-    const hay = `${row.fact || ''} ${row.context || ''} ${row.correctedByTag || ''}`.toLowerCase();
-    const score = terms.reduce((sum, term) => sum + (hay.includes(term) ? 1 : 0), 0) + Number(row.priority || 0) / 1000;
-    return { row, score };
-  }).filter((x) => x.score > 0).sort((a, b) => b.score - a.score).slice(0, maxItems);
-  return scored.length ? scored.map((x, i) => `${i + 1}. ${x.row.fact} (source: ${x.row.correctedByTag || x.row.source || 'staff'}, priority ${x.row.priority || 1000})`).join('\n') : 'No matching staff corrections.';
-}
-
-function inferCorrectionFact(message, commandText) {
-  const text = cleanContent(commandText || message.content || '');
-  if (!canCommandRexy(message.member)) return null;
-  if (/^(bad rexy|wrong|that'?s wrong|no,?|nah,?|actually|correction|fix this|remember|learn)\b/i.test(text) || /\b(should be|is actually|the answer is|you need to|you should say|from now on)\b/i.test(text)) {
-    return text.replace(/^(bad rexy|wrong|that'?s wrong|no,?|nah,?|actually|correction|fix this|remember|learn)\s*[:,.-]?\s*/i, '').trim();
-  }
-  return null;
-}
-
-function capturePhase6Learning(message, commandText) {
-  const source = `${message.member?.displayName || message.author.tag} in #${message.channel?.name || message.channelId}`;
-  const correction = inferCorrectionFact(message, commandText);
-  if (correction && correction.length >= 5) {
-    const entry = { fact: correction, context: commandText, correctedById: message.author.id, correctedByTag: message.author.tag, source, priority: canCommandRexy(message.member) ? 1000 : 250, createdAt: new Date().toISOString() };
-    saveStaffCorrection(entry);
-    saveLearnedFact({ fact: correction, prompt: correction, savedById: message.author.id, savedByTag: message.author.tag, channelId: message.channelId, channelName: message.channel?.name || null, createdAt: entry.createdAt, source: 'phase6 correction capture' });
-    upsertBrainEntity('Adult ASA Corrections', { type: 'correction_bank', facts: [correction], sources: [source], confidence: 1.0, priority: entry.priority });
-  }
-
-  const rememberMatch = cleanContent(commandText).match(/^(?:remember|learn)\s+(.+)$/i);
-  if (rememberMatch && canCommandRexy(message.member)) {
-    const fact = rememberMatch[1].trim();
-    const simple = fact.match(/^(.+?)\s+(?:is|are|runs|handles|owns|created|manages|has|uses|needs|spawns|costs)\s+(.+)$/i);
-    if (simple) {
-      const subject = cleanContent(simple[1]);
-      const object = cleanContent(simple[2]);
-      upsertBrainEntity(subject, { type: 'learned_entity', facts: [fact], sources: [source], confidence: 1.0, priority: 1000 });
-      rememberRelationship(subject, 'learned_fact', object, { source, confidence: 1.0, priority: 1000 });
-    }
-  }
-
-  if (/<ASA\.MEM>|MEMORY_TAG:|FACT_\d+|PX-\d+|ACRO150|CASINO=|CS_PULL|BaseGuardians|AUTH=/i.test(commandText) && canCommandRexy(message.member)) {
-    const facts = [];
-    if (/CS_PULL\s*=\s*500|CS Pull\s*=\s*500/i.test(commandText)) facts.push('Cyber Structures pull range should be 500 foundations.');
-    if (/ACRO150\s*=\s*10-?15BTX|Acro150_BioToxin\s*=\s*10-?15|Acro 150.*10-?15/i.test(commandText)) facts.push('Level 150 Acro on Adult ASA usually needs about 10-15 Bio Toxin; bring 50 to be safe.');
-    if (/CASINO\s*=\s*VAL|Casino_Map\s*=\s*Valguero/i.test(commandText)) facts.push('LudopARK Casino is only on Valguero.');
-    if (/BG\s*=\s*!EXT,!AST|BaseGuardians\s*=\s*!Extinction,!Astraeos/i.test(commandText)) facts.push('Base Guardians are unavailable on Extinction and Astraeos.');
-    for (const fact of facts) {
-      saveStaffCorrection({ fact, context: commandText, correctedById: message.author.id, correctedByTag: message.author.tag, source, priority: 1000, createdAt: new Date().toISOString() });
-      saveLearnedFact({ fact, prompt: fact, savedById: message.author.id, savedByTag: message.author.tag, channelId: message.channelId, channelName: message.channel?.name || null, createdAt: new Date().toISOString(), source: 'structured ASA memory payload' });
-    }
-    if (facts.length) upsertBrainEntity('Adult ASA', { type: 'server_cluster', facts, sources: [source], confidence: 1.0, priority: 1000 });
-  }
-}
-
-function searchBrainContext(questionText, maxItems = 20) {
-  const brain = loadBrain();
-  const q = normalizeQuestionKey(questionText);
-  const terms = q.split(/\s+/).filter((w) => w.length >= 3).slice(0, 20);
-  if (!terms.length) return 'No structured Rexy brain context found.';
-  function score(value, priority = 0) {
-    const hay = String(value || '').toLowerCase();
-    return terms.reduce((sum, term) => sum + (hay.includes(term) ? 1 : 0), 0) + Number(priority || 0) / 1000;
-  }
-  const entities = brain.entities.entities.map((entity) => ({ entity, score: score(`${entity.name} ${entity.type} ${(entity.aliases || []).join(' ')} ${(entity.facts || []).join(' ')}`, entity.priority) })).filter((x) => x.score > 0).sort((a, b) => b.score - a.score).slice(0, maxItems);
-  const rels = brain.relationships.relationships.map((rel) => ({ rel, score: score(`${rel.subject} ${rel.predicate} ${rel.object} ${rel.source || ''}`, rel.priority) })).filter((x) => x.score > 0).sort((a, b) => b.score - a.score).slice(0, maxItems);
-  const tasks = brain.tasks.tasks.map((task) => ({ task, score: score(`${task.title} ${task.status} ${task.notes || ''}`, task.priority === 'high' ? 500 : 0) })).filter((x) => x.score > 0).sort((a, b) => b.score - a.score).slice(0, 5);
-  const lines = [];
-  if (entities.length) {
-    lines.push('Structured entities:');
-    for (const { entity } of entities) lines.push(`- ${entity.name} (${entity.type || 'entity'}, priority ${entity.priority || 0}): ${(entity.facts || []).slice(0, 10).join('; ') || 'no facts'}${entity.aliases?.length ? ` | aliases: ${entity.aliases.join(', ')}` : ''}`);
-  }
-  if (rels.length) {
-    lines.push('Structured relationships:');
-    for (const { rel } of rels) lines.push(`- ${rel.subject} ${rel.predicate} ${rel.object} (${rel.source || 'memory'}, confidence ${rel.confidence ?? 'unknown'}, priority ${rel.priority || 0})`);
-  }
-  if (tasks.length) {
-    lines.push('Tasks:');
-    for (const { task } of tasks) lines.push(`- ${task.title} [${task.status || 'open'}]`);
-  }
-  return lines.length ? lines.join('\n') : 'No structured Rexy brain context found.';
-}
-
-function extractPlayerCandidates(questionText, message) {
-  const candidates = new Set();
-  try {
-    for (const [, member] of message.mentions.members || []) {
-      if (member?.displayName) candidates.add(member.displayName);
-      if (member?.user?.username) candidates.add(member.user.username);
-    }
-  } catch {}
-  const raw = cleanContent(questionText).replace(/^rexy\s*[,.:;!?-]?\s*/i, '').replace(/[?]/g, ' ');
-  for (const match of raw.matchAll(/\b([A-Za-z0-9_❤💕💎]{3,32})['’]s\b/g)) candidates.add(match[1]);
-  const patterns = [/\bwho\s+is\s+([A-Za-z0-9_❤💕💎]{3,32})\b/i, /\bfor\s+([A-Za-z0-9_❤💕💎]{3,32})\b/i, /\babout\s+([A-Za-z0-9_❤💕💎]{3,32})\b/i, /\bplayer\s+([A-Za-z0-9_❤💕💎]{3,32})\b/i];
-  for (const pattern of patterns) { const match = raw.match(pattern); if (match?.[1]) candidates.add(match[1]); }
-  const stop = new Set(['Rexy','What','Where','When','Why','How','Who','The','She','Her','His','Him','They','Them','Their','Map','Hours','Server','Most','Played','Player','Adult','ASA','Ark','ARK','Ascended']);
-  for (const match of raw.matchAll(/\b[A-Z][A-Za-z0-9_❤💕💎]{2,31}\b/g)) if (!stop.has(match[0])) candidates.add(match[0]);
-  return Array.from(candidates).slice(0, 8);
-}
-
-function formatHours(value) {
-  const n = Number(value || 0);
-  if (!Number.isFinite(n)) return '0h';
-  if (n >= 10) return `${n.toFixed(1)}h`;
-  if (n >= 1) return `${n.toFixed(2)}h`;
-  return `${n.toFixed(2)}h`;
-}
-
-function mapTotalName(row) { return row?.map || row?.server || row?.name || row?.currentServer || 'Unknown'; }
-function mapTotalHours(row) {
-  if (row?.hours != null) return Number(row.hours);
-  if (row?.totalHours != null) return Number(row.totalHours);
-  if (row?.durationMs != null) return Number(row.durationMs) / 3600000;
-  if (row?.totalMs != null) return Number(row.totalMs) / 3600000;
-  if (row?.seconds != null) return Number(row.seconds) / 3600;
-  return 0;
-}
-
-function summarizePlayerProfile(profile) {
-  if (!profile) return '';
-  const lines = [];
-  lines.push(`Player profile: ${profile.player || profile.name || 'unknown'}`);
-  if (profile.totalHours != null) lines.push(`Total tracked playtime: ${formatHours(profile.totalHours)}`);
-  if (profile.currentServer) lines.push(`Currently online on: ${profile.currentServer}`);
-  if (profile.lastSeen || profile.lastSeenIso) lines.push(`Last seen: ${profile.lastSeen || profile.lastSeenIso}`);
-  if (profile.timesJoined != null) lines.push(`Times joined: ${profile.timesJoined}`);
-  if (Array.isArray(profile.mapTotals) && profile.mapTotals.length) {
-    const sorted = profile.mapTotals.slice().sort((a, b) => mapTotalHours(b) - mapTotalHours(a));
-    lines.push(`Most played map all-time: ${mapTotalName(sorted[0])} with ${formatHours(mapTotalHours(sorted[0]))}`);
-    lines.push(`All-time map totals: ${sorted.slice(0, 10).map((row, i) => `${i + 1}. ${mapTotalName(row)} ${formatHours(mapTotalHours(row))}`).join(' | ')}`);
-  }
-  if (Array.isArray(profile.recentSessions) && profile.recentSessions.length) lines.push(`Recent sessions: ${profile.recentSessions.slice(0, 5).map((s) => `${s.server || 'Unknown'} ${formatHours(Number(s.durationMs || 0) / 3600000)} ${s.startIso || ''}`).join(' | ')}`);
-  if (Array.isArray(profile.recentTransfers) && profile.recentTransfers.length) lines.push(`Recent transfers: ${profile.recentTransfers.slice(0, 5).map((t) => `${t.fromServer || '?'} -> ${t.toServer || '?'} ${t.isoTime || ''}`).join(' | ')}`);
-  return lines.join('\n');
-}
-
-function summarizeHeatmapPlayer(player) {
-  if (!player) return '';
-  const lines = [];
-  lines.push(`Movement history match: ${player.player}`);
-  if (player.totalHours != null) lines.push(`Range total: ${formatHours(player.totalHours)}`);
-  if (player.currentServer) lines.push(`Currently online on: ${player.currentServer}`);
-  if (player.lastSeenIso) lines.push(`Last seen: ${player.lastSeenIso}`);
-  const rawSessions = Array.isArray(player.rawSessions) ? player.rawSessions : [];
-  if (rawSessions.length) {
-    const totals = new Map();
-    for (const s of rawSessions) totals.set(s.server || 'Unknown', (totals.get(s.server || 'Unknown') || 0) + Number(s.durationMs || 0));
-    const top = Array.from(totals.entries()).sort((a, b) => b[1] - a[1]).slice(0, 10);
-    if (top.length) lines.push(`Range map totals from raw movement: ${top.map(([map, ms], i) => `${i + 1}. ${map} ${formatHours(ms / 3600000)}`).join(' | ')}`);
-  }
-  return lines.join('\n');
-}
-
-function shouldUseWebsitePlayerContext(question) {
-  const q = cleanContent(question).toLowerCase();
-  return /\b(player|players|played|playtime|hours|hour|map|server|movement|history|transfer|transfers|last seen|online|most played|top map|profile|where is|where was|who is|current|joined|join|leaderboard)\b/.test(q);
-}
-
-async function getAdultAsaPlayerWebsiteContext(questionText, message) {
-  if (!shouldUseWebsitePlayerContext(questionText)) return 'No Adult ASA player website lookup needed.';
-  const parts = [];
-  const candidates = extractPlayerCandidates(questionText, message);
-  for (const range of ['24h', '7d', '30d']) {
-    try {
-      const tracker = await fetchJson(`${STATUS_API_BASE}/api/tracker?range=${encodeURIComponent(range)}`, WEBSITE_FETCH_TIMEOUT_MS);
-      if (Array.isArray(tracker.players) && tracker.players.length) {
-        parts.push(`Adult ASA tracker ${range} top players: ${tracker.players.slice(0, 12).map((p, i) => `${i + 1}. ${p.player}: ${formatHours(Number(p.totalMs || 0) / 3600000)}${p.isOnline ? ` online on ${p.currentServer}` : ''}`).join(' | ')}`);
-      }
-    } catch (error) { parts.push(`Tracker ${range} lookup failed: ${error?.message || error}`); }
-  }
-  for (const candidate of candidates) {
-    try {
-      const data = await fetchJson(`${STATUS_API_BASE}/api/players?q=${encodeURIComponent(candidate)}`, WEBSITE_FETCH_TIMEOUT_MS);
-      const matches = Array.isArray(data.players) ? data.players.slice(0, 5) : [];
-      if (matches.length) {
-        parts.push(`Adult ASA /api/players search "${candidate}":`);
-        for (const profile of matches) parts.push(summarizePlayerProfile(profile));
-      } else parts.push(`Adult ASA /api/players search "${candidate}" returned no matches.`);
-    } catch (error) { parts.push(`Adult ASA /api/players search "${candidate}" failed: ${error?.message || error}`); }
-    for (const range of ['30d', '365d']) {
-      try {
-        const heatmap = await fetchJson(`${STATUS_API_BASE}/api/heatmap?range=${encodeURIComponent(range)}&player=${encodeURIComponent(candidate)}`, WEBSITE_FETCH_TIMEOUT_MS);
-        const players = Array.isArray(heatmap.players) ? heatmap.players.slice(0, 5) : [];
-        if (players.length) {
-          parts.push(`Adult ASA /api/heatmap ${range} search "${candidate}":`);
-          for (const player of players) parts.push(summarizeHeatmapPlayer(player));
-        }
-      } catch (error) { parts.push(`Adult ASA /api/heatmap ${range} search "${candidate}" failed: ${error?.message || error}`); }
-    }
-    await sleep(100);
-  }
-  return sanitize(parts.join('\n') || 'No Adult ASA website player context found.').slice(0, 8000);
-}
-
-async function refreshSourceSnapshot() {
-  const snapshot = { generatedAt: new Date().toISOString(), status: null, tracker24h: null, tracker7d: null, versions: null, errors: [] };
-  try { snapshot.status = await fetchJson(`${STATUS_API_BASE}/api/status`, WEBSITE_FETCH_TIMEOUT_MS); } catch (e) { snapshot.errors.push(`status: ${e?.message || e}`); }
-  try { snapshot.tracker24h = await fetchJson(`${STATUS_API_BASE}/api/tracker?range=24h`, WEBSITE_FETCH_TIMEOUT_MS); } catch (e) { snapshot.errors.push(`tracker24h: ${e?.message || e}`); }
-  try { snapshot.tracker7d = await fetchJson(`${STATUS_API_BASE}/api/tracker?range=7d`, WEBSITE_FETCH_TIMEOUT_MS); } catch (e) { snapshot.errors.push(`tracker7d: ${e?.message || e}`); }
-  try { snapshot.versions = await fetchJson(`${STATUS_API_BASE}/api/versions`, WEBSITE_FETCH_TIMEOUT_MS); } catch (e) { snapshot.errors.push(`versions: ${e?.message || e}`); }
-  writeJsonFile(SOURCE_SNAPSHOT_FILE, snapshot);
-  const totalOnline = Number(snapshot.status?.totalOnline || 0);
-  upsertBrainEntity('Adult ASA Live Snapshot', { type: 'live_snapshot', facts: [`Last refreshed ${snapshot.generatedAt}`, `Current online survivors at refresh: ${totalOnline}`, `Snapshot errors: ${snapshot.errors.join(' | ') || 'none'}`], sources: ['Adult ASA website APIs'], confidence: snapshot.errors.length ? 0.6 : 0.95, priority: 700 });
-  return snapshot;
-}
-
-function getSourceSnapshotContext() {
-  const snapshot = readJsonFile(SOURCE_SNAPSHOT_FILE, null);
-  if (!snapshot) return 'No background source snapshot yet.';
-  const parts = [`Snapshot generated: ${snapshot.generatedAt}`];
-  if (snapshot.status) parts.push(`Snapshot total online: ${Number(snapshot.status.totalOnline || 0)}`);
-  if (Array.isArray(snapshot.status?.servers)) parts.push(`Snapshot servers: ${snapshot.status.servers.map((s) => `${String(s.name || '').replace(/^Adult ASA\s*-\s*/i, '')} ${s.online ? 'online' : 'offline'} ${Number(s.players || 0)}/${Number(s.maxPlayers || 0)}`).join(' | ')}`);
-  if (Array.isArray(snapshot.tracker7d?.players)) parts.push(`Snapshot 7d top players: ${snapshot.tracker7d.players.slice(0, 10).map((p, i) => `${i + 1}. ${p.player} ${formatHours(Number(p.totalMs || 0) / 3600000)}`).join(' | ')}`);
-  if (snapshot.errors?.length) parts.push(`Snapshot errors: ${snapshot.errors.join(' | ')}`);
-  return sanitize(parts.join('\n')).slice(0, 3000);
-}
-
-function getPhase6SelfAuditContext() {
-  return `Phase 6 direct self-audit: biggest failure points are stale/ambiguous website data, weak entity resolution between Discord names and ARK survivor names, no real database yet, limited source freshness checks, possible DuckDuckGo/Steam 403s from Railway, and memory still being file-based. Highest-impact improvements: 1) SQLite/vector brain, 2) scheduled website snapshots, 3) stronger player identity linking, 4) correction priority engine, 5) per-user conversation threads, 6) official ASA/wiki/Dododex/mod-page retrieval, 7) confidence labels and refusal to guess when source data is missing.`;
-}
-
-// =====================
 // LEARNING / MEMORY
 // =====================
 function loadLearnedFacts() {
@@ -1861,7 +1478,7 @@ async function fetchJson(url, timeoutMs = WEBSITE_FETCH_TIMEOUT_MS, extraHeaders
       signal: controller.signal,
       headers: {
         Accept: 'application/json, text/plain, */*',
-        'User-Agent': 'Mozilla/5.0 (compatible; AdultASA-Rexy/6.0; +https://adult-asa.org)',
+        'User-Agent': 'Mozilla/5.0 (compatible; AdultASA-Rexy/6.1; +https://adult-asa.org)',
         'Cache-Control': 'no-cache',
         Pragma: 'no-cache',
         ...extraHeaders,
@@ -1891,7 +1508,7 @@ async function fetchText(url, timeoutMs = WEBSITE_FETCH_TIMEOUT_MS, extraHeaders
       signal: controller.signal,
       headers: {
         Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'User-Agent': 'Mozilla/5.0 (compatible; AdultASA-Rexy/6.0; +https://adult-asa.org)',
+        'User-Agent': 'Mozilla/5.0 (compatible; AdultASA-Rexy/6.1; +https://adult-asa.org)',
         'Cache-Control': 'no-cache',
         Pragma: 'no-cache',
         ...extraHeaders,
@@ -2274,22 +1891,13 @@ Adult ASA basics:
 Known role IDs:
 ${Object.entries(KNOWN_ROLE_IDS).map(([name, id]) => `${name}: ${id}`).join('\n')}
 
-Adult ASA high-priority overrides:
-- ASA is always the default context. Do not answer with ASE info unless the user explicitly asks for ARK Survival Evolved/ASE.
-- Adult ASA facts and Pepper/staff corrections override generic wiki, Dododex, Google, and old indexed chat.
-- Base Guardians are unavailable on Extinction and Astraeos.
-- LudopARK Casino is only on Valguero.
-- Level 150 Acro on Adult ASA usually needs about 10-15 Bio Toxin; bring 50 to be safe.
-- CS Pull range should be 500 foundations.
-
 Rexy personality:
-- You are the bouncy, sharp, sarcastic-but-helpful AI dino mascot for Adult ASA.
-- Helpful first, funny second, annoying never.
-- Talk like a smart ARK player who actually plays here, not a corporate support article.
+- Chill ARK player energy.
+- Smart, useful, a little funny when it fits.
 - Short answers first. Details only when needed.
-- Be a little witty when the moment is casual. Be precise when the question is technical.
+- No corporate support voice.
 - If the answer needs a current number, use live API/context/history instead of guessing.
-- If a user corrects Rexy, learn from it and prioritize that correction next time.
+- If a user corrects Rexy, learn from it.
 - If asked for secrets, passwords, tokens, private credentials, or unsafe stuff, answer exactly: ...
 `.trim());
 }
@@ -2317,13 +1925,504 @@ async function getMentionedMemberContext(message, questionText) {
   return pieces.length ? pieces.join('\n') : 'No specific mentioned/member context found.';
 }
 
+
+// =====================
+// PHASE 6.1 STRUCTURED BRAIN + CONVERSATION MEMORY
+// =====================
+function ensureCollectionShape(collection, key) {
+  if (!collection || typeof collection !== 'object') collection = { version: 1, [key]: [] };
+  if (!Array.isArray(collection[key])) collection[key] = [];
+  if (!collection.version) collection.version = 1;
+  return collection;
+}
+
+function phaseReadJson(dataFile, repoFile, fallback) {
+  try {
+    if (fs.existsSync(dataFile)) {
+      const raw = fs.readFileSync(dataFile, 'utf8');
+      if (raw.trim()) return JSON.parse(raw);
+    }
+    if (repoFile && fs.existsSync(repoFile)) {
+      const raw = fs.readFileSync(repoFile, 'utf8');
+      const parsed = raw.trim() ? JSON.parse(raw) : fallback;
+      writeJsonFile(dataFile, parsed);
+      return parsed;
+    }
+  } catch (error) {
+    console.warn('[REXY BRAIN READ]', dataFile, error?.message || error);
+  }
+  return fallback;
+}
+
+function loadBrain() {
+  return {
+    entities: ensureCollectionShape(phaseReadJson(BRAIN_ENTITIES_FILE, path.join(__dirname, 'rexy_entities.json'), { version: 1, entities: [] }), 'entities'),
+    relationships: ensureCollectionShape(phaseReadJson(BRAIN_RELATIONSHIPS_FILE, path.join(__dirname, 'rexy_relationships.json'), { version: 1, relationships: [] }), 'relationships'),
+    tasks: ensureCollectionShape(phaseReadJson(BRAIN_TASKS_FILE, path.join(__dirname, 'rexy_tasks.json'), { version: 1, tasks: [] }), 'tasks'),
+  };
+}
+
+function saveBrain(brain) {
+  if (brain?.entities) writeJsonFile(BRAIN_ENTITIES_FILE, brain.entities);
+  if (brain?.relationships) writeJsonFile(BRAIN_RELATIONSHIPS_FILE, brain.relationships);
+  if (brain?.tasks) writeJsonFile(BRAIN_TASKS_FILE, brain.tasks);
+}
+
+function brainKey(value) {
+  return normalizeQuestionKey(value).replace(/\s+/g, '_') || `item_${Date.now()}`;
+}
+
+function upsertBrainEntity(name, patch = {}) {
+  const cleanName = cleanContent(name);
+  if (!cleanName) return null;
+
+  const brain = loadBrain();
+  const id = patch.id || brainKey(cleanName);
+  let entity = brain.entities.entities.find((item) => item.id === id || normalizeQuestionKey(item.name) === normalizeQuestionKey(cleanName));
+
+  if (!entity) {
+    entity = {
+      id,
+      name: cleanName,
+      type: patch.type || 'entity',
+      aliases: [],
+      facts: [],
+      confidence: Number(patch.confidence || 0.75),
+      priority: Number(patch.priority || 50),
+      sources: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    brain.entities.entities.unshift(entity);
+  }
+
+  entity.type = patch.type || entity.type || 'entity';
+  entity.confidence = Math.max(Number(entity.confidence || 0), Number(patch.confidence || 0));
+  entity.priority = Math.max(Number(entity.priority || 0), Number(patch.priority || 0));
+  entity.aliases = Array.from(new Set([...(entity.aliases || []), ...(patch.aliases || [])].filter(Boolean))).slice(0, 40);
+  entity.facts = Array.from(new Set([...(entity.facts || []), ...(patch.facts || [])].filter(Boolean))).slice(0, 120);
+  entity.sources = Array.from(new Set([...(entity.sources || []), ...(patch.sources || [])].filter(Boolean))).slice(0, 60);
+
+  for (const [key, value] of Object.entries(patch)) {
+    if (!['id','name','type','aliases','facts','confidence','priority','sources'].includes(key)) entity[key] = value;
+  }
+
+  entity.updatedAt = new Date().toISOString();
+  saveBrain(brain);
+  return entity;
+}
+
+function rememberRelationship(subject, predicate, object, patch = {}) {
+  const cleanSubject = cleanContent(subject);
+  const cleanPredicate = cleanContent(predicate);
+  const cleanObject = cleanContent(object);
+  if (!cleanSubject || !cleanPredicate || !cleanObject) return null;
+
+  const brain = loadBrain();
+  const key = `${brainKey(cleanSubject)}|${brainKey(cleanPredicate)}|${brainKey(cleanObject)}`;
+  let rel = brain.relationships.relationships.find((item) => item.key === key);
+
+  if (!rel) {
+    rel = {
+      key,
+      subject: cleanSubject,
+      predicate: cleanPredicate,
+      object: cleanObject,
+      confidence: Number(patch.confidence || 0.8),
+      priority: Number(patch.priority || 50),
+      source: patch.source || 'Rexy brain',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    brain.relationships.relationships.unshift(rel);
+  }
+
+  Object.assign(rel, patch, { updatedAt: new Date().toISOString() });
+  saveBrain(brain);
+  return rel;
+}
+
+function rememberTask(title, patch = {}) {
+  const cleanTitle = cleanContent(title);
+  if (!cleanTitle) return null;
+  const brain = loadBrain();
+  const task = {
+    id: patch.id || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    title: cleanTitle,
+    status: patch.status || 'open',
+    priority: patch.priority || 'normal',
+    source: patch.source || 'Rexy brain',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    ...patch,
+  };
+  brain.tasks.tasks.unshift(task);
+  saveBrain(brain);
+  return task;
+}
+
+function loadStaffCorrections() {
+  const data = readJsonFile(STAFF_CORRECTIONS_FILE, []);
+  return Array.isArray(data) ? data : [];
+}
+
+function saveStaffCorrection(entry) {
+  const rows = loadStaffCorrections();
+  rows.unshift(entry);
+  writeJsonFile(STAFF_CORRECTIONS_FILE, rows.slice(0, 2000));
+}
+
+function getStaffCorrectionContext(questionText, maxItems = 12) {
+  const rows = loadStaffCorrections();
+  if (!rows.length) return 'No Pepper/staff corrections stored yet.';
+  const terms = normalizeQuestionKey(questionText).split(/\s+/).filter((w) => w.length >= 3).slice(0, 18);
+
+  const scored = rows.map((row) => {
+    const hay = `${row.fact || ''} ${row.context || ''} ${row.source || ''}`.toLowerCase();
+    const score = terms.reduce((sum, term) => sum + (hay.includes(term) ? 1 : 0), 0) + Number(row.priority || 0) / 1000;
+    return { row, score };
+  });
+
+  return scored
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, maxItems)
+    .map((x, i) => `${i + 1}. ${x.row.fact} (source: ${x.row.correctedByTag || x.row.source || 'staff'}, priority ${x.row.priority || 1000})`)
+    .join('\n') || 'No matching Pepper/staff corrections.';
+}
+
+function inferCorrectionFact(message, commandText) {
+  const text = cleanContent(commandText || message.content || '');
+  if (!canCommandRexy(message.member)) return null;
+  if (/^(bad rexy|wrong|that'?s wrong|no,?|nah,?|actually|correction|fix this|remember|learn)\b/i.test(text) || /\b(should be|is actually|the answer is|you need to|you should say|from now on)\b/i.test(text)) {
+    return text.replace(/^(bad rexy|wrong|that'?s wrong|no,?|nah,?|actually|correction|fix this|remember|learn)\s*[:,.-]?\s*/i, '').trim();
+  }
+  return null;
+}
+
+function capturePhase6Learning(message, commandText) {
+  const source = `${message.member?.displayName || message.author.tag} in #${message.channel?.name || message.channelId}`;
+  const correction = inferCorrectionFact(message, commandText);
+
+  if (correction && correction.length >= 5) {
+    const entry = {
+      fact: correction,
+      context: commandText,
+      correctedById: message.author.id,
+      correctedByTag: message.author.tag,
+      source,
+      priority: canCommandRexy(message.member) ? 1000 : 250,
+      createdAt: new Date().toISOString(),
+    };
+    saveStaffCorrection(entry);
+    saveLearnedFact({
+      fact: correction,
+      prompt: correction,
+      savedById: message.author.id,
+      savedByTag: message.author.tag,
+      channelId: message.channelId,
+      channelName: message.channel?.name || null,
+      createdAt: entry.createdAt,
+      source: 'phase6 correction capture',
+    });
+    upsertBrainEntity('Adult ASA Corrections', { type: 'correction_bank', facts: [correction], sources: [source], confidence: 1.0, priority: 1000 });
+  }
+
+  // Structured payloads Rexy can ingest.
+  if (/<ASA\.MEM>|MEMORY_TAG:|FACT_\d+|PX-\d+|ACRO150|CASINO=|CS_PULL|BaseGuardians|AUTH=/i.test(commandText) && canCommandRexy(message.member)) {
+    const facts = [];
+    if (/CS_PULL\s*=\s*500|CS Pull\s*=\s*500|PX-500/i.test(commandText)) facts.push('Cyber Structures pull range should be 500 foundations.');
+    if (/ACRO150\s*=\s*10-?15BTX|Acro150_BioToxin\s*=\s*10-?15|Acro 150.*10-?15/i.test(commandText)) facts.push('Level 150 Acro on Adult ASA usually needs about 10-15 Bio Toxin; bring 50 to be safe.');
+    if (/CASINO\s*=\s*VAL|Casino_Map\s*=\s*Valguero/i.test(commandText)) facts.push('LudopARK Casino is only on Valguero.');
+    if (/BG\s*=\s*!EXT,!AST|BaseGuardians\s*=\s*!Extinction,!Astraeos/i.test(commandText)) facts.push('Base Guardians are unavailable on Extinction and Astraeos.');
+
+    for (const fact of facts) {
+      saveStaffCorrection({ fact, context: commandText, correctedById: message.author.id, correctedByTag: message.author.tag, source, priority: 1000, createdAt: new Date().toISOString() });
+      saveLearnedFact({ fact, prompt: fact, savedById: message.author.id, savedByTag: message.author.tag, channelId: message.channelId, channelName: message.channel?.name || null, createdAt: new Date().toISOString(), source: 'structured ASA memory payload' });
+    }
+    if (facts.length) upsertBrainEntity('Adult ASA', { type: 'server_cluster', facts, sources: [source], confidence: 1.0, priority: 1000 });
+  }
+}
+
+function searchBrainContext(questionText, maxItems = 20) {
+  const brain = loadBrain();
+  const q = normalizeQuestionKey(questionText);
+  const terms = q.split(/\s+/).filter((w) => w.length >= 3).slice(0, 20);
+  if (!terms.length) return 'No structured Rexy brain context found.';
+
+  function score(value, priority = 0) {
+    const hay = String(value || '').toLowerCase();
+    return terms.reduce((sum, term) => sum + (hay.includes(term) ? 1 : 0), 0) + Number(priority || 0) / 1000;
+  }
+
+  const entities = brain.entities.entities
+    .map((entity) => ({ entity, score: score(`${entity.name} ${entity.type} ${(entity.aliases || []).join(' ')} ${(entity.facts || []).join(' ')}`, entity.priority) }))
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, maxItems);
+
+  const rels = brain.relationships.relationships
+    .map((rel) => ({ rel, score: score(`${rel.subject} ${rel.predicate} ${rel.object} ${rel.source || ''}`, rel.priority) }))
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, maxItems);
+
+  const tasks = brain.tasks.tasks
+    .map((task) => ({ task, score: score(`${task.title} ${task.status} ${task.notes || ''}`, task.priority === 'high' ? 500 : 0) }))
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5);
+
+  const lines = [];
+  if (entities.length) {
+    lines.push('Structured entities:');
+    for (const { entity } of entities) lines.push(`- ${entity.name} (${entity.type || 'entity'}, priority ${entity.priority || 0}): ${(entity.facts || []).slice(0, 10).join('; ') || 'no facts'}${entity.aliases?.length ? ` | aliases: ${entity.aliases.join(', ')}` : ''}`);
+  }
+  if (rels.length) {
+    lines.push('Structured relationships:');
+    for (const { rel } of rels) lines.push(`- ${rel.subject} ${rel.predicate} ${rel.object} (${rel.source || 'memory'}, confidence ${rel.confidence ?? 'unknown'}, priority ${rel.priority || 0})`);
+  }
+  if (tasks.length) {
+    lines.push('Tasks:');
+    for (const { task } of tasks) lines.push(`- ${task.title} [${task.status || 'open'}]`);
+  }
+
+  return lines.length ? lines.join('\n') : 'No structured Rexy brain context found.';
+}
+
+function loadConversationMemory() {
+  const data = readJsonFile(CONVERSATION_MEMORY_FILE, { version: 1, threads: {} });
+  if (!data.threads || typeof data.threads !== 'object') data.threads = {};
+  return data;
+}
+
+function saveConversationMemory(data) {
+  writeJsonFile(CONVERSATION_MEMORY_FILE, data);
+}
+
+function conversationKey(message) {
+  return `${message.channelId}:${message.author.id}`;
+}
+
+function recordConversationTurn(message, question, answer = null) {
+  try {
+    const data = loadConversationMemory();
+    const key = conversationKey(message);
+    const thread = data.threads[key] || {
+      key,
+      channelId: message.channelId,
+      userId: message.author.id,
+      displayName: message.member?.displayName || message.author.tag,
+      turns: [],
+      updatedAt: null,
+    };
+    thread.displayName = message.member?.displayName || message.author.tag;
+    thread.channelName = message.channel?.name || null;
+    thread.turns.unshift({ at: new Date().toISOString(), question: sanitize(question || ''), answer: answer ? sanitize(answer) : null });
+    thread.turns = thread.turns.slice(0, 50);
+    thread.updatedAt = new Date().toISOString();
+    data.threads[key] = thread;
+    saveConversationMemory(data);
+  } catch (error) {
+    console.warn('[REXY CONVERSATION MEMORY]', error?.message || error);
+  }
+}
+
+function loadConversationSummary() {
+  const data = readJsonFile(CONVERSATION_SUMMARY_FILE, { version: 1, users: {}, topics: {}, recent: [] });
+  if (!data.users || typeof data.users !== 'object') data.users = {};
+  if (!data.topics || typeof data.topics !== 'object') data.topics = {};
+  if (!Array.isArray(data.recent)) data.recent = [];
+  return data;
+}
+
+function saveConversationSummary(data) {
+  writeJsonFile(CONVERSATION_SUMMARY_FILE, data);
+}
+
+function extractConversationTopics(text) {
+  const clean = normalizeQuestionKey(text);
+  const stop = new Set([
+    'rexy','what','when','where','why','how','the','and','for','with','that','this','you','your','are','was','were','have','has','had','can','could','would','should','about','from','into','onto','then','than','them','they','there','here','does','did','will','list','give','tell','all','any','our','server','asa','adult','ark'
+  ]);
+  return clean.split(/\s+/).filter((word) => word.length >= 3 && !stop.has(word)).slice(0, 12);
+}
+
+function recordConversationObservation(message, indexedContent, addressedToRexy = false) {
+  try {
+    const content = sanitize(indexedContent || messageToIndexContent(message) || cleanContent(message.content || ''));
+    if (!content) return;
+
+    const roles = getMemberRoleContext(message.member);
+    const displayName = message.member?.displayName || message.author.tag;
+    const channelName = message.channel?.name || null;
+    const topics = extractConversationTopics(content);
+
+    const row = {
+      at: new Date().toISOString(),
+      guildId: message.guild?.id || null,
+      channelId: message.channelId,
+      channelName,
+      messageId: message.id,
+      authorId: message.author.id,
+      authorTag: message.author.tag,
+      displayName,
+      roles,
+      addressedToRexy,
+      isTicket: isTicketChannel(message.channel),
+      topics,
+      content: content.slice(0, 1200),
+      url: message.url,
+    };
+
+    appendJsonLine(CONVERSATION_TIMELINE_FILE, row);
+
+    const summary = loadConversationSummary();
+    const user = summary.users[message.author.id] || {
+      userId: message.author.id,
+      authorTag: message.author.tag,
+      displayName,
+      names: [],
+      roles: [],
+      channels: {},
+      topicCounts: {},
+      lastMessages: [],
+      firstSeenAt: row.at,
+      lastSeenAt: row.at,
+    };
+
+    user.authorTag = message.author.tag;
+    user.displayName = displayName;
+    user.names = Array.from(new Set([...(user.names || []), displayName, message.author.username, message.author.tag].filter(Boolean))).slice(0, 20);
+    user.roles = Array.from(new Set([...(user.roles || []), ...roles.split(',').map((x) => x.trim()).filter(Boolean)])).slice(0, 40);
+    user.channels[channelName || message.channelId] = (user.channels[channelName || message.channelId] || 0) + 1;
+    user.lastSeenAt = row.at;
+    for (const topic of topics) user.topicCounts[topic] = (user.topicCounts[topic] || 0) + 1;
+    user.lastMessages = [{ at: row.at, channelName, content: row.content, addressedToRexy }, ...(user.lastMessages || [])].slice(0, 25);
+    summary.users[message.author.id] = user;
+
+    for (const topic of topics) {
+      const bucket = summary.topics[topic] || { topic, count: 0, lastSeenAt: row.at, messages: [] };
+      bucket.count += 1;
+      bucket.lastSeenAt = row.at;
+      bucket.messages = [{ at: row.at, authorId: message.author.id, displayName, channelName, content: row.content }, ...(bucket.messages || [])].slice(0, 25);
+      summary.topics[topic] = bucket;
+    }
+
+    summary.recent = [row, ...(summary.recent || [])].slice(0, 400);
+    saveConversationSummary(summary);
+
+    upsertBrainEntity(displayName, {
+      type: 'person',
+      aliases: [message.author.username, message.author.tag].filter(Boolean),
+      facts: [
+        `Last seen talking in #${channelName || message.channelId} at ${row.at}.`,
+        topics.length ? `Recent topics: ${topics.slice(0, 8).join(', ')}.` : null,
+      ].filter(Boolean),
+      sources: [`Discord conversation memory: ${message.url}`],
+      confidence: 0.65,
+      priority: addressedToRexy ? 120 : 40,
+      userId: message.author.id,
+      lastSeenAt: row.at,
+      lastChannel: channelName || message.channelId,
+    });
+  } catch (error) {
+    console.warn('[REXY CONVERSATION OBSERVE]', error?.message || error);
+  }
+}
+
+function readConversationTimelineTail(maxLines = 3000) {
+  if (!fs.existsSync(CONVERSATION_TIMELINE_FILE)) return [];
+  try {
+    const raw = fs.readFileSync(CONVERSATION_TIMELINE_FILE, 'utf8').trim();
+    if (!raw) return [];
+    return raw.split(/\r?\n/).filter(Boolean).slice(-maxLines).map((line) => {
+      try { return JSON.parse(line); } catch { return null; }
+    }).filter(Boolean);
+  } catch (error) {
+    console.warn('[REXY CONVERSATION TAIL]', error?.message || error);
+    return [];
+  }
+}
+
+function searchConversationTimeline(questionText, message, maxItems = 16) {
+  const terms = extractConversationTopics(questionText);
+  const rows = readConversationTimelineTail(4500);
+  if (!rows.length) return 'No long-term conversation timeline stored yet.';
+
+  const askUserId = message.author.id;
+  const q = normalizeQuestionKey(questionText);
+  const wantsSelfHistory = /\b(what did i|what was i|my question|my convo|we talk|remember|last time|yesterday|week ago|earlier)\b/i.test(q);
+  const wantsPeople = /\b(who is|who's|who are|person|player|member|mod|owner|overseer)\b/i.test(q);
+
+  const scored = rows.map((row) => {
+    const hay = `${row.displayName || ''} ${row.authorTag || ''} ${row.channelName || ''} ${(row.roles || '')} ${(row.topics || []).join(' ')} ${row.content || ''}`.toLowerCase();
+    let score = terms.reduce((sum, term) => sum + (hay.includes(term) ? 2 : 0), 0);
+    if (row.authorId === askUserId) score += wantsSelfHistory ? 4 : 1;
+    if (row.addressedToRexy) score += 1;
+    if (wantsPeople && /role|overseer|mod|contributor|survivor|player|xbox|ps5|pc/i.test(row.roles || '')) score += 1;
+    return { row, score };
+  }).filter((x) => x.score > 0);
+
+  scored.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    return String(b.row.at || '').localeCompare(String(a.row.at || ''));
+  });
+
+  if (!scored.length) return 'No matching long-term conversation records found.';
+
+  return scored.slice(0, maxItems).map((x, i) => {
+    const r = x.row;
+    return `${i + 1}. ${r.at} #${r.channelName || r.channelId} ${r.displayName}: ${r.content}`;
+  }).join('\n');
+}
+
+function getUserConversationSummaryContext(message, questionText) {
+  const summary = loadConversationSummary();
+  const terms = extractConversationTopics(questionText);
+  const lines = [];
+
+  const self = summary.users?.[message.author.id];
+  if (self) {
+    const topTopics = Object.entries(self.topicCounts || {}).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([topic, count]) => `${topic}(${count})`).join(', ');
+    const topChannels = Object.entries(self.channels || {}).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([channel, count]) => `#${channel}(${count})`).join(', ');
+    lines.push(`Asking user's stored conversation profile: ${self.displayName}; roles: ${(self.roles || []).slice(0, 12).join(', ') || 'unknown'}; common topics: ${topTopics || 'none yet'}; common channels: ${topChannels || 'none yet'}; last seen: ${self.lastSeenAt || 'unknown'}.`);
+  }
+
+  for (const term of terms.slice(0, 8)) {
+    const topic = summary.topics?.[term];
+    if (!topic) continue;
+    lines.push(`Topic memory "${term}" appeared ${topic.count} times. Recent: ${(topic.messages || []).slice(0, 4).map((m) => `${m.displayName} in #${m.channelName}: ${m.content}`).join(' | ')}`);
+  }
+
+  return lines.length ? lines.join('\n') : 'No user/topic conversation summary found.';
+}
+
+function getConversationContext(message, questionText) {
+  const data = loadConversationMemory();
+  const thread = data.threads[conversationKey(message)];
+  const isFollowUp = /^(what about|and|also|how about|what if|then|that|those|it|they|them|where|why|how many|how much|do they|did they|are they|was it|is it|you missed)\b/i.test(cleanContent(questionText));
+  const lines = [];
+
+  if (thread && Array.isArray(thread.turns) && thread.turns.length) {
+    const turns = thread.turns.slice(0, isFollowUp ? 12 : 7).map((turn, i) => `${i + 1}. User: ${turn.question}${turn.answer ? ` | Rexy: ${turn.answer}` : ''}`);
+    lines.push(`Recent direct Rexy thread with ${thread.displayName}:\n${turns.join('\n')}`);
+  } else {
+    lines.push('No prior direct Rexy thread with this user in this channel.');
+  }
+
+  lines.push(`Stored user/topic conversation summary:\n${getUserConversationSummaryContext(message, questionText)}`);
+  lines.push(`Relevant long-term Discord conversation timeline:\n${searchConversationTimeline(questionText, message, isFollowUp ? 22 : 14)}`);
+
+  return lines.join('\n\n');
+}
+
 // =====================
 // AI ANSWERING
 // =====================
 async function answerWithRexy(message, questionText) {
-  const [liveContext, playerWebsiteContext, wikiContext, steamContext, platformContext, generalInternetContext, memberContext] = await Promise.all([
+  const [liveContext, wikiContext, steamContext, platformContext, generalInternetContext, memberContext] = await Promise.all([
     getLiveStatusContext(),
-    getAdultAsaPlayerWebsiteContext(questionText, message),
     getArkWikiContext(questionText),
     getSteamStatusContext(questionText),
     getPlatformStatusContext(questionText),
@@ -2331,11 +2430,9 @@ async function answerWithRexy(message, questionText) {
     getMentionedMemberContext(message, questionText),
   ]);
 
-  const sourceSnapshotContext = getSourceSnapshotContext();
   const brainContext = searchBrainContext(questionText);
   const staffCorrectionContext = getStaffCorrectionContext(questionText);
   const conversationContext = getConversationContext(message, questionText);
-  const selfAuditContext = /(phase\s*6|upgrade|improvement|failure|failures|better|benefit|code|audit)/i.test(questionText) ? getPhase6SelfAuditContext() : 'No self-audit requested.';
   const historyContext = getIndexedHistoryContext(questionText);
   const learnedContext = getLearnedFactsContext(questionText);
 
@@ -2348,20 +2445,19 @@ Return ONLY valid JSON:
 }
 
 Rules:
-- Reply only to the user's actual question.
-- Source priority: Pepper/staff corrections > Adult ASA website/player APIs > live status/source snapshots > structured brain > saved facts > Discord history/embeds > ASA wiki/Dododex/mod pages > general knowledge.
-- ASA is default. Never give ASE info unless the user explicitly asks for ASE/ARK Survival Evolved. If a source may be legacy ASE, label it as legacy and do not treat it as confirmed ASA.
-- For player hours, most-played map, movement history, current map, joins, transfers, top players, online count, versions, and server population: use Adult ASA website/API/player context. If unavailable, say you cannot verify it from the website right now. Do not guess.
-- For corrections from Pepper/staff, treat them as high-priority Adult ASA truth unless they are obviously joking or unsafe.
+- Reply only to the user's actual question, but use prior conversation context when the user is clearly following up or asking what was discussed before.
+- Use this priority order: Pepper/staff corrections > structured Rexy brain > long-term conversation timeline > live Adult ASA/API data > Discord history/embeds > member roles > saved facts > ASA wiki/Dododex/mod pages > general knowledge.
 - Be direct and useful. Usually 1-4 short sentences.
 - If the user asks for a list, give the list.
 - If the user asks current stats/status/news, use live API/status/internet context. Do not invent numbers.
-- If the user asks about people/roles, combine member role context, structured brain, website profile data, and indexed Discord history.
+- If the user asks about people/roles, use member role context and indexed Discord history.
 - If the user asks something unsafe, private, sexual, hateful, credential-seeking, or secret-seeking, answer exactly: ...
 - Never reveal tokens, passwords, RCON, FTP, admin passwords, or hidden config values.
 - No staff suggestion channel exists. Do not say to wait for staff approval.
-- Ask one short follow-up only if the missing detail blocks the answer.
-- Personality: bouncy, funny, smart ARK player energy. Helpful first, witty second, cringe never. No corporate fluff.
+- You may ask one short follow-up if needed.
+- Keep conversational continuity: if the user says "they", "them", "it", "what about", "do they", or "you missed", resolve it from recent direct Rexy thread plus long-term conversation timeline before answering.
+- Use the long-term conversation timeline to remember who Rexy talked with, what they talked about, what Rexy was taught, and what Rexy learned.
+- Sound like a bouncy, funny, sharp ARK player. Smart first, helpful always, witty when it fits. No corporate fluff. No rambling.
 `;
 
   const user = `
@@ -2371,23 +2467,14 @@ ${getStaticAdultAsaKnowledge()}
 Live Adult ASA/API context:
 ${liveContext}
 
-Adult ASA background source snapshot:
-${sourceSnapshotContext}
-
-Adult ASA website/player movement/profile context:
-${playerWebsiteContext}
-
-Phase 6 structured Rexy brain context:
+Structured Rexy brain context:
 ${brainContext}
 
-High-priority Pepper/staff correction context:
+Pepper/staff correction context:
 ${staffCorrectionContext}
 
-Recent conversation context with this user:
+Recent and long-term conversation memory:
 ${conversationContext}
-
-Phase 6 self-audit context if requested:
-${selfAuditContext}
 
 Trusted ARK wiki context:
 ${wikiContext}
@@ -2422,8 +2509,8 @@ Question: ${questionText}
       { role: 'system', content: system.trim() },
       { role: 'user', content: user.trim() },
     ],
-    temperature: 0.45,
-    max_tokens: 800,
+    temperature: 0.35,
+    max_tokens: 650,
   });
 
   const raw = completion.choices?.[0]?.message?.content || '';
@@ -2477,7 +2564,7 @@ async function handleAdminCommand(message, commandText) {
   }
 
   if (command === 'status') {
-    await message.reply('Rexy is online. Phase 6.0 is active: activation-only replies, all configured channel indexing, ticket memory, embed reading, role awareness, internet/status lookups, ASA-first mod knowledge, live server stats, Nitrado start/stop/restart commands, and RCON kick commands.');
+    await message.reply('Rexy is online. Phase 6.1 is active: activation-only replies, all configured channel indexing, ticket memory, embed reading, role awareness, internet/status lookups, ASA-first mod knowledge, live server stats, Nitrado start/stop/restart commands, and RCON kick commands.');
     return true;
   }
 
@@ -2498,23 +2585,16 @@ async function handleAdminCommand(message, commandText) {
     return true;
   }
 
-  if (command === 'memory' || command === 'brain') {
+  if (command === 'memory') {
     const facts = loadLearnedFacts();
     const brain = loadBrain();
-    const convos = loadConversationMemory();
-    const corrections = loadStaffCorrections();
-    await message.reply(`Brain online. Saved facts: ${facts.length}. Entities: ${brain.entities.entities.length}. Relationships: ${brain.relationships.relationships.length}. Tasks: ${brain.tasks.tasks.length}. Corrections: ${corrections.length}. Conversation threads: ${Object.keys(convos.threads || {}).length}. Indexed history: ${fs.existsSync(HISTORY_INDEX_FILE) ? 'yes' : 'not yet'}.`);
-    return true;
-  }
-
-  if (command === 'audit') {
-    await message.reply(limitDiscord(getPhase6SelfAuditContext(), 1900));
-    return true;
-  }
-
-  if (command === 'source' || command === 'context') {
-    const snap = await refreshSourceSnapshot();
-    await message.reply(`Source refresh complete. Online: ${Number(snap.status?.totalOnline || 0)}. Errors: ${snap.errors.length ? snap.errors.join(' | ') : 'none'}`);
+    const summary = loadConversationSummary();
+    const entities = Array.isArray(brain.entities?.entities) ? brain.entities.entities.length : 0;
+    const relationships = Array.isArray(brain.relationships?.relationships) ? brain.relationships.relationships.length : 0;
+    const tasks = Array.isArray(brain.tasks?.tasks) ? brain.tasks.tasks.length : 0;
+    const convoUsers = summary.users ? Object.keys(summary.users).length : 0;
+    const convoTopics = summary.topics ? Object.keys(summary.topics).length : 0;
+    await message.reply(`Memory online. Saved facts: ${facts.length}. Brain entities: ${entities}. Relationships: ${relationships}. Tasks: ${tasks}. Conversation users: ${convoUsers}. Topics: ${convoTopics}. Timeline: ${fs.existsSync(CONVERSATION_TIMELINE_FILE) ? 'yes' : 'not yet'}. Indexed history file: ${fs.existsSync(HISTORY_INDEX_FILE) ? 'yes' : 'not yet'}.`);
     return true;
   }
 
@@ -2533,11 +2613,8 @@ async function handleAdminCommand(message, commandText) {
       channelId: message.channelId,
       channelName: message.channel?.name || null,
       createdAt: new Date().toISOString(),
-      source: 'admin learn command',
     });
-    saveStaffCorrection({ fact, context: commandText, correctedById: message.author.id, correctedByTag: message.author.tag, source: `${message.member?.displayName || message.author.tag} in #${message.channel?.name || message.channelId}`, priority: 1000, createdAt: new Date().toISOString() });
-    upsertBrainEntity('Adult ASA Corrections', { type: 'correction_bank', facts: [fact], sources: [`${message.member?.displayName || message.author.tag} in #${message.channel?.name || message.channelId}`], confidence: 1.0, priority: 1000 });
-    await message.reply('Locked in. Brain updated.');
+    await message.reply('Got it. I’ll remember that.');
     return true;
   }
 
@@ -2554,13 +2631,8 @@ async function handleAdminCommand(message, commandText) {
 // =====================
 client.once(Events.ClientReady, async () => {
   console.log(`[REXY] Logged in as ${client.user.tag}`);
-  console.log('[REXY] Phase 6.0 active: activation-only replies, full configured history indexing, ticket memory, embed reading, roles, broader internet/status lookups, wiki context, live stats, Nitrado start/stop/restart commands, RCON kick commands.');
+  console.log('[REXY] Phase 6.1 active: long-term conversation timeline, user/topic memory, structured brain, activation-only replies, full configured history indexing, ticket memory, embed reading, roles, broader internet/status lookups, wiki context, live stats, Nitrado controls, RCON kick commands.');
   console.log(`[REXY HISTORY] Configured base channels: ${HISTORY_CHANNEL_IDS.length}`);
-
-  refreshSourceSnapshot().catch((error) => console.warn('[REXY SOURCE REFRESH ERROR]', error?.message || error));
-  setInterval(() => {
-    refreshSourceSnapshot().catch((error) => console.warn('[REXY SOURCE REFRESH ERROR]', error?.message || error));
-  }, PHASE6_REFRESH_SECONDS * 1000).unref?.();
 
   if (AUTO_INDEX_HISTORY_ON_START) {
     indexAllowedHistory({ forceFull: false }).catch((error) => {
@@ -2607,6 +2679,8 @@ client.on(Events.MessageCreate, async (message) => {
       indexedContent,
       url: message.url,
     });
+
+    recordConversationObservation(message, indexedContent, addressedToRexy);
 
     if (shouldIndexMessage(message) && indexedContent) {
       appendJsonLine(HISTORY_INDEX_FILE, {
