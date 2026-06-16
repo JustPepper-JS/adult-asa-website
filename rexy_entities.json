@@ -2,7 +2,29 @@
   "version": 1,
   "entities": [
     {
-      "id": "adult asa",
+      "id": "rexy_phase_6_priorities",
+      "name": "Rexy Phase 6 Priorities",
+      "type": "system_directive",
+      "aliases": [
+        "Phase 6",
+        "Phase Six"
+      ],
+      "facts": [
+        "Answer from evidence, not vibes.",
+        "Use source priority: staff corrections, Adult ASA website/API, live source snapshots, brain, saved facts, Discord history, ASA wiki/internet, general knowledge.",
+        "Continuously refresh website source snapshots and preserve conversation context per user/channel.",
+        "Personality should be bouncy, funny, smarter, faster, but never annoying or inaccurate."
+      ],
+      "confidence": 1.0,
+      "priority": 950,
+      "sources": [
+        "Phase 6 seed"
+      ],
+      "createdAt": "2026-06-16T00:00:00.000Z",
+      "updatedAt": "2026-06-16T00:00:00.000Z"
+    },
+    {
+      "id": "adult_asa",
       "name": "Adult ASA",
       "type": "server_cluster",
       "aliases": [
@@ -10,17 +32,20 @@
         "Adult ASA PvE"
       ],
       "facts": [
-        "ASA is the default context, not ASE.",
+        "ASA is the default context; do not answer with ASE information unless explicitly asked.",
         "Base Guardians are unavailable on Extinction and Astraeos.",
         "LudopARK Casino is only on Valguero.",
-        "Adult ASA website/player movement data overrides guesses for player hours, maps, movements, and current stats."
+        "Level 150 Acro on Adult ASA usually needs about 10-15 Bio Toxin; bring 50 to be safe.",
+        "Cyber Structures pull range should be 500 foundations.",
+        "Website/player movement API should override guesses for playtime, map totals, joins, transfers, and player history."
       ],
       "confidence": 1.0,
+      "priority": 1000,
       "sources": [
-        "Phase 5.1 seed"
+        "Phase 6 seed"
       ],
-      "createdAt": "2026-06-15T00:00:00.000Z",
-      "updatedAt": "2026-06-15T00:00:00.000Z"
+      "createdAt": "2026-06-16T00:00:00.000Z",
+      "updatedAt": "2026-06-16T00:00:00.000Z"
     }
   ]
 }
