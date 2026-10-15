@@ -1,0 +1,13 @@
+.git/**
+.github/**
+.ci-evidence/**
+node_modules/**
+tests/**
+docs/**
+bootstrap-parts/**
+_worker.js
+wrangler.*
+package*.json
+*.md
+rexy-*.js
+rexy_*.json

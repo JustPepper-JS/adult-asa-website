@@ -1,0 +1,11 @@
+{
+  "name": "adult-asa-website",
+  "private": true,
+  "version": "1.0.0-w1a",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/routing.test.mjs",
+    "check": "node --check _worker.js && npm test"
+  },
+  "engines": { "node": ">=22" }
+}
