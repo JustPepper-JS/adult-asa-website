@@ -1,0 +1,61 @@
+name: Adult ASA website verification
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: website-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prepare evidence
+        run: mkdir -p .ci-evidence
+      - name: Syntax, routing, privacy and data projection tests
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run check 2>&1 | tee .ci-evidence/unit-tests.log
+      - name: Install isolated browser test dependency (not production)
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Desktop and mobile browser tests with real HTTP and CSP
+        shell: bash
+        run: |
+          set -euo pipefail
+          WEB_REQUIRE_COOKIE=true node tests/local-server.mjs > .ci-evidence/fixture-server.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          for i in $(seq 1 20); do curl -fsS http://127.0.0.1:4173/admin > /dev/null && break || sleep 1; done
+          node tests/browser.test.mjs 2>&1 | tee .ci-evidence/browser-tests.log
+      - name: Exact source and evidence checksums
+        if: always()
+        shell: bash
+        run: |
+          git rev-parse HEAD > .ci-evidence/commit.txt
+          git ls-files -z | xargs -0 sha256sum > .ci-evidence/source-sha256.txt
+          printf '%s\n' 'Real owner/non-owner Discord login NOT RUN. Fixtures are not provider authorization.' 'No game writes, provider tokens, paid infrastructure or production settings are used by CI.' > .ci-evidence/LIMITATIONS.txt
+          find .ci-evidence -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > .ci-evidence/SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: adult-asa-web-evidence-${{ github.run_id }}
+          path: .ci-evidence/
+          include-hidden-files: true
+          retention-days: 14
+          if-no-files-found: error
+# Mandatory handoff: record COMPLETED/INCOMPLETE/BLOCKED/UNVERIFIED, exact errors,
+# paths, PASS/FAIL/NOT RUN, artifact and SHA-256 evidence, and precise continuation.
+# Never treat an incomplete or skipped check as passing. No automatic main promotion.
