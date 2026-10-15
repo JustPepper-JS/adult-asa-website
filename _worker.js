@@ -1,0 +1,217 @@
+// W1A: explicit public-to-private routing. Discord authorization remains in AASA.
+// This module runs in Cloudflare Pages advanced mode and Workers static assets.
+export const RELEASE = 'W1A-routing-20261015-r1';
+export const CANONICAL = 'https://adult-asa.org';
+export const BACKEND = 'https://aasa-discord-bot-v-20-production.up.railway.app';
+const COOKIE_NAMES = new Set(['__Host-rexy_console', '__Host-rexy_oauth']);
+const PRIVATE_GET = new Set([
+  '/control/', '/control/login', '/control/oauth/callback', '/control/app.js',
+  '/control/app.css', '/control/app.webmanifest', '/control/icon.svg',
+  '/control/api/me', '/control/api/overview', '/control/api/capabilities',
+]);
+const STATUS_ROUTES = new Map([
+  ['/api/status', 'legacy'], ['/api/status/legacy', 'legacy'], ['/api/status/limited', 'limited'],
+]);
+const PUBLIC_FILES = new Set([
+  '/index.html', '/adultasa-theme.css', '/shared-nav.js', '/gateway.css', '/admin.html',
+  '/boss-roles.html', '/cluster-status.html', '/heatmap.html', '/link-survivor.html',
+  '/mods.html', '/movement.html', '/players.html', '/profile.html', '/profile.fixed.html',
+  '/staff.html', '/tracker.html', '/tribe.html',
+]);
+const ADMIN_ALIASES = new Set(['/admin.html', '/admin/', '/control/admin.html', '/staff-whitelist.html']);
+const CSP = "default-src 'none'; style-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'; form-action 'none'";
+const nullBody = status => status === 204 || status === 205 || status === 304;
+function secureHeaders(input = {}) {
+  const h = new Headers(input);
+  h.set('X-Adult-ASA-Release', RELEASE);
+  h.set('X-Content-Type-Options', 'nosniff');
+  h.set('X-Frame-Options', 'DENY');
+  h.set('Referrer-Policy', 'no-referrer');
+  h.set('Cache-Control', 'no-store, max-age=0');
+  h.set('CDN-Cache-Control', 'no-store');
+  h.set('Cloudflare-CDN-Cache-Control', 'no-store');
+  h.delete('Access-Control-Allow-Origin');
+  h.delete('Access-Control-Allow-Credentials');
+  return h;
+}
+function errorResponse(code, status) {
+  return new Response(JSON.stringify({ error: code }), {
+    status, headers: secureHeaders({ 'Content-Type': 'application/json; charset=utf-8' }),
+  });
+}
+function redirect(path) {
+  return new Response(null, { status: 302, headers: secureHeaders({ Location: path }) });
+}
+export function forwardedCookies(raw = '') {
+  if (raw.length > 4096) throw Error('Cookie header too large');
+  const seen = new Set(), cookies = [];
+  for (const item of raw.split(';')) {
+    const [key, ...rest] = item.trim().split('=');
+    if (!COOKIE_NAMES.has(key)) continue;
+    if (seen.has(key)) throw Error('Duplicate authentication cookie');
+    seen.add(key);
+    const value = rest.join('=');
+    if (/^[A-Za-z0-9_-]{43}$/.test(value)) cookies.push(key + '=' + value);
+  }
+  return cookies.join('; ');
+}
+function responseCookies(headers) {
+  if (typeof headers.getSetCookie === 'function') return headers.getSetCookie();
+  if (typeof headers.getAll === 'function') return headers.getAll('Set-Cookie');
+  if (headers.has('Set-Cookie')) throw Error('Cookie-preserving headers API unavailable');
+  return [];
+}
+async function boundedBytes(body, limit, signal) {
+  if (!body) return new Uint8Array();
+  const reader = body.getReader(), parts = [];
+  let size = 0;
+  const cancel = () => { reader.cancel().catch(() => {}); };
+  signal?.addEventListener('abort', cancel, { once: true });
+  try {
+    if (signal?.aborted) throw Error('Deadline exceeded');
+    while (true) {
+      const { done, value } = await reader.read();
+      if (signal?.aborted) throw Error('Deadline exceeded');
+      if (done) break;
+      size += value.byteLength;
+      if (size > limit) { await reader.cancel(); throw Error('Body too large'); }
+      parts.push(value);
+    }
+  } finally { signal?.removeEventListener('abort', cancel); reader.releaseLock(); }
+  const bytes = new Uint8Array(size);
+  let offset = 0;
+  for (const part of parts) { bytes.set(part, offset); offset += part.byteLength; }
+  return bytes;
+}
+function safeLocation(value) {
+  const url = new URL(value, CANONICAL);
+  if (url.username || url.password || url.hash) throw Error('Invalid redirect');
+  if (url.origin === CANONICAL && ['/control/', '/control/login'].includes(url.pathname) && !url.search) {
+    return url.pathname;
+  }
+  if (url.origin === 'https://discord.com' && url.pathname === '/oauth2/authorize' &&
+      url.searchParams.get('client_id') === '1450621944360603820' &&
+      url.searchParams.get('redirect_uri') === CANONICAL + '/control/oauth/callback' &&
+      url.searchParams.get('response_type') === 'code' && url.searchParams.get('scope') === 'identify' &&
+      /^[A-Za-z0-9_-]{43}$/.test(url.searchParams.get('state') || '') &&
+      [...url.searchParams.keys()].length === 5) return url.href;
+  throw Error('Unexpected authentication redirect');
+}
+function validQuery(url) {
+  if (!url.search) return true;
+  if (url.pathname !== '/control/oauth/callback') return false;
+  const allowed = new Set(['state', 'code', 'error', 'error_description']);
+  const seen = new Set();
+  for (const [key, value] of url.searchParams) {
+    if (!allowed.has(key) || seen.has(key) || value.length > 2048) return false;
+    seen.add(key);
+  }
+  return true;
+}
+const text = (value, max = 100) => typeof value === 'string' ? value.replace(/[\x00-\x1f\x7f]/g, '').slice(0, max) : '';
+const count = value => Number.isInteger(value) && value >= 0 && value <= 10000 ? value : null;
+export function projectStatus(raw, cluster, now = Date.now()) {
+  if (!raw || typeof raw !== 'object' || raw.cluster !== cluster || !Array.isArray(raw.servers) || raw.servers.length > 25) {
+    throw Error('Invalid status response');
+  }
+  const sourceTime = typeof raw.updatedAt === 'string' ? Date.parse(raw.updatedAt) : NaN;
+  const timestampValid = Number.isFinite(sourceTime) && sourceTime <= now + 30000;
+  return {
+    cluster, clusterName: cluster === 'legacy' ? 'Adult ASA Legacy' : 'Adult ASA Limited',
+    totalOnline: count(raw.totalOnline), updatedAt: timestampValid ? new Date(sourceTime).toISOString() : null,
+    fetchedAt: new Date(now).toISOString(),
+    freshness: !timestampValid ? 'unknown' : now - sourceTime > 180000 ? 'stale' : 'recent',
+    servers: raw.servers.map(row => ({
+      name: text(row?.name), map: text(row?.map),
+      online: typeof row?.online === 'boolean' ? row.online : null,
+      players: count(row?.players), maxPlayers: count(row?.maxPlayers), version: text(row?.version, 30) || null,
+    })),
+  };
+}
+export function createHandler({ fetchImpl = globalThis.fetch, timeoutMs = 12000, now = Date.now } = {}) {
+  return async function handle(request, env) {
+    const url = new URL(request.url), pathname = url.pathname;
+    if (request.url.length > 8192 || /[%\\]/.test(pathname) || pathname.includes('//')) return errorResponse('INVALID_PATH', 400);
+    const isControl = pathname === '/control' || pathname.startsWith('/control/');
+    const isApi = pathname === '/api' || pathname.startsWith('/api/');
+    if (ADMIN_ALIASES.has(pathname)) {
+      return request.method === 'GET' || request.method === 'HEAD' ? redirect('/admin') : errorResponse('METHOD_NOT_ALLOWED', 405);
+    }
+    if (pathname === '/control') return request.method === 'GET' || request.method === 'HEAD' ? redirect('/control/') : errorResponse('METHOD_NOT_ALLOWED', 405);
+    if (isControl || isApi) {
+      if (isControl && url.origin !== CANONICAL) return errorResponse('USE_CANONICAL_LOGIN', 403);
+      const isStatus = STATUS_ROUTES.has(pathname);
+      const isLogout = pathname === '/control/api/logout';
+      if (!isStatus && !PRIVATE_GET.has(pathname) && !isLogout) return errorResponse('NOT_FOUND', 404);
+      const methodOK = isLogout ? request.method === 'POST' : ['GET', 'HEAD'].includes(request.method);
+      if (!methodOK) return errorResponse('METHOD_NOT_ALLOWED', 405);
+      if (!validQuery(url)) return errorResponse('INVALID_QUERY', 400);
+      if (isLogout && (request.headers.get('Origin') !== CANONICAL ||
+          !/^[A-Za-z0-9_-]{43}$/.test(request.headers.get('X-CSRF-Token') || ''))) return errorResponse('CSRF_DENIED', 403);
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const headers = new Headers({ Accept: isStatus || pathname.includes('/api/') ? 'application/json' : '*/*' });
+        if (isControl) {
+          const cookies = forwardedCookies(request.headers.get('Cookie') || '');
+          if (cookies) headers.set('Cookie', cookies);
+          if (isLogout) {
+            headers.set('Origin', request.headers.get('Origin'));
+            headers.set('X-CSRF-Token', request.headers.get('X-CSRF-Token'));
+            headers.set('Content-Type', 'application/json');
+          }
+        }
+        const body = isLogout ? await boundedBytes(request.body, 1024, controller.signal) : undefined;
+        const upstream = await fetchImpl(BACKEND + pathname + url.search, {
+          method: isStatus ? 'GET' : request.method, headers, body, redirect: 'manual',
+          signal: controller.signal, cf: { cacheTtl: 0, cacheEverything: false },
+        });
+        const bytes = await boundedBytes(upstream.body, 1024 * 1024, controller.signal);
+        if (isStatus) {
+          if (upstream.status !== 200 || !/^application\/json\b/i.test(upstream.headers.get('Content-Type') || '')) throw Error('Status unavailable');
+          const projected = projectStatus(JSON.parse(new TextDecoder().decode(bytes)), STATUS_ROUTES.get(pathname), now());
+          return new Response(request.method === 'HEAD' ? null : JSON.stringify(projected), {
+            headers: secureHeaders({ 'Content-Type': 'application/json; charset=utf-8' }),
+          });
+        }
+        if (pathname.includes('/api/') && !nullBody(upstream.status) &&
+            !/^application\/json\b/i.test(upstream.headers.get('Content-Type') || '')) throw Error('Unexpected API response');
+        const output = secureHeaders();
+        for (const name of ['Content-Type', 'Content-Security-Policy', 'Retry-After']) {
+          const value = upstream.headers.get(name); if (value) output.set(name, value);
+        }
+        if (upstream.headers.has('Location')) output.set('Location', safeLocation(upstream.headers.get('Location')));
+        for (const cookie of responseCookies(upstream.headers)) {
+          if (!COOKIE_NAMES.has(cookie.split('=')[0]) || /;\s*Domain=/i.test(cookie) ||
+              !/;\s*Secure(?:;|$)/i.test(cookie) || !/;\s*HttpOnly(?:;|$)/i.test(cookie) ||
+              !/;\s*Path=\/(?:;|$)/i.test(cookie) || !/;\s*SameSite=Lax(?:;|$)/i.test(cookie)) throw Error('Unsafe session cookie');
+          output.append('Set-Cookie', cookie);
+        }
+        return new Response(request.method === 'HEAD' || nullBody(upstream.status) ? null : bytes, { status: upstream.status, headers: output });
+      } catch (_) {
+        return errorResponse('UPSTREAM_UNAVAILABLE', 502);
+      } finally { clearTimeout(timer); }
+    }
+    if (!['GET', 'HEAD'].includes(request.method)) return errorResponse('METHOD_NOT_ALLOWED', 405);
+    const file = pathname === '/' ? '/index.html' : pathname === '/admin' ? '/admin.html' : pathname;
+    if (!PUBLIC_FILES.has(file)) return errorResponse('NOT_FOUND', 404);
+    try {
+      const assetURL = new URL(file, url.origin);
+      let response = await env.ASSETS.fetch(new Request(assetURL, { method: request.method }));
+      // Pages canonicalizes file.html to /file; Workers uses exact files.
+      if ([301, 302, 307, 308].includes(response.status) && response.headers.has('Location')) {
+        const target = new URL(response.headers.get('Location'), assetURL);
+        const clean = file === '/index.html' ? '/' : file.replace(/\.html$/, '');
+        if (target.origin !== assetURL.origin || target.search || target.hash ||
+            ![clean, clean + '/'].includes(target.pathname)) return errorResponse('INVALID_ASSET_REDIRECT', 502);
+        response = await env.ASSETS.fetch(new Request(target, { method: request.method }));
+      }
+      if (response.status !== 200) return errorResponse('ASSET_UNAVAILABLE', 404);
+      const headers = secureHeaders(response.headers);
+      if (file === '/admin.html') { headers.set('Content-Security-Policy', CSP); headers.set('X-Robots-Tag', 'noindex'); }
+      return new Response(request.method === 'HEAD' ? null : response.body, { status: 200, headers });
+    } catch (_) { return errorResponse('ASSET_UNAVAILABLE', 503); }
+  };
+}
+const handle = createHandler();
+export default { fetch: (request, env) => handle(request, env) };

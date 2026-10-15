@@ -1,0 +1,12 @@
+{
+  "name": "adult-asa-website",
+  "main": "_worker.js",
+  "compatibility_date": "2026-10-15",
+  "assets": {
+    "directory": ".",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "html_handling": "none",
+    "not_found_handling": "none"
+  }
+}
