@@ -1,0 +1,61 @@
+name: Publish reviewed website source to candidate branch
+on:
+  push:
+    branches: [redesign/clean-ark-w1-20261015]
+    paths: [bootstrap-parts/ready.txt]
+permissions:
+  contents: write
+jobs:
+  publish:
+    if: github.repository == 'JustPepper-JS/adult-asa-website' && github.ref == 'refs/heads/redesign/clean-ark-w1-20261015'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: redesign/clean-ark-w1-20261015
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify exact reviewed archive, scope and original main checkpoint
+        shell: python
+        run: |
+          from pathlib import Path
+          import base64, hashlib, io, tarfile, subprocess, shutil
+          expected='d99a7236fda97fcc7f7c1afdc47e761041a09505603bb87221519a56ee360340'
+          assert Path('bootstrap-parts/ready.txt').read_text().strip()==expected
+          parts=sorted(Path('bootstrap-parts').glob('part*.txt'))
+          assert len(parts)==7
+          data=base64.b64decode(''.join(p.read_text().strip() for p in parts),validate=True)
+          assert hashlib.sha256(data).hexdigest()==expected, 'Source transport hash mismatch'
+          head=subprocess.check_output(['git','ls-remote','origin','refs/heads/main'],text=True).split()[0]
+          assert head=='5a3cc7d38d45fb627bbf293c3422d260df5d04f9', 'Main advanced: reconcile before publishing'
+          allowed=set('''.assetsignore .github/workflows/website-ci.yml 404.html README.md _worker.js activity.html admin.html assets/catalog.json assets/crest.webp assets/icon.svg assets/landscape.webp assets/site.css assets/site.js control.html index.html mods.html package.json robots.txt servers.html sitemap.xml tests/browser.test.mjs tests/local-server.mjs tests/worker.test.mjs wrangler.jsonc'''.split())
+          old=set('''README.md admin.html adultasa-theme.css boss-roles.html cluster-status.html heatmap.html index.html link-survivor.html mods.html movement.html players.html profile.fixed.html profile.html rexy-ai.js rexy_entities.json rexy_relationships.json rexy_tasks.json shared-nav.js staff-whitelist.html staff.html tracker.html tribe.html'''.split())
+          with tarfile.open(fileobj=io.BytesIO(data),mode='r:gz') as archive:
+            members=archive.getmembers()
+            assert len(members)==len(allowed) and set(m.name for m in members)==allowed
+            assert all(m.isfile() and m.size<200000 for m in members)
+            # The final CI workflow was added through the connector; do not modify it with the job token.
+            ci=archive.extractfile('.github/workflows/website-ci.yml').read()
+            assert ci==Path('.github/workflows/website-ci.yml').read_bytes()
+            for name in old-allowed:
+              Path(name).unlink(missing_ok=True)
+            for m in members:
+              target=Path(m.name);target.parent.mkdir(parents=True,exist_ok=True)
+              target.write_bytes(archive.extractfile(m).read())
+          shutil.rmtree('bootstrap-parts')
+      - name: Test exact extracted source before committing
+        run: npm run check
+      - name: Commit reviewed source to this candidate only
+        run: |
+          set -euo pipefail
+          test "$(git branch --show-current)" = 'redesign/clean-ark-w1-20261015'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Rebuild Adult ASA website with verified Discord routing and readable player data'
+          git push origin HEAD:refs/heads/redesign/clean-ark-w1-20261015
+# Temporary source transport. No main merge, production credentials or game actions.
+# Delete this workflow through the connector after the candidate source is published.
+# On any failure: preserve exact logs and hashes; never promote an incomplete candidate.
