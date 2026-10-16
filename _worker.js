@@ -1,6 +1,6 @@
 // W1A: explicit public-to-private routing. Discord authorization remains in AASA.
 // This module runs in Cloudflare Pages advanced mode and Workers static assets.
-export const RELEASE = 'W1B-public-site-20261016-r1';
+export const RELEASE = 'W1B-beacon-private-proxy-20261016-r1';
 export const CANONICAL = 'https://adult-asa.org';
 export const BACKEND = 'https://aasa-discord-bot-v-20-production.up.railway.app';
 const COOKIE_NAMES = new Set(['__Host-rexy_console', '__Host-rexy_oauth']);
@@ -8,7 +8,9 @@ const PRIVATE_GET = new Set([
   '/control/', '/control/login', '/control/oauth/callback', '/control/app.js',
   '/control/app.css', '/control/app.webmanifest', '/control/icon.svg',
   '/control/api/me', '/control/api/overview', '/control/api/capabilities',
+  '/control/api/beacon/status', '/control/api/beacon/services',
 ]);
+const BEACON_DEVICE_POST = new Set(['/control/api/beacon/start','/control/api/beacon/poll']);
 const STATUS_ROUTES = new Map([
   ['/api/status', 'legacy'], ['/api/status/legacy', 'legacy'], ['/api/status/limited', 'limited'],
 ]);
@@ -154,12 +156,16 @@ export function createHandler({ fetchImpl = globalThis.fetch, timeoutMs = 12000,
       if (isControl && url.origin !== CANONICAL) return errorResponse('USE_CANONICAL_LOGIN', 403);
       const isStatus = STATUS_ROUTES.has(pathname);
       const isLogout = pathname === '/control/api/logout';
-      if (!isStatus && !PRIVATE_GET.has(pathname) && !isLogout) return errorResponse('NOT_FOUND', 404);
-      const methodOK = isLogout ? request.method === 'POST' : ['GET', 'HEAD'].includes(request.method);
+      const isDevicePost = BEACON_DEVICE_POST.has(pathname);
+      const isMutation = isLogout || isDevicePost;
+      if (!isStatus && !PRIVATE_GET.has(pathname) && !isMutation) return errorResponse('NOT_FOUND', 404);
+      const methodOK = isMutation ? request.method === 'POST' : ['GET', 'HEAD'].includes(request.method);
       if (!methodOK) return errorResponse('METHOD_NOT_ALLOWED', 405);
       if (!validQuery(url)) return errorResponse('INVALID_QUERY', 400);
-      if (isLogout && (request.headers.get('Origin') !== CANONICAL ||
-          !/^[A-Za-z0-9_-]{43}$/.test(request.headers.get('X-CSRF-Token') || ''))) return errorResponse('CSRF_DENIED', 403);
+      if (isMutation && (request.headers.get('Origin') !== CANONICAL ||
+          !/^[A-Za-z0-9_-]{43}$/.test(request.headers.get('X-CSRF-Token') || '') ||
+          !/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type') || '')))
+        return errorResponse('CSRF_DENIED', 403);
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), timeoutMs);
       try {
@@ -167,13 +173,13 @@ export function createHandler({ fetchImpl = globalThis.fetch, timeoutMs = 12000,
         if (isControl) {
           const cookies = forwardedCookies(request.headers.get('Cookie') || '');
           if (cookies) headers.set('Cookie', cookies);
-          if (isLogout) {
-            headers.set('Origin', request.headers.get('Origin'));
+          if (isMutation) {
+            headers.set('Origin', CANONICAL);
             headers.set('X-CSRF-Token', request.headers.get('X-CSRF-Token'));
             headers.set('Content-Type', 'application/json');
           }
         }
-        const body = isLogout ? await boundedBytes(request.body, 1024, controller.signal) : undefined;
+        const body = isMutation ? await boundedBytes(request.body, 1024, controller.signal) : undefined;
         const upstream = await fetchImpl(BACKEND + pathname + url.search, {
           method: isStatus ? 'GET' : request.method, headers, body, redirect: 'manual',
           signal: controller.signal, cf: { cacheTtl: 0, cacheEverything: false },
