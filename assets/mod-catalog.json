@@ -1,0 +1,953 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "repository": "JustPepper-JS/Project-Zenthara",
+    "file": "rexy3/adult-asa-knowledge.json",
+    "commit": "eb02c9cfa017af3ababf28336970dac82d7387e1",
+    "authorPagesReviewedAt": "2026-08-07",
+    "notice": "Research library snapshot, not a current installed-mod list. Map/cluster scope is historical and may have changed. Check current Nitrado lists or Rexy provider verification before treating a mod as installed."
+  },
+  "entries": [
+    {
+      "id": "additions-ascended-brachiosaurus",
+      "name": "Additions Ascended: Brachiosaurus",
+      "category": "creatures",
+      "categories": [
+        "creatures"
+      ],
+      "summary": "Adds the ARK Additions Brachiosaurus, a rare giant herbivore that can appear in jungle and grassland environments. Its body is heavily protected, its legs are a tactical weak point during encounters, and a tamed Brachiosaurus is designed as a powerful harvesting creature.",
+      "features": [
+        "Rare large herbivore for jungle/grassland regions.",
+        "Tough body and legs create a distinct combat/taming encounter.",
+        "Tamed Brachiosaurus is a high-capacity resource harvester.",
+        "Can switch between gathering and defensive behavior.",
+        "Its bellow can frighten dangerous nearby creatures."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/additions-ascended-brachiosaurus",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "alfa-oceanic-platforms",
+      "name": "Alfa Oceanic Platforms",
+      "category": "structures",
+      "categories": [
+        "structures",
+        "building"
+      ],
+      "summary": "Adds an ocean-building system centered on large platform variants, floating foundations, and triangle foundations for constructing bases over or on the water.",
+      "features": [
+        "Multiple ocean-platform styles, including open, closed, cage, wood, grass, ice, underwater-cage, Shasta-cage, concrete, adobe, and partial variants.",
+        "Floating foundations and triangle foundations extend water-building options.",
+        "Support distance can be adjusted by server configuration.",
+        "A radial option can extend support to nearby foundations."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/alfaoceanicplataforms",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "arkitect-structures-remastered",
+      "name": "Arkitect Structures Remastered",
+      "category": "structures",
+      "categories": [
+        "structures",
+        "building"
+      ],
+      "summary": "A large cross-platform building mod that expands ASA construction with custom structure tiers, shapes, roofs, glass, decorative pieces, and specialty foundations.",
+      "features": [
+        "Adds broad thatch, wood, stone, adobe, glass, and decorative building families.",
+        "Includes non-vanilla shapes such as steep and curved roof pieces.",
+        "Provides ornate and clear/glass-style construction options.",
+        "Includes specialty pieces such as AntiGrav foundations and other advanced building components.",
+        "Designed as a remastered continuation of Arkitect Structures building content for ASA."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/arkitect-structures-remastered",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "auto-engrams",
+      "name": "Auto Engrams!",
+      "category": "quality-of-life",
+      "categories": [
+        "quality-of-life",
+        "engrams"
+      ],
+      "summary": "Automatically unlocks eligible engrams as a survivor reaches the required level, removing the need to spend engram points manually for normal unlocks.",
+      "features": [
+        "Unlocks engrams automatically when level requirements are reached.",
+        "Does not consume engram points for automatic unlocks.",
+        "Avoids repeated unlock-screen spam.",
+        "Can unlock across DLC restrictions and works with eligible mod engrams regardless of mod order.",
+        "Respects hidden engrams, overridden level requirements, and prerequisite engrams."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/auto-engrams",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "auto-fishery",
+      "name": "Auto Fishery | Gaia Studios",
+      "category": "automation",
+      "categories": [
+        "automation",
+        "resources"
+      ],
+      "summary": "Adds an automated underwater fishery built around a placeable clam that can generate aquatic resources over time.",
+      "features": [
+        "Produces resources such as Oil, Black Pearls, Silica Pearls, Angler Gel, Leech Blood, and Ammonite-related resources.",
+        "Activated and managed through its radial menu.",
+        "Can generate aquatic defenders/creatures depending on configuration.",
+        "Passive creature generation can be enabled or disabled."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/auto-fishery",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "awesome-ark-tools",
+      "name": "Awesome ARK Tools",
+      "category": "admin",
+      "categories": [
+        "admin",
+        "quality-of-life"
+      ],
+      "summary": "A broad administration and utility toolkit for ASA with tools for spawning, structure management, creature management, player/tribe inspection, object location, and other server-management workflows.",
+      "features": [
+        "Admin tooling can spawn custom creatures and items.",
+        "Can copy/paste or otherwise manage structures and buildings.",
+        "Includes creature actions such as tame/claim, level/XP, imprint, color, healing, duplication/baby-related operations, and other management functions.",
+        "Includes player/tribe browsing, wild-creature tools, tracking, command/item/dino databases, object location, and file-oriented utilities through the AAT menu.",
+        "Some overview functions are available without administrator privileges, while powerful mutation/spawn/destructive operations remain admin-oriented."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/awesome-admin-tools",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "awesome-spyglass",
+      "name": "Awesome Spyglass!",
+      "category": "quality-of-life",
+      "categories": [
+        "quality-of-life",
+        "creatures"
+      ],
+      "summary": "An enhanced spyglass that displays detailed information about the object currently being targeted and provides extensive player/admin display customization.",
+      "features": [
+        "Can target dinos, players, structures, eggs, loot, supply crates, and natural structures.",
+        "Displays target-relevant information in the spyglass UI.",
+        "Provides many player-customizable display options.",
+        "Server admins can disable selected options in-game.",
+        "Mod authors can expose custom dino information to the UI through the supported SpyGlass tag convention."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/awesomespyglass",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "awesome-teleporters",
+      "name": "Awesome Teleporters!",
+      "category": "transport",
+      "categories": [
+        "transport",
+        "quality-of-life"
+      ],
+      "summary": "Adds a network of placeable teleporters, a portable remote teleporter, and a dino-tracking/return tool for rapid travel and creature recovery.",
+      "features": [
+        "Placeable teleporters can travel to friendly or public destinations.",
+        "Destinations can use custom names/coordinates and multiple teleport bubble sizes.",
+        "Teleporters can be picked up and do not require a foundation.",
+        "Supports favorite destinations plus creature/corpse-oriented recovery features depending on configuration.",
+        "The Remote Teleporter creates a teleport bubble at the player location and can travel to allowed destinations."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/awesometeleporters",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "better-breeding",
+      "name": "Better Breeding",
+      "category": "breeding",
+      "categories": [
+        "breeding",
+        "mutations"
+      ],
+      "summary": "Better Breeding changes inheritance so offspring receive the best available wild-level stat values and mutations from their parents, reducing the RNG involved in combining breeding lines. It does not transfer post-tame levels.",
+      "features": [
+        "Prioritizes the best eligible wild stat levels from the parents.",
+        "Can pass useful mutations more consistently while combining breeding lines.",
+        "Post-tame levels are intentionally not inherited through this mechanic."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/better-breeding",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "better-variants",
+      "name": "Better Variants",
+      "category": "creatures",
+      "categories": [
+        "creatures",
+        "variants"
+      ],
+      "summary": "A compatibility/spawn-control layer for creature-variant mods that lets multiple replacements or variants coexist instead of one replacement chain suppressing the others.",
+      "features": [
+        "Merges compatible creature replacement/variant pools so multiple variant mods can spawn together.",
+        "Supports weighting by creature and by variant/mod source.",
+        "Supports blocking specific creatures or source mods from the merged system.",
+        "Designed to reduce mod-order conflicts where only one variant would otherwise win a replacement."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/better-variants",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "breeding-stopper",
+      "name": "Breeding Stopper",
+      "category": "breeding",
+      "categories": [
+        "breeding",
+        "automation"
+      ],
+      "summary": "Breeding Stopper is an operational control that disables unattended breeding, including on server startup and when all members of a tribe go offline. It does not improve stat or mutation inheritance.",
+      "features": [
+        "Can stop breeding automatically at server startup.",
+        "Can stop breeding when all members of a tribe go offline.",
+        "Can be configured to affect both genders or selected genders.",
+        "Designed to prevent unattended breeding load rather than alter baby genetics."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/breeding-stopper",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "creature-spawns-pyromane",
+      "name": "Creature Spawns (Pyromane)",
+      "category": "creatures",
+      "categories": [
+        "creatures",
+        "spawns"
+      ],
+      "summary": "Adds Pyromane spawn opportunities to supported maps outside its original content, while still requiring the relevant paid DLC entitlement to tame/use the creature where Wildcard requires it.",
+      "features": [],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/creature-spawns-pyromane",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "crafting-skill-potion",
+      "name": "Crafting Skill Potion",
+      "category": "crafting",
+      "categories": [
+        "crafting",
+        "quality-of-life"
+      ],
+      "summary": "Adds a temporary crafting-build potion that lets a survivor dedicate their stat points to Crafting Skill for a short crafting window and then restores their prior stat setup.",
+      "features": [
+        "Engram is available at level 1 and the potion can be crafted in player inventory.",
+        "The documented recipe uses Mejoberries, Narcotics, Rare Flowers, Rare Mushrooms, and Stimulants.",
+        "The effect lasts about two minutes by default.",
+        "While active, the survivor is reset and points are directed into Crafting Skill; normal stat spending/mindwipe behavior is temporarily restricted.",
+        "When the effect expires, the previous stat setup is restored."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/crafting-skill-potion",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "custom-dino-levels",
+      "name": "Custom Dino Levels",
+      "category": "creatures",
+      "categories": [
+        "creatures",
+        "levels",
+        "spawns"
+      ],
+      "summary": "Custom Dino Levels changes wild-creature level distribution, allowing servers to favor higher levels, equalize level chances, or mimic distributions such as Ragnarok while still respecting server difficulty.",
+      "features": [
+        "Supports several level-distribution modes including equalized and high-level-weighted distributions.",
+        "Can constrain allowed minimum and maximum levels through configuration.",
+        "Works with normally spawned vanilla and compatible modded creatures.",
+        "Existing creatures are not retroactively changed."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/custom-dino-levels",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "cybers-structures-qol",
+      "name": "Cybers Structures QoL+",
+      "category": "structures",
+      "categories": [
+        "structures",
+        "quality-of-life",
+        "building"
+      ],
+      "summary": "A large S+-inspired, fully configurable QoL/building suite with more than 200 structures/recipes, wireless crafting, resource pulling, creature/breeding automation, storage systems, industrial upgrades, tools, and cluster utilities.",
+      "features": [
+        "Wireless Crafting, improved ASA snapping/placement, pull-system resource transfers, and Omni/Multi tools.",
+        "Mindwipe support that preserves learned engrams and a way to reset misallocated tame stat points.",
+        "Resource conversion/grinding systems including Organic Polymer conversion and rare-resource recipes.",
+        "Large automation set including Mutator, Propagator, Vivarium, Hatchery, Nanny, Farmer, Gardener, Item Aggregator, Dedicated Storage tools, and Cryofridge automation.",
+        "Cluster/creature tools include a Transmitter with dino scan/tracking, boss-fight access, and cluster transfer."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/cybers-structures",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "der-dino-finder",
+      "name": "Der Dino Finder",
+      "category": "creatures",
+      "categories": [
+        "creatures",
+        "finder",
+        "quality-of-life"
+      ],
+      "summary": "Adds an in-game creature-finding map interface that scans for creatures and lets players filter and track matching dinos.",
+      "features": [
+        "A map button toggles the finder interface.",
+        "Filters include species, gender, age, and level.",
+        "Can place markers for high-level matching creatures and allow the player to select a marker for tracking.",
+        "Includes administrative/summon-oriented recovery behavior when enabled."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/der-dino-finder",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "dino-color-tokens",
+      "name": "Dino Color Tokens",
+      "category": "creatures",
+      "categories": [
+        "creatures",
+        "colors"
+      ],
+      "summary": "Adds craftable color tokens that can be force-fed to tamed creatures to change their color regions.",
+      "features": [
+        "Tokens change creature colors when consumed by the target dino.",
+        "Author documentation provides crafting support through high-tier crafting stations and administrative spawn information.",
+        "The engram can be disabled through configuration if a server wants admin-only access."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/dino-color-tokens",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "explorer-notes-tracker",
+      "name": "Explorer Notes Tracker",
+      "category": "exploration",
+      "categories": [
+        "exploration",
+        "quality-of-life"
+      ],
+      "summary": "Adds a tracker for finding Explorer Notes across maps, with directional guidance to the nearest relevant note.",
+      "features": [],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/explorer-notes-tracker",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "frankis-garden-deco",
+      "name": "Frankis Garden Deco",
+      "category": "decoration",
+      "categories": [
+        "decoration",
+        "building"
+      ],
+      "summary": "A decorative landscaping pack focused on garden scenery such as flowers, bushes, trees, and other plants for base design.",
+      "features": [
+        "Adds placeable decorative flowers, bushes, trees, and plants.",
+        "The author maintains a separate blueprint/spawn reference for the decoration set."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/frankis-gargden-deco",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "greenhouse-glass-fix",
+      "name": "Greenhouse Glass Fix",
+      "category": "structures",
+      "categories": [
+        "structures",
+        "building",
+        "quality-of-life"
+      ],
+      "summary": "Adds clearer visual variants for greenhouse glass structures so players can keep greenhouse building functionality while using more transparent glass appearances.",
+      "features": [
+        "Placed greenhouse pieces can switch visual variants through their interaction wheel.",
+        "Includes translucent/clear glass-style variants and supports paint/dye regions.",
+        "Designed to be safe to add/remove; removing the mod reverts the special appearance rather than replacing the underlying greenhouse structure."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/greenhouse-glass-fix",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "just-wants-to-cuddle",
+      "name": "Just wants to cuddle",
+      "category": "breeding",
+      "categories": [
+        "breeding",
+        "imprinting",
+        "quality-of-life"
+      ],
+      "summary": "Simplifies baby imprint requests so babies ask only for cuddles/petting instead of random walks or food requests.",
+      "features": [
+        "Removes walking requests from the normal imprint request pool.",
+        "Removes random requested-food imprint tasks.",
+        "Keeps the cuddle/petting interaction as the imprint request."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/only-pet",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "jvh-garden-decor",
+      "name": "JVH Garden Decor",
+      "category": "decoration",
+      "categories": [
+        "decoration",
+        "building"
+      ],
+      "summary": "A broad landscaping and garden-decoration pack with plants, planters, paths, bridges, fountains, lights, and themed outdoor pieces.",
+      "features": [
+        "Includes hedges, rose bushes, climbing roses, flowers, potted plants, planters, cherry blossom/wisteria-style vegetation, pathways, bridges, and fountains.",
+        "Many pieces expose color/texture variants through radial options.",
+        "Includes functional decorative lighting with automatic day/night behavior.",
+        "A dedicated crafting station organizes many of the pieces.",
+        "Several assets react to environmental conditions such as rain/weather."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/jvh-garden-decor",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "kibble-vending-machine",
+      "name": "Kibble Vending Machine",
+      "category": "taming",
+      "categories": [
+        "taming",
+        "kibble",
+        "crafting"
+      ],
+      "summary": "Adds a placeable vending/crafting machine that produces kibble in exchange for raw metal, providing an alternate way to obtain kibble without the normal cooking chain.",
+      "features": [
+        "Unlocks at level 26 for 10 engram points according to the author page.",
+        "Uses raw metal as the documented purchase/crafting resource.",
+        "Author prices begin at 30 raw metal per kibble and crafting time is reduced.",
+        "The structure supports side/front-back snapping and pin locking."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/kibble-vending-machine",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "mining-drill-cross-platform",
+      "name": "Mining Drill (Cross-Platform)",
+      "category": "resources",
+      "categories": [
+        "resources",
+        "farming",
+        "tools"
+      ],
+      "summary": "Adds a lightweight mining-drill tool intended for convenient resource gathering with reduced upkeep and resource weight.",
+      "features": [
+        "Unlocks at level 1 for zero engram points according to the author page.",
+        "Documented recipe uses Crystal, Metal Ingots, and Polymer.",
+        "After initial gasoline activation, the tool is designed for effectively unlimited power.",
+        "No overheat and unlimited durability are advertised features.",
+        "Provides major carried-resource weight reduction while equipped."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/mining-drill-cross-platform",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "mouse-saver-easy-dino-attacks",
+      "name": "Mouse Saver - Easy Dino Attacks",
+      "category": "quality-of-life",
+      "categories": [
+        "quality-of-life",
+        "creatures",
+        "controls"
+      ],
+      "summary": "Lets players hold creature attack inputs instead of repeatedly clicking/tapping, reducing input fatigue during repetitive dino attacks.",
+      "features": [
+        "Works with most creatures and the primary attack inputs.",
+        "Per-creature behavior can be managed through radial settings.",
+        "Servers can blacklist creature classes that should not use the override."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/mouse-saver-easy-dino-attacks",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "name-that-dino",
+      "name": "Name That Dino! - Automatic Themed Random Dino Names",
+      "category": "creatures",
+      "categories": [
+        "creatures",
+        "names",
+        "quality-of-life"
+      ],
+      "summary": "Automatically assigns themed names to newly tamed creatures and babies using large species-aware name pools.",
+      "features": [
+        "Contains thousands of themed names across many supported creatures.",
+        "Uses male, female, and unisex pools where appropriate.",
+        "Draw-bag logic reduces immediate repeats.",
+        "After a name pool is exhausted, reuse can be distinguished with Roman-numeral suffixes.",
+        "Works with normal tames, bred babies, and supported wild-baby tames."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/name-that-dino",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "pelayoris-cryo-storage",
+      "name": "Pelayori's Cryo Storage (Crossplay!)",
+      "category": "creature-storage",
+      "categories": [
+        "creature-storage",
+        "cryopods",
+        "quality-of-life"
+      ],
+      "summary": "A full cryopod-storage suite with cryopods, cryofridge, Cryogun, Cryo Terminal, and Neuter Gun, designed to preserve creature data and remain compatible with buffs such as Shiny effects.",
+      "features": [
+        "Cryopods and Cryofridge provide creature storage.",
+        "Cryogun quickly cryopods creatures.",
+        "Cryo Terminal can recharge cryopods, automatically pick up babies, destroy unwanted creatures, and provide additional management actions.",
+        "Neuter Gun can neuter or kill targeted creatures on demand.",
+        "The author states stored creatures are protected from the restart-deletion problem addressed by the mod."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/cryopods",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "rr-tranqs-and-more",
+      "name": "RR-Tranqs and more!",
+      "category": "taming",
+      "categories": [
+        "taming",
+        "tranqs",
+        "potions"
+      ],
+      "summary": "Adds stronger tranquilizer tiers, narcotics, utility potions, and related taming items centered on the RR-Tranq Smithy.",
+      "features": [
+        "The author states the listed items have their own engrams."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/rr-tranqs-and-more",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "s-dino-variants",
+      "name": "S-Dino Variants",
+      "category": "creatures",
+      "categories": [
+        "creatures",
+        "variants"
+      ],
+      "summary": "Adds a large collection of glowing S-variant creatures with modified visuals and, for many species, extra gameplay traits compared with their vanilla counterparts.",
+      "features": [
+        "S variants are intended for use across maps supported by the mod.",
+        "Many tamed S creatures share a general stat tradeoff of increased attack/movement with reduced health.",
+        "S variants are documented as radiation immune.",
+        "Many individual S species have unique extra mechanics beyond the shared baseline.",
+        "Special effects can be toggled through the creature interaction menu where supported."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/s-dino-variants",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "shiny-dinos-ascended",
+      "name": "Shiny! Dinos Ascended",
+      "category": "creatures",
+      "categories": [
+        "creatures",
+        "variants",
+        "rewards"
+      ],
+      "summary": "Periodically spawns rare Shiny versions of existing creatures with distinctive colors and optional enhanced levels/abilities, plus tracking, notification, reward, and display systems.",
+      "features": [
+        "Shinies are special variants of existing species and may have enhanced levels or abilities depending on configuration.",
+        "Shinies can be tamed or hunted for configurable rewards.",
+        "They remain compatible with their base species for breeding/mate-boost behavior.",
+        "Includes a tracker and configurable spawn notifications.",
+        "Supports in-game configuration, optional Discord notifications, and a Shiny Display for showcasing stored creatures."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/shiny-ascended",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "simple-trade",
+      "name": "Simple Trade",
+      "category": "trading",
+      "categories": [
+        "trading",
+        "currency",
+        "shops"
+      ],
+      "summary": "Provides player-to-player and admin trading through trade structures and an optional global market, supporting item and creature listings with configurable currencies.",
+      "features": [
+        "Players can list items or supported creatures and define a price or requested goods.",
+        "Transactions can complete through dedicated structures/global-market workflows without players meeting in person.",
+        "Supports admin shops and creature sales through compatible cryo systems.",
+        "Server admins can configure main/alternate currencies from eligible vanilla or mod items."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/simpletrade",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "solo-farm-mod",
+      "name": "Solo Farm Mod",
+      "category": "farming",
+      "categories": [
+        "farming",
+        "automation",
+        "quality-of-life"
+      ],
+      "summary": "Adds a Solo Farm Remote and farm-mode controls that keep compatible farming creatures performing their harvesting attack automatically until configured limits are reached.",
+      "features": [
+        "Solo Farm Remote can place compatible creatures into continuous farming behavior.",
+        "Supports remove/keep item lists and reusable presets.",
+        "Farmmode Enabler can expose radial farm-mode controls on creatures that normally do not have them.",
+        "Supports administrative enabling for otherwise disabled creatures."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/solo-farm-mod",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "stop-the-steal",
+      "name": "Stop The Steal - Ascended [UPDATE NOV 2024]",
+      "category": "creatures",
+      "categories": [
+        "creatures",
+        "quality-of-life",
+        "protection"
+      ],
+      "summary": "Changes wild Pegomastax and Ichthyornis behavior to greatly reduce nuisance item theft while preserving selected taming/behavior mechanics.",
+      "features": [
+        "Wild Pegomastax no longer steal items from players under normal behavior and are changed to knockout taming.",
+        "Tamed Pegomastax can still use their instructed pickpocket behavior.",
+        "Healthy wild Ichthyornis are prevented from normally targeting players, tames, or non-water creatures.",
+        "Provoked Ichthyornis can still retain a small chance to steal.",
+        "Affected newly spawned creatures use the modified behavior."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/stop-the-steal-ascended",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "tg-stacking-mod",
+      "name": "TG Stacking Mod 10000-90",
+      "category": "storage",
+      "categories": [
+        "storage",
+        "stacks",
+        "quality-of-life"
+      ],
+      "summary": "A resource stacking/weight-reduction mod that raises many stack sizes and substantially reduces carried resource weight.",
+      "features": [
+        "Many resources stack up to 10,000.",
+        "Ammo and kibble use smaller documented stack caps such as 500.",
+        "Resource weight is heavily reduced.",
+        "Designed to load high in mod order so its resource replacements take precedence."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/tg-stacking-mod-10000-90",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "upgrade-station",
+      "name": "Upgrade Station",
+      "category": "crafting",
+      "categories": [
+        "crafting",
+        "upgrades",
+        "quality-of-life"
+      ],
+      "summary": "Adds an Upgrade Station system for improving qualifying weapons, armor, and saddles through quality tiers, with complementary salvage/resource-recovery functions.",
+      "features": [
+        "Can upgrade qualifying gear from lower quality through higher tiers, including Ascendant.",
+        "Supports weapons, armor, saddles, and many mod/Tek items when they expose a valid upgrade path.",
+        "Provides salvage behavior for eligible gear/structures to recover resources.",
+        "The ASA port is still treated by the author as an actively developed/work-in-progress system."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/upgrade-station",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "utilities-plus",
+      "name": "Utilities Plus",
+      "category": "quality-of-life",
+      "categories": [
+        "quality-of-life",
+        "tools"
+      ],
+      "summary": "Adds reusable or enhanced versions of common utility items to reduce repetitive crafting and improve exploration convenience.",
+      "features": [
+        "Includes reusable Bola, Flare Gun, and Parachute variants.",
+        "Grappling Hook+ still uses a crossbow but the hook is not consumed and is designed to work in many cave contexts.",
+        "Includes a reusable Lasso and reinforced Whip.",
+        "Items can be individually enabled/disabled through server configuration."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/utilities-plus",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "wall-n-floor-decor",
+      "name": "Wall'n'Floor Decor",
+      "category": "decoration",
+      "categories": [
+        "decoration",
+        "building"
+      ],
+      "summary": "A very large decorative furnishing pack covering creature-themed displays, furniture, lighting, room décor, storage, event pieces, and glass/decorative architecture.",
+      "features": [
+        "Includes 100+ creature statues plus bone heads, eggs/nests, figurines, holograms, and boss-themed displays.",
+        "Adds furniture and room-decoration collections.",
+        "Includes extensive lighting and wall décor.",
+        "Includes event/themed decoration sets and storage pieces.",
+        "Provides stained/clear glass and other architectural decoration options."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/wallnfloor-decor",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Previously cataloged as all maps",
+      "historicMapNames": [],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "creature-spawns-griffins",
+      "name": "Creature Spawns (Griffins)",
+      "category": "creatures",
+      "categories": [
+        "creatures",
+        "spawns"
+      ],
+      "summary": "Adds Griffin spawns to supported ASA maps/regions so servers can introduce Griffins outside their normal availability.",
+      "features": [],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/creature-spawns-griffin",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Historical map-specific entry",
+      "historicMapNames": [
+        "Scorched Earth"
+      ],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "ludopark-casino-freemium",
+      "name": "LudopARK CASINO Freemium",
+      "category": "casino",
+      "categories": [
+        "casino",
+        "games"
+      ],
+      "summary": "A server-economy and casino suite with minigames, player/dino/item shops, multiple currencies, reward systems, and administrator-configured casino structures.",
+      "features": [
+        "Free games include Raptor Race, Blackjack, Slot Machine, Mystery Box, Wheel of Fortune, Piggi Bank, and Poker Bob’s Tales; additional premium games are also offered.",
+        "Supports item shops, player shops, dino shops, and item-sell shops as part of a server economy.",
+        "Includes Daily Reward, Welcome Kit, and Online Reward structures/workflows.",
+        "Supports several built-in coin resources and a Currency Exchange Machine.",
+        "Shop sales can be logged and optionally delivered to Discord via webhook configuration."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/ludopark-casino-freemium",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Historical map-specific entry",
+      "historicMapNames": [
+        "Valguero"
+      ],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "astraeos-trireme-ships",
+      "name": "Astraeos - Trireme Ships",
+      "category": "ships",
+      "categories": [
+        "ships",
+        "transport"
+      ],
+      "summary": "Adds a buildable Greek Trireme ship originally created for Astraeos but usable on other maps supported by the server.",
+      "features": [
+        "Adds a Greek Trireme ship.",
+        "The ship can be built on by players.",
+        "Its sail appearance can be changed.",
+        "The author states the ship is not damaged by Leedsichthys."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/astraeos-trireme-ships",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Historical map-specific entry",
+      "historicMapNames": [
+        "Astraeos",
+        "Valguero",
+        "Ragnarok",
+        "The Center",
+        "Genesis"
+      ],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "better-horde-mode",
+      "name": "Better Horde Mode [QoL, Open Source]",
+      "category": "events",
+      "categories": [
+        "events",
+        "combat",
+        "quality-of-life"
+      ],
+      "summary": "Improves Extinction-style Orbital Supply Drop and Element Vein horde events with visibility, radar, cleanup, and configurable quality-of-life controls.",
+      "features": [
+        "After a configurable delay, remaining hostile creatures can be marked with a bright beacon so hidden enemies are easier to locate.",
+        "Can optionally kill lingering/idle event dinos after a configured time.",
+        "Provides a radar UI to help find remaining enemies.",
+        "Adjusts event auto-destruction behavior/range and can prevent completed events from disappearing solely because players move farther away.",
+        "Compatible with vanilla OSD/Element Vein spawns and supported spawner mods."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/better-horde-mode-qol-open-source",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Historical map-specific entry",
+      "historicMapNames": [
+        "Extinction",
+        "Astraeos"
+      ],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "base-guardian",
+      "name": "Base Guardian | Gaia Studios",
+      "category": "protection",
+      "categories": [
+        "protection",
+        "structures",
+        "quality-of-life"
+      ],
+      "summary": "Adds a place-and-go base-protection structure that automatically eliminates wild dinosaurs entering a configurable protection radius.",
+      "features": [
+        "Automatically removes wild dinosaurs inside its protected area.",
+        "Default author-documented radius is ten foundations.",
+        "Protection radius can be changed through the mod’s INI option.",
+        "Activates automatically when placed.",
+        "Baby dinos are intentionally not affected, allowing breeding/raising within the protected area."
+      ],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/base-guardian",
+      "sourceType": "CurseForge mod-author listing",
+      "historicScope": "Historical limited applicability",
+      "historicMapNames": [
+        "Extinction",
+        "Astraeos"
+      ],
+      "listedLegacyOn": null
+    },
+    {
+      "id": "paleo-ark-ascension",
+      "name": "Paleo ARK Ascension",
+      "category": "creatures",
+      "categories": [
+        "creatures"
+      ],
+      "summary": "Prehistoric creature content pack; mechanics and individual server builds are not verified by this listing.",
+      "features": [],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/paleo-ark-ascension",
+      "sourceType": "CurseForge project 986540",
+      "historicScope": "Legacy listing observed on all ten submitted Legacy Mods pages",
+      "historicMapNames": [],
+      "listedLegacyOn": "2026-10-08"
+    },
+    {
+      "id": "paleo-ark-evolution-apex-predators",
+      "name": "Paleo ARK – Evolution | Apex Predators",
+      "category": "creatures",
+      "categories": [
+        "creatures"
+      ],
+      "summary": "Distinct Paleo ARK creature project. This listing does not verify runtime creatures, exact commands or enabled builds.",
+      "features": [],
+      "sourceUrl": "https://www.curseforge.com/ark-survival-ascended/mods/paleo-ark-evolution-apex-predators",
+      "sourceType": "CurseForge project 970540",
+      "historicScope": "Legacy listing observed on all ten submitted Legacy Mods pages",
+      "historicMapNames": [],
+      "listedLegacyOn": "2026-10-08"
+    }
+  ],
+  "evidenceNote": "Two additional mods were observed by the owner in the Legacy Nitrado enabled-mod listings on 2026-10-08; this does not prove live mod loading or availability on the Limited cluster."
+}

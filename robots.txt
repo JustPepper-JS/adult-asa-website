@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /control/
+Disallow: /admin
+Disallow: /api/
+Sitemap: https://adult-asa.org/sitemap.xml

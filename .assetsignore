@@ -11,3 +11,19 @@ package*.json
 *.md
 rexy-*.js
 rexy_*.json
+# Archived screens are intentionally no longer public assets.
+adultasa-theme.css
+shared-nav.js
+cluster-status.html
+heatmap.html
+movement.html
+players.html
+profile.html
+profile.fixed.html
+link-survivor.html
+staff.html
+staff-whitelist.html
+boss-roles.html
+tracker.html
+tribe.html
+rexy-ai.js

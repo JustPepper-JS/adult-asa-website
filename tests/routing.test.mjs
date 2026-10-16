@@ -29,10 +29,18 @@ test('admin aliases reach the dedicated login landing page', async () => {
   assert.match(res.headers.get('Content-Security-Policy'), /default-src 'none'/);
   assert.equal(res.headers.get('X-Robots-Tag'), 'noindex');
 });
-test('existing homepage and approved static files are preserved', async () => {
+test('only redesigned public files are served, with safe legacy redirects', async () => {
   const handle = createHandler({ fetchImpl: failFetch });
   assert.equal(await (await handle(request('/'), env)).text(), 'asset:/index.html');
-  for (const path of ['/mods.html', '/gateway.css', '/movement.html']) assert.equal((await handle(request(path), env)).status, 200);
+  for (const path of ['/mods','/servers','/mods.html','/servers.html','/gateway.css','/assets/site.css','/assets/site.js','/assets/mod-catalog.json','/assets/icon.svg','/robots.txt','/sitemap.xml']) {
+    const res = await handle(request(path), env); assert.equal(res.status, 200, path); noCache(res);
+  }
+  for (const [path, destination] of [['/movement.html','/servers'],['/heatmap.html','/servers'],['/players.html','/servers'],['/tracker.html','/servers'],['/link-survivor.html','/'],['/tribe.html','/']]) {
+    const res = await handle(request(path), env); assert.equal(res.status, 302, path); assert.equal(res.headers.get('Location'), destination);
+  }
+  for (const path of ['/','/servers','/mods']) {
+    const res=await handle(request(path),env);assert.match(res.headers.get('Content-Security-Policy')||'', /script-src 'self'/);
+  }
 });
 test('source files, unreviewed APIs and arbitrary proxy targets are not published', async () => {
   const handle = createHandler({ fetchImpl: failFetch });
@@ -273,3 +281,14 @@ test('unknown, spoofed, malformed and duplicate OAuth issuers are rejected befor
   }
 });
 
+
+test('all historic individual activity and player pages fail closed or redirect safely', async () => {
+  const handle=createHandler({fetchImpl:failFetch});
+  for(const path of ['/movement.html','/heatmap.html','/profile.html','/profile.fixed.html','/staff.html','/staff-whitelist.html','/boss-roles.html']) {
+    const res=await handle(request(path),env);assert.equal(res.status,302,path);
+    assert.ok(['/', '/servers','/admin'].includes(res.headers.get('Location')));
+  }
+  for(const path of ['/api/movement','/api/players','/api/heatmap','/api/history','/api/staff','/api/admin','/control/api/actions','/control/moderation']) {
+    const res=await handle(request(path),env);assert.equal(res.status,404,path);
+  }
+});
