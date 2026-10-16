@@ -100,11 +100,14 @@ function safeLocation(value) {
 function validQuery(url) {
   if (!url.search) return true;
   if (url.pathname !== '/control/oauth/callback') return false;
-  const allowed = new Set(['state', 'code', 'error', 'error_description']);
+  const allowed = new Set(['state', 'code', 'error', 'error_description', 'iss']);
   const seen = new Set();
   for (const [key, value] of url.searchParams) {
     if (!allowed.has(key) || seen.has(key) || value.length > 2048) return false;
     seen.add(key);
+    // RFC 9207 issuer identification: Discord supplies this parameter on its
+    // authorization callback. Accept only the exact expected issuer.
+    if (key === 'iss' && value !== 'https://discord.com') return false;
   }
   return true;
 }
