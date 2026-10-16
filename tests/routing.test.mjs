@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { createHandler, projectStatus, forwardedCookies, RELEASE, CANONICAL, BACKEND } from '../_worker.js';
 const nonce = 'A'.repeat(43);
-const headers = { Cookie: '__Host-rexy_console=' + nonce, Origin: CANONICAL, 'X-CSRF-Token': nonce };
+const headers = { Cookie: '__Host-rexy_console=' + nonce, Origin: CANONICAL, 'X-CSRF-Token': nonce, 'Content-Type':'application/json' };
 const request = (path, opts = {}, origin = CANONICAL) => new Request(origin + path, opts);
 const sample = { cluster: 'legacy', updatedAt: '2026-10-15T20:00:00Z', totalOnline: 2,
   servers: [{ name: 'Adult ASA - The Island', map: 'TheIsland_WP', players: 2, maxPlayers: 26, online: true,
@@ -290,5 +290,83 @@ test('all historic individual activity and player pages fail closed or redirect 
   }
   for(const path of ['/api/movement','/api/players','/api/heatmap','/api/history','/api/staff','/api/admin','/control/api/actions','/control/moderation']) {
     const res=await handle(request(path),env);assert.equal(res.status,404,path);
+  }
+});
+
+test('Beacon status and services use exact private path, never a public status fallback', async () => {
+  for (const path of ['/control/api/beacon/status','/control/api/beacon/services']) {
+    let seen=0;
+    const handle=createHandler({ fetchImpl:async(url,opts)=>{
+      seen++;assert.equal(url,BACKEND+path);assert.equal(opts.method,'GET');
+      assert.equal(opts.headers.get('Cookie'),headers.Cookie);
+      assert.equal(opts.headers.get('Authorization'),null);
+      return json({error:'NOT_AUTHENTICATED'},401);
+    }});
+    const response=await handle(request(path,{headers}),env);
+    assert.equal(response.status,401);
+    assert.equal((await response.json()).error,'NOT_AUTHENTICATED');
+    assert.equal(seen,1);noCache(response);
+  }
+});
+test('Beacon device start/poll require secure canonical CSRF and application/json', async () => {
+  const handle=createHandler({fetchImpl:failFetch});
+  for(const path of ['/control/api/beacon/start','/control/api/beacon/poll']){
+    for(const changes of [
+      {Origin:'https://evil.invalid'},
+      {'X-CSRF-Token':'wrong'},
+      {'X-CSRF-Token':''},
+      {'Content-Type':'text/plain'},
+      {'Content-Type':''},
+    ]){
+      const res=await handle(request(path,{method:'POST',headers:{...headers,...changes},body:'{}'}),env);
+      assert.equal(res.status,403,path+JSON.stringify(changes));
+    }
+    assert.equal((await handle(request(path),env)).status,405);
+    assert.equal((await handle(request(path,{method:'PUT',headers,body:'{}'}),env)).status,405);
+  }
+});
+test('Beacon POST forwards only canonical owner cookie, Origin, CSRF and sanitized JSON', async () => {
+  for(const path of ['/control/api/beacon/start','/control/api/beacon/poll']){
+    let count=0;
+    const handle=createHandler({fetchImpl:async(url,opts)=>{
+      count++;assert.equal(url,BACKEND+path);assert.equal(opts.method,'POST');
+      assert.equal(opts.headers.get('Origin'),CANONICAL);
+      assert.equal(opts.headers.get('X-CSRF-Token'),nonce);
+      assert.equal(opts.headers.get('Cookie'),headers.Cookie);
+      assert.equal(opts.headers.get('Content-Type'),'application/json');
+      for(const key of ['Authorization','X-User-Id','X-Admin','X-Forwarded-Host','X-Forwarded-For','Host'])
+        assert.equal(opts.headers.get(key),null,key);
+      assert.equal(new TextDecoder().decode(opts.body),'{}');
+      return json({state:'DISABLED',readOnly:true},503);
+    }});
+    const res=await handle(request(path,{method:'POST',headers:{...headers,Authorization:'Bearer injected','X-User-Id':'owner','X-Admin':'true'},body:'{}'}),env);
+    assert.equal(res.status,503);
+    assert.equal((await res.json()).state,'DISABLED');
+    assert.equal(count,1);noCache(res);
+  }
+});
+test('Beacon request body over limit fails before provider access', async () => {
+  const handle=createHandler({fetchImpl:failFetch});
+  for(const path of ['/control/api/beacon/start','/control/api/beacon/poll']){
+    const res=await handle(request(path,{method:'POST',headers,body:'x'.repeat(1025)}),env);
+    assert.equal(res.status,502);noCache(res);
+  }
+});
+test('Beacon private responses remain JSON and never leak HTML fallback',async()=>{
+  const handle=createHandler({fetchImpl:async()=>new Response('<html>public homepage</html>',{status:200,headers:{'Content-Type':'text/html'}})});
+  assert.equal((await handle(request('/control/api/beacon/services',{headers}),env)).status,502);
+});
+test('Cloudflare preview cannot start Beacon authorization or read private service UUIDs',async()=>{
+  const handle=createHandler({fetchImpl:failFetch});
+  for(const path of ['/control/api/beacon/status','/control/api/beacon/services','/control/api/beacon/start','/control/api/beacon/poll']){
+    const opts=path.endsWith('start')||path.endsWith('poll')?{method:'POST',headers,body:'{}'}:{headers};
+    const res=await handle(request(path,opts,'https://preview.adult-asa-website.pages.dev'),env);
+    assert.equal(res.status,403);
+  }
+});
+test('Unknown Beacon and game operations are not reverse proxied',async()=>{
+  const handle=createHandler({fetchImpl:failFetch});
+  for(const path of ['/control/api/beacon/revoke','/control/api/beacon/write','/control/api/beacon/kick','/control/api/beacon/servers/1','/control/api/rcon','/api/movement','/api/heatmap']){
+    assert.equal((await handle(request(path),env)).status,404,path);
   }
 });
