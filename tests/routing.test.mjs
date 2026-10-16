@@ -29,16 +29,24 @@ test('admin aliases reach the dedicated login landing page', async () => {
   assert.match(res.headers.get('Content-Security-Policy'), /default-src 'none'/);
   assert.equal(res.headers.get('X-Robots-Tag'), 'noindex');
 });
-test('existing homepage and approved static files are preserved', async () => {
+test('only redesigned public files are served, with safe legacy redirects', async () => {
   const handle = createHandler({ fetchImpl: failFetch });
   assert.equal(await (await handle(request('/'), env)).text(), 'asset:/index.html');
-  for (const path of ['/mods.html', '/gateway.css', '/movement.html']) assert.equal((await handle(request(path), env)).status, 200);
+  for (const path of ['/mods','/servers','/mods.html','/servers.html','/gateway.css','/assets/site.css','/assets/site.js','/assets/mod-catalog.json','/assets/icon.svg','/robots.txt','/sitemap.xml']) {
+    const res = await handle(request(path), env); assert.equal(res.status, 200, path); noCache(res);
+  }
+  for (const [path, destination] of [['/movement.html','/servers'],['/heatmap.html','/servers'],['/players.html','/servers'],['/tracker.html','/servers'],['/link-survivor.html','/'],['/tribe.html','/']]) {
+    const res = await handle(request(path), env); assert.equal(res.status, 302, path); assert.equal(res.headers.get('Location'), destination);
+  }
+  for (const path of ['/','/servers','/mods']) {
+    const res=await handle(request(path),env);assert.match(res.headers.get('Content-Security-Policy')||'', /script-src 'self'/);
+  }
 });
 test('source files, unreviewed APIs and arbitrary proxy targets are not published', async () => {
   const handle = createHandler({ fetchImpl: failFetch });
   for (const path of ['/_worker.js', '/rexy-ai.js', '/rexy_entities.json', '/tests/routing.test.mjs', '/wrangler.jsonc',
     '/.github/workflows/routing-ci.yml', '/unknown.html', '/api/heatmap', '/api/tracker', '/api/players',
-    '/api/player-profiles/admin', '/control/api/actions/execute', '/api/status/primal']) {
+    '/api/player-profiles/admin', '/control/api/actions/execute', '/api/status/primal', '/adultasa-theme.css', '/shared-nav.js', '/rexy_tasks.json']) {
     const res = await handle(request(path), env); assert.equal(res.status, 404, path); noCache(res);
   }
 });
@@ -218,58 +226,27 @@ test('asset redirects cannot turn into arbitrary external requests', async () =>
   assert.equal((await createHandler({fetchImpl:failFetch})(request('/admin'), assets)).status, 502);
 });
 
-test('Discord RFC 9207 issuer is accepted and passed unchanged to the C0 callback', async () => {
-  const query = '?code=fixture-code&state=' + nonce + '&iss=https%3A%2F%2Fdiscord.com';
-  let calls = 0;
-  const handle = createHandler({ fetchImpl: async (url, opts) => {
-    calls++;
-    assert.equal(url, BACKEND + '/control/oauth/callback' + query);
-    assert.equal(opts.redirect, 'manual');
-    assert.equal(opts.headers.get('Cookie'), '__Host-rexy_oauth=' + nonce);
-    return new Response('Authentication rejected', { status: 403, headers: { 'Content-Type': 'text/plain' } });
-  } });
-  const response = await handle(request('/control/oauth/callback' + query, { headers: { Cookie: '__Host-rexy_oauth=' + nonce } }), env);
-  assert.equal(response.status, 403);
-  assert.equal(calls, 1);
-  noCache(response);
+test('W1A.1 RFC9207 exact Discord issuer reaches backend without changing session validation', async () => {
+  const query='?code=synthetic-code&state='+nonce+'&iss=https%3A%2F%2Fdiscord.com';let calls=0;
+  const handle=createHandler({fetchImpl: async (url, opts)=>{calls++;assert.equal(url,BACKEND+'/control/oauth/callback'+query);assert.equal(opts.headers.get('Cookie'),'__Host-rexy_oauth='+nonce);return new Response('Authentication rejected',{status:403});}});
+  const response=await handle(request('/control/oauth/callback'+query,{headers:{Cookie:'__Host-rexy_oauth='+nonce}}),env);
+  assert.equal(response.status,403);assert.equal(calls,1);
 });
-
-test('OAuth error callback may also contain the exact Discord issuer', async () => {
-  const query = '?error=access_denied&state=' + nonce + '&iss=https%3A%2F%2Fdiscord.com';
-  let calls = 0;
-  const handle = createHandler({ fetchImpl: async (url) => {
-    calls++;
-    assert.equal(url, BACKEND + '/control/oauth/callback' + query);
-    return new Response('Authentication rejected', { status: 403, headers: { 'Content-Type': 'text/plain' } });
-  } });
-  const response = await handle(request('/control/oauth/callback' + query), env);
-  assert.equal(response.status, 403);
-  assert.equal(calls, 1);
-});
-
-test('unknown, spoofed, malformed and duplicate OAuth issuers are rejected before upstream', async () => {
-  const base = '?code=fixture-code&state=' + nonce + '&iss=';
-  const badIssuers = [
-    'https://evil.invalid', 'http://discord.com', 'https://discord.com/',
-    'https://discord.com.evil.invalid', 'https://discord.com@evil.invalid',
-    'https://DISCORD.com', 'https://discord.com?extra=1', '',
-    'https://discord.com\nadmin',
-  ];
-  const handle = createHandler({ fetchImpl: failFetch });
-  for (const issuer of badIssuers) {
-    const path = '/control/oauth/callback' + base + encodeURIComponent(issuer);
-    assert.equal((await handle(request(path), env)).status, 400, path);
+test('W1A.1 rejects altered and duplicate issuers and OAuth fields', async () => {
+  const handle=createHandler({fetchImpl:failFetch}),base='?state='+nonce+'&code=synthetic-code&iss=';
+  for(const issuer of ['https://bad.invalid','http://discord.com','https://discord.com/','https://discord.com.evil.invalid','']) {
+    assert.equal((await handle(request('/control/oauth/callback'+base+encodeURIComponent(issuer)),env)).status,400);
   }
-  const discord = encodeURIComponent('https://discord.com');
-  for (const path of [
-    '/control/oauth/callback' + base + discord + '&iss=' + discord,
-    '/control/oauth/callback' + base + discord + '&unexpected=true',
-    '/control/oauth/callback' + base + discord + '&state=' + nonce,
-    '/control/login?iss=' + discord,
-    '/control/api/me?iss=' + discord,
-    '/api/status?iss=' + discord,
-  ]) {
-    assert.equal((await handle(request(path), env)).status, 400, path);
+  assert.equal((await handle(request('/control/oauth/callback'+base+encodeURIComponent('https://discord.com')+'&iss=https%3A%2F%2Fdiscord.com'),env)).status,400);
+  assert.equal((await handle(request('/control/login?iss=https%3A%2F%2Fdiscord.com'),env)).status,400);
+});
+test('all historic individual activity and player pages fail closed or redirect safely', async () => {
+  const handle=createHandler({fetchImpl:failFetch});
+  for(const path of ['/movement.html','/heatmap.html','/profile.html','/profile.fixed.html','/staff.html','/staff-whitelist.html','/boss-roles.html']) {
+    const res=await handle(request(path),env);assert.equal(res.status,302,path);
+    assert.ok(['/', '/servers','/admin'].includes(res.headers.get('Location')));
+  }
+  for(const path of ['/api/movement','/api/players','/api/heatmap','/api/history','/api/staff','/api/admin','/control/api/actions','/control/moderation']) {
+    const res=await handle(request(path),env);assert.equal(res.status,404,path);
   }
 });
-

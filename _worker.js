@@ -1,6 +1,6 @@
 // W1A: explicit public-to-private routing. Discord authorization remains in AASA.
 // This module runs in Cloudflare Pages advanced mode and Workers static assets.
-export const RELEASE = 'W1A.1-discord-issuer-20261016-r1';
+export const RELEASE = 'W1B-public-site-20261016-r1';
 export const CANONICAL = 'https://adult-asa.org';
 export const BACKEND = 'https://aasa-discord-bot-v-20-production.up.railway.app';
 const COOKIE_NAMES = new Set(['__Host-rexy_console', '__Host-rexy_oauth']);
@@ -13,11 +13,20 @@ const STATUS_ROUTES = new Map([
   ['/api/status', 'legacy'], ['/api/status/legacy', 'legacy'], ['/api/status/limited', 'limited'],
 ]);
 const PUBLIC_FILES = new Set([
-  '/index.html', '/adultasa-theme.css', '/shared-nav.js', '/gateway.css', '/admin.html',
-  '/boss-roles.html', '/cluster-status.html', '/heatmap.html', '/link-survivor.html',
-  '/mods.html', '/movement.html', '/players.html', '/profile.html', '/profile.fixed.html',
-  '/staff.html', '/tracker.html', '/tribe.html',
+  '/index.html', '/servers.html', '/mods.html', '/admin.html', '/gateway.css',
+  '/assets/site.css', '/assets/site.js', '/assets/icon.svg', '/assets/mod-catalog.json',
+  '/robots.txt', '/sitemap.xml',
 ]);
+// Historic public screens included identifiable movement and unused placeholder tools.
+// De-link and reject their assets; offer only safe public destinations.
+const LEGACY_REDIRECTS = new Map([
+  ['/cluster-status.html', '/servers'], ['/movement.html', '/servers'],
+  ['/heatmap.html', '/servers'], ['/players.html', '/servers'],
+  ['/tracker.html', '/servers'], ['/profile.html', '/servers'],
+  ['/profile.fixed.html', '/servers'], ['/link-survivor.html', '/'],
+  ['/staff.html', '/'], ['/tribe.html', '/'], ['/boss-roles.html', '/'],
+]);
+const PUBLIC_CSP = "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; font-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'";
 const ADMIN_ALIASES = new Set(['/admin.html', '/admin/', '/control/admin.html', '/staff-whitelist.html']);
 const CSP = "default-src 'none'; style-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'; form-action 'none'";
 const nullBody = status => status === 204 || status === 205 || status === 304;
@@ -196,7 +205,9 @@ export function createHandler({ fetchImpl = globalThis.fetch, timeoutMs = 12000,
       } finally { clearTimeout(timer); }
     }
     if (!['GET', 'HEAD'].includes(request.method)) return errorResponse('METHOD_NOT_ALLOWED', 405);
-    const file = pathname === '/' ? '/index.html' : pathname === '/admin' ? '/admin.html' : pathname;
+    if (LEGACY_REDIRECTS.has(pathname)) return redirect(LEGACY_REDIRECTS.get(pathname));
+    const file = pathname === '/' ? '/index.html' : pathname === '/admin' ? '/admin.html'
+      : pathname === '/servers' ? '/servers.html' : pathname === '/mods' ? '/mods.html' : pathname;
     if (!PUBLIC_FILES.has(file)) return errorResponse('NOT_FOUND', 404);
     try {
       const assetURL = new URL(file, url.origin);
@@ -212,6 +223,7 @@ export function createHandler({ fetchImpl = globalThis.fetch, timeoutMs = 12000,
       if (response.status !== 200) return errorResponse('ASSET_UNAVAILABLE', 404);
       const headers = secureHeaders(response.headers);
       if (file === '/admin.html') { headers.set('Content-Security-Policy', CSP); headers.set('X-Robots-Tag', 'noindex'); }
+      else if (['/index.html', '/servers.html', '/mods.html'].includes(file)) headers.set('Content-Security-Policy', PUBLIC_CSP);
       return new Response(request.method === 'HEAD' ? null : response.body, { status: 200, headers });
     } catch (_) { return errorResponse('ASSET_UNAVAILABLE', 503); }
   };
