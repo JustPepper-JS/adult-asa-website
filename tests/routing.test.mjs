@@ -217,3 +217,59 @@ test('asset redirects cannot turn into arbitrary external requests', async () =>
   const assets = { ASSETS: { fetch: async () => new Response(null, {status: 302, headers: {Location: 'https://evil.invalid'}}) } };
   assert.equal((await createHandler({fetchImpl:failFetch})(request('/admin'), assets)).status, 502);
 });
+
+test('Discord RFC 9207 issuer is accepted and passed unchanged to the C0 callback', async () => {
+  const query = '?code=fixture-code&state=' + nonce + '&iss=https%3A%2F%2Fdiscord.com';
+  let calls = 0;
+  const handle = createHandler({ fetchImpl: async (url, opts) => {
+    calls++;
+    assert.equal(url, BACKEND + '/control/oauth/callback' + query);
+    assert.equal(opts.redirect, 'manual');
+    assert.equal(opts.headers.get('Cookie'), '__Host-rexy_oauth=' + nonce);
+    return new Response('Authentication rejected', { status: 403, headers: { 'Content-Type': 'text/plain' } });
+  } });
+  const response = await handle(request('/control/oauth/callback' + query, { headers: { Cookie: '__Host-rexy_oauth=' + nonce } }), env);
+  assert.equal(response.status, 403);
+  assert.equal(calls, 1);
+  noCache(response);
+});
+
+test('OAuth error callback may also contain the exact Discord issuer', async () => {
+  const query = '?error=access_denied&state=' + nonce + '&iss=https%3A%2F%2Fdiscord.com';
+  let calls = 0;
+  const handle = createHandler({ fetchImpl: async (url) => {
+    calls++;
+    assert.equal(url, BACKEND + '/control/oauth/callback' + query);
+    return new Response('Authentication rejected', { status: 403, headers: { 'Content-Type': 'text/plain' } });
+  } });
+  const response = await handle(request('/control/oauth/callback' + query), env);
+  assert.equal(response.status, 403);
+  assert.equal(calls, 1);
+});
+
+test('unknown, spoofed, malformed and duplicate OAuth issuers are rejected before upstream', async () => {
+  const base = '?code=fixture-code&state=' + nonce + '&iss=';
+  const badIssuers = [
+    'https://evil.invalid', 'http://discord.com', 'https://discord.com/',
+    'https://discord.com.evil.invalid', 'https://discord.com@evil.invalid',
+    'https://DISCORD.com', 'https://discord.com?extra=1', '',
+    'https://discord.com\nadmin',
+  ];
+  const handle = createHandler({ fetchImpl: failFetch });
+  for (const issuer of badIssuers) {
+    const path = '/control/oauth/callback' + base + encodeURIComponent(issuer);
+    assert.equal((await handle(request(path), env)).status, 400, path);
+  }
+  const discord = encodeURIComponent('https://discord.com');
+  for (const path of [
+    '/control/oauth/callback' + base + discord + '&iss=' + discord,
+    '/control/oauth/callback' + base + discord + '&unexpected=true',
+    '/control/oauth/callback' + base + discord + '&state=' + nonce,
+    '/control/login?iss=' + discord,
+    '/control/api/me?iss=' + discord,
+    '/api/status?iss=' + discord,
+  ]) {
+    assert.equal((await handle(request(path), env)).status, 400, path);
+  }
+});
+

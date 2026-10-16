@@ -69,3 +69,24 @@ validation passed. Include this rule in future Rexy implementation prompts and h
 - https://developers.cloudflare.com/pages/functions/advanced-mode/
 - https://developers.cloudflare.com/workers/static-assets/binding/
 - https://developers.cloudflare.com/workers/runtime-apis/headers/
+
+## W1A.1 Discord issuer callback correction (2026-10-15/16)
+
+Live owner login exposed a missing callback query allowlist field: Discord returned
+`iss=https%3A%2F%2Fdiscord.com` alongside `code` and `state`. W1A rejected
+the request with `{"error":"INVALID_QUERY"}` before the C0 router could process it.
+W1A.1 permits the optional RFC 9207 issuer parameter **only** on the exact
+`/control/oauth/callback` route, and only when decoded value matches
+`https://discord.com` exactly. Duplicate, foreign, malformed, or misplaced
+issuer fields still fail closed. The exact query is forwarded to the existing
+C0 server; its one-time state-cookie checks and owner allowlist remain unchanged.
+
+No new OAuth secret, token, bot, Railway change, or permissions are necessary.
+A screenshot containing a prior authorization code does not permit replay;
+the owner must begin a new login from `https://adult-asa.org/admin`.
+
+Evidence gates: updated website routing CI; Cloudflare preview build; public-domain
+verification of the corrected query validator without attempting token exchange;
+then human owner success/non-owner denial and sign-out. Treat the last live
+login checks as **UNVERIFIED** until someone performs them. Preserve the
+mandatory timeout-safe handoff and exact source/CI evidence.

@@ -1,6 +1,6 @@
 // W1A: explicit public-to-private routing. Discord authorization remains in AASA.
 // This module runs in Cloudflare Pages advanced mode and Workers static assets.
-export const RELEASE = 'W1A-routing-20261015-r1';
+export const RELEASE = 'W1A.1-discord-issuer-20261016-r1';
 export const CANONICAL = 'https://adult-asa.org';
 export const BACKEND = 'https://aasa-discord-bot-v-20-production.up.railway.app';
 const COOKIE_NAMES = new Set(['__Host-rexy_console', '__Host-rexy_oauth']);
@@ -100,11 +100,14 @@ function safeLocation(value) {
 function validQuery(url) {
   if (!url.search) return true;
   if (url.pathname !== '/control/oauth/callback') return false;
-  const allowed = new Set(['state', 'code', 'error', 'error_description']);
+  const allowed = new Set(['state', 'code', 'error', 'error_description', 'iss']);
   const seen = new Set();
   for (const [key, value] of url.searchParams) {
     if (!allowed.has(key) || seen.has(key) || value.length > 2048) return false;
     seen.add(key);
+    // RFC 9207 issuer identification: Discord supplies this parameter on its
+    // authorization callback. Accept only the exact expected issuer.
+    if (key === 'iss' && value !== 'https://discord.com') return false;
   }
   return true;
 }
