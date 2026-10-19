@@ -1,6 +1,6 @@
 // W1A: explicit public-to-private routing. Discord authorization remains in AASA.
 // This module runs in Cloudflare Pages advanced mode and Workers static assets.
-export const RELEASE = 'W1B-beacon-private-proxy-20261016-r1';
+export const RELEASE = 'W1B-control-marketing-query-20261018-r1';
 export const CANONICAL = 'https://adult-asa.org';
 export const BACKEND = 'https://aasa-discord-bot-v-20-production.up.railway.app';
 const COOKIE_NAMES = new Set(['__Host-rexy_console', '__Host-rexy_oauth']);
@@ -108,6 +108,23 @@ function safeLocation(value) {
       [...url.searchParams.keys()].length === 5) return url.href;
   throw Error('Unexpected authentication redirect');
 }
+// External links may append analytics parameters to the private landing
+// page. Strip only standard, bounded UTM tags with a SAME-ORIGIN redirect.
+// OAuth callbacks, APIs, login state, and credentials continue to reject all
+// non-protocol query keys. This never forwards the tag to the AASA backend.
+const TRACKING_KEYS = new Set([
+  'utm_source','utm_medium','utm_campaign','utm_term','utm_content',
+]);
+const TRACKING_ENTRY = /^[A-Za-z0-9._~-]{1,128}$/;
+function isRemovableTrackingQuery(url) {
+  if (!url.search || url.search.length > 768) return false;
+  const seen = new Set();
+  for (const [key,value] of url.searchParams) {
+    if (!TRACKING_KEYS.has(key) || seen.has(key) || !TRACKING_ENTRY.test(value)) return false;
+    seen.add(key);
+  }
+  return seen.size >= 1 && seen.size <= TRACKING_KEYS.size;
+}
 function validQuery(url) {
   if (!url.search) return true;
   if (url.pathname !== '/control/oauth/callback') return false;
@@ -151,7 +168,11 @@ export function createHandler({ fetchImpl = globalThis.fetch, timeoutMs = 12000,
     if (ADMIN_ALIASES.has(pathname)) {
       return request.method === 'GET' || request.method === 'HEAD' ? redirect('/admin') : errorResponse('METHOD_NOT_ALLOWED', 405);
     }
-    if (pathname === '/control') return request.method === 'GET' || request.method === 'HEAD' ? redirect('/control/') : errorResponse('METHOD_NOT_ALLOWED', 405);
+    if (pathname === '/control') {
+      if (request.method !== 'GET' && request.method !== 'HEAD') return errorResponse('METHOD_NOT_ALLOWED', 405);
+      if (url.origin !== CANONICAL) return errorResponse('USE_CANONICAL_LOGIN', 403);
+      return !url.search || isRemovableTrackingQuery(url) ? redirect('/control/') : errorResponse('INVALID_QUERY', 400);
+    }
     if (isControl || isApi) {
       if (isControl && url.origin !== CANONICAL) return errorResponse('USE_CANONICAL_LOGIN', 403);
       const isStatus = STATUS_ROUTES.has(pathname);
@@ -161,6 +182,12 @@ export function createHandler({ fetchImpl = globalThis.fetch, timeoutMs = 12000,
       if (!isStatus && !PRIVATE_GET.has(pathname) && !isMutation) return errorResponse('NOT_FOUND', 404);
       const methodOK = isMutation ? request.method === 'POST' : ['GET', 'HEAD'].includes(request.method);
       if (!methodOK) return errorResponse('METHOD_NOT_ALLOWED', 405);
+      if (url.search && (pathname === '/control/' || pathname === '/control/login') &&
+          isRemovableTrackingQuery(url)) {
+        // Browser receives a no-store, relative redirect to the exact
+        // canonical endpoint. No tracking parameters reach OAuth or APIs.
+        return redirect(pathname);
+      }
       if (!validQuery(url)) return errorResponse('INVALID_QUERY', 400);
       if (isMutation && (request.headers.get('Origin') !== CANONICAL ||
           !/^[A-Za-z0-9_-]{43}$/.test(request.headers.get('X-CSRF-Token') || '') ||
