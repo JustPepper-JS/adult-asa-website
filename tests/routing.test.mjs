@@ -32,13 +32,13 @@ test('admin aliases reach the dedicated login landing page', async () => {
 test('only redesigned public files are served, with safe legacy redirects', async () => {
   const handle = createHandler({ fetchImpl: failFetch });
   assert.equal(await (await handle(request('/'), env)).text(), 'asset:/index.html');
-  for (const path of ['/mods','/servers','/mods.html','/servers.html','/gateway.css','/assets/site.css','/assets/site.js','/assets/mod-catalog.json','/assets/icon.svg','/robots.txt','/sitemap.xml']) {
+  for (const path of ['/mods','/servers','/meet-the-players','/mods.html','/servers.html','/meet-the-players.html','/gateway.css','/assets/site.css','/assets/site.js','/assets/players.css','/assets/players.js','/assets/players-directory.json','/assets/mod-catalog.json','/assets/icon.svg','/robots.txt','/sitemap.xml']) {
     const res = await handle(request(path), env); assert.equal(res.status, 200, path); noCache(res);
   }
   for (const [path, destination] of [['/movement.html','/servers'],['/heatmap.html','/servers'],['/players.html','/servers'],['/tracker.html','/servers'],['/link-survivor.html','/'],['/tribe.html','/']]) {
     const res = await handle(request(path), env); assert.equal(res.status, 302, path); assert.equal(res.headers.get('Location'), destination);
   }
-  for (const path of ['/','/servers','/mods']) {
+  for (const path of ['/','/servers','/mods','/meet-the-players']) {
     const res=await handle(request(path),env);assert.match(res.headers.get('Content-Security-Policy')||'', /script-src 'self'/);
   }
 });
@@ -369,4 +369,25 @@ test('Unknown Beacon and game operations are not reverse proxied',async()=>{
   for(const path of ['/control/api/beacon/revoke','/control/api/beacon/write','/control/api/beacon/kick','/control/api/beacon/servers/1','/control/api/rcon','/api/movement','/api/heatmap']){
     assert.equal((await handle(request(path),env)).status,404,path);
   }
+});
+
+test('Meet the Players remains public but cannot proxy raw individual game history',async()=>{
+  const handle=createHandler({fetchImpl:failFetch});
+  const page=await handle(request('/meet-the-players'),env);
+  assert.equal(page.status,200);
+  assert.equal(await page.text(),'asset:/meet-the-players.html');
+  assert.match(page.headers.get('Content-Security-Policy'),/script-src 'self'/);
+  noCache(page);
+  const directory=await handle(request('/assets/players-directory.json'),env);
+  assert.equal(directory.status,200);noCache(directory);
+  for(const path of ['/api/players','/api/movement','/api/player-profiles/admin','/api/heatmap','/api/tracker',
+    '/assets/private-player-log.json','/players','/players?id=hidden']){
+    const result=await handle(request(path),env);
+    assert.equal(result.status,404,path);
+  }
+  const archived=await handle(request('/players.html'),env);
+  assert.equal(archived.status,302);
+  assert.equal(archived.headers.get('Location'),'/servers');
+  const post=await handle(request('/meet-the-players',{method:'POST'}),env);
+  assert.equal(post.status,405);
 });

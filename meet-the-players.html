@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#081321">
+  <meta name="description" content="Meet Adult ASA survivors who choose to share their public profiles, favorite maps and journeys through Legacy and Limited.">
+  <link rel="canonical" href="https://adult-asa.org/meet-the-players">
+  <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/site.css">
+  <link rel="stylesheet" href="/assets/players.css">
+  <script src="/assets/site.js" defer></script>
+  <script src="/assets/players.js" type="module"></script>
+  <title>Meet the Players — Adult ASA</title>
+</head>
+<body data-page="meet-players">
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="nav-shell container">
+    <a class="brand" href="/" aria-label="Adult ASA home"><span class="brand-icon" aria-hidden="true">A</span><span class="brand-wordmark">ADULT ASA<small>PVE CLUSTER</small></span></a>
+    <button class="menu-button" type="button" aria-controls="primary-nav" aria-expanded="false" aria-label="Toggle navigation"><span></span><span></span><span></span></button>
+    <nav class="main-nav" id="primary-nav" aria-label="Primary navigation">
+      <a href="/">Home</a><a href="/servers">Servers</a><a href="/meet-the-players" aria-current="page">Players</a><a href="/mods">Mods</a><a href="/#how-to-join">How to join</a>
+    </nav>
+    <a class="nav-admin" href="/admin"><span aria-hidden="true">◇</span> Admin access</a>
+  </div>
+</header>
+<main id="main">
+  <section class="players-hero container" aria-labelledby="players-title">
+    <div>
+      <p class="eyebrow">THE PEOPLE BEHIND THE ADVENTURES</p>
+      <h1 id="players-title">Meet the <em>players.</em></h1>
+      <p>Every base has a builder. Every map has a story. Get to know the survivors who make Adult ASA home—through the profiles and adventures they choose to share.</p>
+      <div class="players-pills"><span>Player-approved profiles</span><span>Legacy + Limited</span><span>Stories, not surveillance</span></div>
+    </div>
+    <div class="players-art" aria-label="Abstract survivor emblem on a calm dark ocean-blue background" role="img">
+      <span class="players-art-symbol" aria-hidden="true">◇</span>
+      <strong>Same community</strong>
+      <small>Different adventures</small>
+    </div>
+  </section>
+  <section class="container section compact" aria-label="What players can share">
+    <div class="players-intro">
+      <article class="players-explainer">
+        <span class="micro">THE SURVIVORS</span>
+        <h2>A directory with personality.</h2>
+        <p>Players can choose to share a display name, an introduction, and whether they adventure on Legacy, Limited, or both. Only approved profiles appear here.</p>
+      </article>
+      <article class="players-explainer">
+        <span class="micro">THE JOURNEY</span>
+        <h2>Maps and transfer stories.</h2>
+        <p>Optional map highlights and transfers can tell a player's story at a month-level, without publishing exact login times, private identifiers, or live movement.</p>
+      </article>
+    </div>
+  </section>
+  <section class="container section compact" aria-labelledby="directory-title">
+    <div class="players-head">
+      <div><p class="eyebrow">THE COMMUNITY DIRECTORY</p><h2 id="directory-title">Find your fellow survivors.</h2></div>
+      <p>Search only profiles players have approved for public display. No records are imported automatically from game tracking.</p>
+    </div>
+    <div class="players-filters" role="search" aria-label="Search public player profiles">
+      <label for="player-search">Player name
+        <input id="player-search" type="search" placeholder="Search approved profiles" autocomplete="off" maxlength="50">
+      </label>
+      <label for="player-cluster">Cluster
+        <select id="player-cluster">
+          <option value="all">All clusters</option>
+          <option value="legacy">Legacy</option>
+          <option value="limited">Limited</option>
+        </select>
+      </label>
+    </div>
+    <p id="directory-status" class="player-directory-status" role="status" aria-live="polite">Checking approved public profiles…</p>
+    <div class="player-list" id="player-directory" aria-live="polite"></div>
+    <p class="players-footer-note">Transfers and map histories are hidden unless the player separately approves each category. Private histories remain protected. Owner investigations and historical tracking are not published here.</p>
+  </section>
+  <section class="container section compact">
+    <div class="players-cta">
+      <div><p class="eyebrow">MAKE IT YOUR STORY</p><h2>Want to be featured?</h2>
+        <p>Join our Discord and ask staff about sharing a community profile. Verified self-service profile controls are planned; no public information is published automatically.</p>
+      </div>
+      <a href="https://discord.gg/adultasa" target="_blank" rel="noopener noreferrer" class="button button-primary">Join the Discord <span aria-hidden="true">↗</span></a>
+    </div>
+  </section>
+</main>
+<footer class="site-footer"><div class="container footer-main">
+  <div><a class="brand" href="/"><span class="brand-icon" aria-hidden="true">A</span><span class="brand-wordmark">ADULT ASA<small>PVE CLUSTER</small></span></a><p>A friendlier way to experience ARK.</p></div>
+  <div class="footer-links"><a href="/">Home</a><a href="/servers">Servers</a><a href="/meet-the-players">Meet the Players</a><a href="/mods">Mods</a><a href="/admin">Admin</a><a href="https://discord.gg/adultasa" target="_blank" rel="noopener noreferrer">Discord ↗</a></div>
+</div><div class="container footer-bottom"><span>© 2026 Adult ASA. Independent community server.</span><span>Public stories are shared by choice.</span></div></footer>
+</body>
+</html>

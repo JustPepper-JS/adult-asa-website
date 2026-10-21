@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 const root=new URL('../',import.meta.url);
 const read=(file)=>fs.readFileSync(new URL(file,root),'utf8');
-const pages=['index.html','servers.html','mods.html'];
+const pages=['index.html','servers.html','mods.html','meet-the-players.html'];
 const css=read('assets/site.css'),js=read('assets/site.js'),worker=read('_worker.js');
 const siteLinks=(html)=>[...html.matchAll(/(?:href|src)="([^"]+)"/g)].map(x=>x[1]);
 
@@ -17,7 +17,7 @@ test('public pages use the same accessible, standalone navigation and stylesheet
     assert.match(html,/aria-label="Primary navigation"/);
     assert.doesNotMatch(html,/localStorage|type="password"|onclick=|onload=/i);
     for(const url of siteLinks(html))if(url.startsWith('/')){
-      const clean=url.split('?')[0].split('#')[0];if(['','/','/admin','/servers','/mods'].includes(clean))continue;
+      const clean=url.split('?')[0].split('#')[0];if(['','/','/admin','/servers','/mods','/meet-the-players'].includes(clean))continue;
       assert.ok(fs.existsSync(new URL('.'+clean,root)),page+' references missing asset '+clean);
     }
   }
@@ -74,4 +74,20 @@ test('activity shows full blue Legacy and gold Limited names with readable respo
   assert.match(js,/model\.players===null\?'—':String\(model\.players\)/);
   assert.match(js,/const meter=el\('meter','activity-meter'\)/);
   assert.match(read('servers.html'),/Unknown ≠ empty/);
+});
+
+test('Meet the Players is navigable but only explicitly approved static profiles can publish',()=>{
+  for(const page of pages)assert.match(read(page),/href="\/meet-the-players"/);
+  const players=read('meet-the-players.html');
+  assert.match(players,/player-directory/);
+  assert.match(players,/\/assets\/players\.js/);
+  assert.match(players,/\/assets\/players\.css/);
+  assert.match(worker,/\/meet-the-players\.html/);
+  assert.match(worker,/\/assets\/players-directory\.json/);
+  assert.match(read('sitemap.xml'),/\/meet-the-players/);
+  assert.match(read('servers.html'),/Players can choose to share coarse map and transfer stories/);
+  assert.match(read('.assetsignore'),/^players\.html$/m); // Old unsafe history page stays blocked.
+  assert.doesNotMatch(read('assets/players.js'),/fetch\(['"]\/api\/players/);
+  const data=JSON.parse(read('assets/players-directory.json'));
+  assert.deepEqual(data.profiles,[]);
 });
