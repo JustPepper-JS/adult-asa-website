@@ -62,3 +62,16 @@ test('marketing accurately distinguishes snapshot counts, cluster differences an
   assert.match(js,/Source clock inconsistent/);
   assert.doesNotMatch(home,/15 \/ 15 online|Players online: 999/);
 });
+
+test('activity shows full blue Legacy and gold Limited names with readable responsive labels',()=>{
+  assert.match(js,/activity-label \$\{model\.cluster\}/);
+  assert.match(js,/model\.cluster==='legacy'\?'Legacy':'Limited'/);
+  assert.doesNotMatch(js,/model\.cluster==='legacy'\?'L':'M'/);
+  assert.match(css,/\.activity-label\.legacy\{color:var\(--blue\)\}/);
+  assert.match(css,/\.activity-label\.limited\{color:var\(--gold\)\}/);
+  assert.match(css,/\.activity-label\{[^}]*white-space:normal/);
+  assert.match(css,/@media\(max-width:480px\)\{[\s\S]*?\.activity-row\{grid-template-columns:/);
+  assert.match(js,/model\.players===null\?'—':String\(model\.players\)/);
+  assert.match(js,/const meter=el\('meter','activity-meter'\)/);
+  assert.match(read('servers.html'),/Unknown ≠ empty/);
+});
