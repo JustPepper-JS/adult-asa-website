@@ -76,6 +76,17 @@ test('activity shows full blue Legacy and gold Limited names with readable respo
   assert.match(read('servers.html'),/Unknown ≠ empty/);
 });
 
+test('Legacy SE short server label matches Scorched Earth without loose substring matching',()=>{
+  assert.match(js,/options\.includes\('Scorched Earth'\)/);
+  assert.match(js,/\['se', 'sewp'\]\.includes\(normalize\(row\.map\)\)/);
+  assert.match(js,/Adult ASA\(\?: Legacy\)\?/);
+  assert.doesNotMatch(js,/'Scorched Earth':\['se'/);
+});
+test('Meet the Players hero says Stories without surveillance tagline',()=>{
+  const html=read('meet-the-players.html');
+  assert.match(html,/<span>Stories<\/span>/);
+  assert.doesNotMatch(html,/Stories, not surveillance/i);
+});
 test('Meet the Players is navigable but only explicitly approved static profiles can publish',()=>{
   for(const page of pages)assert.match(read(page),/href="\/meet-the-players"/);
   const players=read('meet-the-players.html');
