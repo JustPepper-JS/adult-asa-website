@@ -6,7 +6,7 @@ const MAPS=Object.freeze({
   limited:Object.freeze(['Astraeos','Extinction','Genesis','Lost Colony','The Island']),
 });
 const CLUSTERS=new Set(['legacy','limited','both']);
-const SAFE_NAME=/^[\p{L}\p{N} ._'\-]{2,36}$/u;
+const SAFE_NAME=/^[\p{L}\p{N}\p{M}\p{Extended_Pictographic} _.'\-#()&+!•\u200d]{2,48}$/u;
 const MONTH=/^20\d{2}-(0[1-9]|1[0-2])$/;
 const ROOT_KEYS=new Set(['schemaVersion','publicationState','reviewedAt','profiles']);
 const PROFILE_KEYS=new Set(['displayName','bio','cluster','consent','mapHighlights','transferHighlights']);
