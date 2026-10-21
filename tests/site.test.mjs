@@ -87,18 +87,20 @@ test('Meet the Players hero says Stories without surveillance tagline',()=>{
   assert.match(html,/<span>Stories<\/span>/);
   assert.doesNotMatch(html,/Stories, not surveillance/i);
 });
-test('Meet the Players is navigable but only explicitly approved static profiles can publish',()=>{
+test('Meet the Players public game-history search is linked and its raw legacy history is blocked',()=>{
   for(const page of pages)assert.match(read(page),/href="\/meet-the-players"/);
-  const players=read('meet-the-players.html');
-  assert.match(players,/player-directory/);
-  assert.match(players,/\/assets\/players\.js/);
-  assert.match(players,/\/assets\/players\.css/);
+  const h=read('meet-the-players.html'),p=read('assets/players.js');
+  assert.match(h,/player-directory/);
+  assert.match(h,/\/assets\/players\.js/);
+  assert.match(h,/\/assets\/players\.css/);
+  assert.match(h,/id="player-load-more"/);
+  assert.doesNotMatch(h,/approved profile|Stories, not surveillance|player consent/i);
+  assert.match(h,/<span>Stories<\/span>/);
   assert.match(worker,/\/meet-the-players\.html/);
-  assert.match(worker,/\/assets\/players-directory\.json/);
   assert.match(read('sitemap.xml'),/\/meet-the-players/);
-  assert.match(read('servers.html'),/Players can choose to share coarse map and transfer stories/);
-  assert.match(read('.assetsignore'),/^players\.html$/m); // Old unsafe history page stays blocked.
-  assert.doesNotMatch(read('assets/players.js'),/fetch\(['"]\/api\/players/);
-  const data=JSON.parse(read('assets/players-directory.json'));
-  assert.deepEqual(data.profiles,[]);
+  assert.match(read('servers.html'),/For recorded in-game player sessions/);
+  assert.match(read('.assetsignore'),/^players\.html$/m);
+  assert.match(p,/\/api\/community\/players/);
+  assert.doesNotMatch(p,/fetch\(['"]\/api\/players/);
+  assert.match(worker,/const COMMUNITY_ROUTES = new Set/);
 });
