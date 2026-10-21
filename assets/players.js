@@ -18,7 +18,7 @@ function allowedKeys(record,allowed) {
   return record&&typeof record==='object'&&!Array.isArray(record)&&
     Object.keys(record).every(key=>allowed.has(key));
 }
-function validMap(cluster,map){return cluster in MAPS && MAPS[cluster].includes(map);}
+function validMap(cluster,map){return Object.hasOwn(MAPS,cluster) && MAPS[cluster].includes(map);}
 function validMonth(month){return typeof month==='string'&&MONTH.test(month);}
 function cleanMap(row){
   if(!allowedKeys(row,MAP_KEYS)||!validMap(row.cluster,row.map)||!validMonth(row.month))return null;
