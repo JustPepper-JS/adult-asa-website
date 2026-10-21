@@ -92,3 +92,15 @@ test('no query forgery, POST, unknown API access, or foreign OAuth origin',async
   assert.equal((await handle(request('/control/api/beacon/host-preview',{},
     'https://preview.invalid'),env)).status,403);
 });
+
+test('HEAD returns approved status and security headers without leaking upstream JSON',async()=>{
+  let called=0;
+  const h=createHandler({fetchImpl:async(_url,options)=>{
+    called++;assert.equal(options.method,'GET');return json(record());
+  }});
+  const res=await h(request('/control/api/beacon/host-preview',{
+    method:'HEAD',headers:{Cookie:'__Host-rexy_console='+nonce}}),env);
+  assert.equal(res.status,200);assert.equal(await res.text(),'');assert.equal(called,1);
+  assert.match(res.headers.get('Content-Type')||'',/application\/json/);
+  assert.match(res.headers.get('Cache-Control')||'',/no-store/);
+});
