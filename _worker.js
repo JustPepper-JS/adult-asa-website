@@ -9,6 +9,7 @@ const PRIVATE_GET = new Set([
   '/control/app.css', '/control/app.webmanifest', '/control/icon.svg',
   '/control/api/me', '/control/api/overview', '/control/api/capabilities',
   '/control/api/beacon/status', '/control/api/beacon/services',
+  '/control/api/beacon/host-preview',
 ]);
 const BEACON_DEVICE_POST = new Set(['/control/api/beacon/start','/control/api/beacon/poll']);
 const STATUS_ROUTES = new Map([
@@ -160,6 +161,39 @@ export function projectStatus(raw, cluster, now = Date.now()) {
     })),
   };
 }
+// A second, independent Cloudflare security projection for B3-8c owner data.
+// No upstream address, UUID, AccessKey, player name or arbitrary property leaves
+// this bridge, even when the backend provider response is accidentally broader.
+export function projectOwnerHostPreview(raw) {
+  const hidden={state:'UNVERIFIED',readOnly:true,verifiedMappings:0,slots:[]};
+  if(!raw||typeof raw!=='object'||Array.isArray(raw)||
+     raw.state!=='CORROBORATION_ONLY'||raw.verifiedMappings!==0||
+     !Array.isArray(raw.slots)||raw.slots.length!==15||
+     !Number.isInteger(raw.candidateCount)||raw.candidateCount<0||raw.candidateCount>15||
+     !Number.isInteger(raw.reportedHostEqualCount)||raw.reportedHostEqualCount<0||
+     raw.reportedHostEqualCount>raw.candidateCount||
+     typeof raw.observedAt!=='string'||
+     !/^20\d{2}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(raw.observedAt)||
+     !Number.isFinite(Date.parse(raw.observedAt)))return hidden;
+  const outcome=new Set([
+    'IP_EQUAL_UNVERIFIED','IP_DIFFERENT_UNVERIFIED',
+    'PROVIDER_IP_UNAVAILABLE','UNSUPPORTED_PROVIDER_ADDRESS',
+    'SHARED_IP_AMBIGUOUS','NO_NAME_CANDIDATE',
+  ]);
+  const seen=new Set(),slots=[];
+  for(const item of raw.slots){
+    if(!item||typeof item!=='object'||Array.isArray(item)||
+       typeof item.slot!=='string'||!(/^(legacy|limited):[a-z0-9 &'()/-]{1,70}$/.test(item.slot))||
+       seen.has(item.slot)||!outcome.has(item.addressEvidence))
+      return hidden;
+    seen.add(item.slot);
+    slots.push({slot:item.slot,addressEvidence:item.addressEvidence});
+  }
+  return {state:'CORROBORATION_ONLY',readOnly:true,verifiedMappings:0,
+    candidateCount:raw.candidateCount,reportedHostEqualCount:raw.reportedHostEqualCount,
+    observedAt:raw.observedAt,slots};
+}
+
 export function createHandler({ fetchImpl = globalThis.fetch, timeoutMs = 12000, now = Date.now } = {}) {
   return async function handle(request, env) {
     const url = new URL(request.url), pathname = url.pathname;
@@ -209,10 +243,20 @@ export function createHandler({ fetchImpl = globalThis.fetch, timeoutMs = 12000,
         }
         const body = isMutation ? await boundedBytes(request.body, 1024, controller.signal) : undefined;
         const upstream = await fetchImpl(BACKEND + pathname + url.search, {
-          method: isStatus ? 'GET' : request.method, headers, body, redirect: 'manual',
+          method: isStatus || pathname === '/control/api/beacon/host-preview' ? 'GET' : request.method, headers, body, redirect: 'manual',
           signal: controller.signal, cf: { cacheTtl: 0, cacheEverything: false },
         });
         const bytes = await boundedBytes(upstream.body, 1024 * 1024, controller.signal);
+        if(pathname==='/control/api/beacon/host-preview'){
+          if(upstream.status===401||upstream.status===403)
+            return errorResponse('NOT_AUTHORIZED',upstream.status);
+          if(upstream.status!==200||!/^\s*application\/json\b/i.test(upstream.headers.get('Content-Type')||''))
+            return errorResponse('UPSTREAM_UNAVAILABLE',502);
+          const safe=projectOwnerHostPreview(JSON.parse(new TextDecoder().decode(bytes)));
+          return new Response(request.method==='HEAD'?null:JSON.stringify(safe),{
+            status:200,headers:secureHeaders({'Content-Type':'application/json; charset=utf-8'}),
+          });
+        }
         if (isStatus) {
           if (upstream.status !== 200 || !/^application\/json\b/i.test(upstream.headers.get('Content-Type') || '')) throw Error('Status unavailable');
           const projected = projectStatus(JSON.parse(new TextDecoder().decode(bytes)), STATUS_ROUTES.get(pathname), now());
