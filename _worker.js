@@ -345,7 +345,7 @@ export function createHandler({ fetchImpl = globalThis.fetch, timeoutMs = 12000,
         }
         const body = isMutation ? await boundedBytes(request.body, 1024, controller.signal) : undefined;
         const upstream = await fetchImpl(BACKEND + pathname + url.search, {
-          method: isStatus || pathname === '/control/api/beacon/host-preview' ? 'GET' : request.method, headers, body, redirect: 'manual',
+          method: isStatus || isCommunity || pathname === '/control/api/beacon/host-preview' ? 'GET' : request.method, headers, body, redirect: 'manual',
           signal: controller.signal, cf: { cacheTtl: 0, cacheEverything: false },
         });
         const bytes = await boundedBytes(upstream.body, 1024 * 1024, controller.signal);
