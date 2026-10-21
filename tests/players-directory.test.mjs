@@ -1,113 +1,54 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {projectPublicDirectory} from '../assets/players.js';
-
-const source=JSON.parse(fs.readFileSync(new URL('../assets/players-directory.json',import.meta.url),'utf8'));
+import {activityDescription} from '../assets/players.js';
 const read=path=>fs.readFileSync(new URL('../'+path,import.meta.url),'utf8');
-const approved=()=>({
-  schemaVersion:1,publicationState:'approved_profiles',reviewedAt:'2026-10-21',
-  profiles:[{
-    displayName:'Synthetic Survivor',bio:'Likes building beautiful bases.',
-    cluster:'both',
-    consent:{profile:true,mapHistory:true,transfers:true,reviewedAt:'2026-10-21'},
-    mapHighlights:[{cluster:'legacy',map:'Astraeos',month:'2026-10'}],
-    transferHighlights:[{
-      fromCluster:'legacy',fromMap:'Astraeos',
-      toCluster:'limited',toMap:'The Island',month:'2026-10',
-    }],
-  }],
+test('real Meet the Players page promises all retained gameplay events, not opt-in publication',()=>{
+  const h=read('meet-the-players.html');
+  assert.match(h,/Meet the <em>players/);
+  assert.match(h,/<span>Stories<\/span>/);
+  assert.doesNotMatch(h,/Stories, not surveillance|approved profile|consent|ask staff about sharing|players can choose/i);
+  assert.match(h,/retained|recorded/i);
+  assert.match(h,/id="player-load-more"/);
+  assert.match(h,/id="player-cluster"/);
+  assert.match(h,/id="player-search"/);
+  assert.match(read('servers.html'),/For recorded in-game player sessions/);
 });
-test('published public directory starts empty and includes no real identities or histories',()=>{
-  assert.deepEqual(source,{
-    schemaVersion:1,publicationState:'awaiting_verified_player_consent',
-    reviewedAt:null,profiles:[],
-  });
-  const projected=projectPublicDirectory(source);
-  assert.equal(projected.state,'EMPTY_OR_UNVERIFIED');
-  assert.deepEqual(projected.profiles,[]);
-  const code=read('assets/players.js');
-  for(const forbidden of ["'/api/players'","'/api/player-profiles/admin'","'/api/movement'","'/api/tracker'"]){
-    assert.ok(!code.includes('fetch('+forbidden));
+test('website only reads independently projected community endpoints, never private legacy player or game APIs',()=>{
+  const js=read('assets/players.js');
+  assert.match(js,/\/api\/community\/players/);
+  assert.match(js,/\/history/);
+  assert.match(js,/page:String\(nextPage\)/);
+  assert.match(js,/nextPage>=data.totalPages/);
+  for(const s of ['/api/players','/api/heatmap','/api/movement','/api/tracker']){
+    assert.ok(!js.includes("fetch('"+s));
+    assert.ok(!js.includes('fetch("'+s));
   }
-});
-test('synthetic opt-in profiles project only safe public fields and month-level stories',()=>{
-  const data=projectPublicDirectory(approved());
-  assert.equal(data.state,'PUBLISHED_OPT_IN_ONLY');
-  assert.equal(data.profiles.length,1);
-  assert.deepEqual(Object.keys(data.profiles[0]),
-    ['displayName','bio','cluster','mapHighlights','transferHighlights']);
-  assert.equal(data.profiles[0].displayName,'Synthetic Survivor');
-  assert.equal(data.profiles[0].mapHighlights[0].month,'2026-10');
-  assert.ok(Object.isFrozen(data.profiles[0]));
-  assert.ok(Object.isFrozen(data.profiles[0].transferHighlights));
-  assert.ok(!JSON.stringify(data).includes('consent'));
-});
-test('no profile is published without explicit reviewed profile consent',()=>{
-  for(const mutate of [
-    p=>{delete p.consent;},
-    p=>{p.consent.profile=false;},
-    p=>{p.consent.reviewedAt='invalid';},
-    p=>{p.displayName='';},
-    p=>{p.cluster='admin';},
-    p=>{p.displayName='<img onerror=alert(1)>';},
-    p=>{p.bio='\u0000secret';},
-    p=>{p.mapHighlights.push({cluster:'legacy',map:'Invalid Map',month:'2026-10'});},
-    p=>{p.transferHighlights[0].toCluster='__proto__';},
-    p=>{p.mapHighlights[0].month='2026-10-20T09:31:00Z';},
-  ]){
-    const d=approved();mutate(d.profiles[0]);
-    const result=projectPublicDirectory(d);
-    assert.equal(result.state,'EMPTY_OR_UNVERIFIED');
-    assert.deepEqual(result.profiles,[]);
-  }
-});
-test('map and transfer stories require independent scoped consent',()=>{
-  const d=approved();
-  d.profiles[0].consent.mapHistory=false;
-  assert.equal(projectPublicDirectory(d).state,'EMPTY_OR_UNVERIFIED');
-  d.profiles[0].consent.mapHistory=true;
-  d.profiles[0].consent.transfers=false;
-  assert.equal(projectPublicDirectory(d).state,'EMPTY_OR_UNVERIFIED');
-});
-test('reject catalog containing raw provider fields or unknown keys even if profile opts in',()=>{
-  for(const mutate of [
-    d=>{d.players=[{name:'Private Player'}];},
-    d=>{d.profiles[0].playerId='private-steam-id';},
-    d=>{d.profiles[0].ipAddress='192.0.2.1';},
-    d=>{d.profiles[0].currentServer='Live location';},
-    d=>{d.profiles[0].consent.adminOverride=true;},
-    d=>{d.profiles[0].mapHighlights[0].coordinates='hidden base';},
-    d=>{d.profiles[0].transferHighlights[0].timestamp='2026-10-21T09:31:00Z';},
-  ]){
-    const d=approved();mutate(d);
-    const projected=projectPublicDirectory(d);
-    assert.equal(projected.state,'EMPTY_OR_UNVERIFIED');
-    assert.ok(!JSON.stringify(projected).includes('private-steam-id'));
-  }
-});
-test('bad provenance, mixed data versions, duplicate names or oversized fleet fail closed',()=>{
-  for(const mutate of [
-    d=>{d.schemaVersion=2;},
-    d=>{d.publicationState='awaiting_verified_player_consent';},
-    d=>{d.reviewedAt=null;},
-    d=>{d.profiles.push({...d.profiles[0],displayName:'synthetic survivor'});},
-    d=>{d.profiles=Array.from({length:101},()=>({...d.profiles[0]}));},
-  ]){
-    const d=approved();mutate(d);
-    assert.equal(projectPublicDirectory(d).state,'EMPTY_OR_UNVERIFIED');
-  }
-});
-test('website page explains consent and does not use browser storage or raw tracking',()=>{
-  const html=read('meet-the-players.html'),js=read('assets/players.js'),css=read('assets/players.css');
-  assert.match(html,/Meet the <em>players/);
-  assert.match(html,/player-directory/);
-  assert.match(html,/\/assets\/players\.js/);
-  assert.match(html,/\/assets\/players\.css/);
-  assert.match(html,/private histories remain protected/i);
-  assert.match(html,/Join the Discord/);
-  assert.match(css,/@media\(max-width:480px\)/);
-  assert.match(js,/textContent/);
+  assert.match(js,/credentials:'omit'/);
   assert.doesNotMatch(js,/innerHTML|outerHTML|insertAdjacentHTML|eval\(|localStorage|sessionStorage|document\.cookie/);
-  assert.doesNotMatch(js,/fetch\(['"]\/api\/(?:players|heatmap|movement|tracker|sessions)/);
+  assert.match(js,/textContent/);
+  assert.match(js,/inferred by Rexy/);
+});
+test('transfer and session event format distinguishes inferred moves and maps without provider IDs',()=>{
+  const transfer={type:'transfer',fromCluster:'legacy',fromMap:'Scorched Earth',
+    toCluster:'limited',toMap:'Astraeos',inferred:true,occurredAt:'2026-10-20T15:00:00.000Z',
+    rconPassword:'DO-NOT-RENDER',platformId:'DO-NOT-RENDER'};
+  const text=activityDescription(transfer);
+  assert.match(text,/Legacy \/ Scorched Earth/);
+  assert.match(text,/Limited \/ Astraeos/);
+  assert.match(text,/inferred by Rexy/);
+  assert.ok(!text.includes('DO-NOT-RENDER'));
+  const session=activityDescription({type:'session',cluster:'legacy',map:'Scorched Earth',
+    durationMinutes:72,occurredAt:'2026-10-20T10:00:00.000Z',
+    endedAt:'2026-10-20T11:12:00.000Z'});
+  assert.match(session,/72 min/);
+});
+test('mobile layouts and history card expansion are accessible with no direct player account information',()=>{
+  const css=read('assets/players.css'),html=read('meet-the-players.html'),js=read('assets/players.js');
+  assert.match(css,/@media\(max-width:480px\)/);
+  assert.match(css,/\.player-more-events/);
+  assert.match(js,/aria-expanded/);
+  assert.match(js,/replaceChildren/);
+  assert.match(html,/Player account identifiers|Account IDs, credentials and base coordinates/i);
+  assert.doesNotMatch(html,/Steam ID|EOS ID|RCON_PASSWORD|AdminPassword/);
 });

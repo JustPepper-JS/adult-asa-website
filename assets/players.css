@@ -56,3 +56,25 @@
 @media(max-width:1020px){.players-hero{gap:25px}.player-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.players-hero{grid-template-columns:1fr;padding:42px 0}.players-art{min-height:220px}.players-intro,.player-list{grid-template-columns:1fr}.players-head{align-items:flex-start;flex-direction:column}.players-cta{flex-direction:column;align-items:flex-start;padding:26px}}
 @media(max-width:480px){.players-hero h1{font-size:45px}.players-filters{flex-direction:column}.players-filters label,.players-filters input,.players-filters select{width:100%}.players-art-symbol{font-size:70px}}
+
+/* W1D: Retained live ARK roster, session and transfer history cards. */
+.player-card-top{justify-content:flex-start;flex-wrap:wrap;gap:7px}
+.player-card-top .player-avatar{margin-right:auto}
+.player-tag.unknown{background:#28394b;color:#b6c7d8}
+.player-stats{display:flex;gap:8px;flex-wrap:wrap;font-size:11px;color:#b4d1e7;margin:5px 0 10px}
+.player-stats span{background:#1a3046;padding:6px 9px;border-radius:7px;border:1px solid #35546d}
+.player-history-trigger,.player-more-events{appearance:none;cursor:pointer;color:var(--ice);font:inherit;font-size:12px;font-weight:760;background:#1b3952;border:1px solid #407293;border-radius:10px;padding:10px 13px;text-align:left}
+.player-history-trigger:hover,.player-more-events:hover{background:#264b66}
+.player-history-trigger:focus-visible,.player-more-events:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.player-history-trigger:disabled,.player-more-events:disabled{opacity:.6;cursor:wait}
+.player-history{margin-top:15px;border-top:1px solid #3d546a;padding-top:12px}
+.player-history[hidden]{display:none}
+.player-map-totals{margin-bottom:12px}
+.player-map-totals h4{font-size:13px;color:#d9ecfa;margin:0 0 8px}
+.player-map-entry{font-size:11px;padding:6px 10px;background:#192e44;border-radius:8px;color:#a9dafa;margin:5px 0}
+.player-more-events{margin:11px 0 2px;width:100%;text-align:center}
+.player-more-events[hidden]{display:none}
+.player-events li{line-height:1.65}
+.player-load-more{display:block;margin:21px auto 0;min-height:45px}
+.player-load-more[hidden]{display:none}
+.player-list .player-empty{min-height:185px}
