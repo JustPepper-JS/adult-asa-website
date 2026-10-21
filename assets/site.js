@@ -121,7 +121,7 @@
   }
   function activityRow(model) {
     const row=el('div','activity-row');row.setAttribute('role','group');row.setAttribute('aria-label',`${model.cluster} ${model.map}: ${model.players===null?'unknown player count':model.players+' players'}`);
-    const label=el('span','activity-label',`${model.map} · ${model.cluster==='legacy'?'L':'M'}`);
+    const label=el('span',`activity-label ${model.cluster}`,`${model.map} · ${model.cluster==='legacy'?'Legacy':'Limited'}`);
     const track=el('div','activity-track');const fill=el('div',`activity-fill ${model.cluster==='limited'?'limited':''}`);
     if(model.players!==null){ const meter=el('meter','activity-meter'); meter.min=0; meter.max=model.capacity||Math.max(model.players,1);meter.value=Math.min(model.players,meter.max);meter.setAttribute('aria-label',`${model.players} players currently reported`);track.append(meter);}
     row.append(label,track,el('span','activity-count',model.players===null?'—':String(model.players)));
