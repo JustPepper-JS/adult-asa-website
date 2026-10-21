@@ -12,6 +12,7 @@ const PRIVATE_GET = new Set([
   '/control/api/beacon/host-preview',
 ]);
 const BEACON_DEVICE_POST = new Set(['/control/api/beacon/start','/control/api/beacon/poll']);
+const COMMUNITY_ROUTES = new Set(['/api/community/players','/api/community/players/history']);
 const STATUS_ROUTES = new Map([
   ['/api/status', 'legacy'], ['/api/status/legacy', 'legacy'], ['/api/status/limited', 'limited'],
 ]);
@@ -127,7 +128,22 @@ function isRemovableTrackingQuery(url) {
   }
   return seen.size >= 1 && seen.size <= TRACKING_KEYS.size;
 }
+function validCommunityQuery(url){
+  if(url.search.length>220)return false;
+  const history=url.pathname==='/api/community/players/history';
+  const allowed=new Set(history?['id','page']:['page','q']);
+  const seen=new Set();
+  for(const [key,value] of url.searchParams){
+    if(!allowed.has(key)||seen.has(key))return false;
+    seen.add(key);
+    if(key==='page'&&!/^[1-9][0-9]{0,2}$/.test(value))return false;
+    if(key==='id'&&!/^[0-9a-f]{24}$/.test(value))return false;
+    if(key==='q'&&(value.length>50||/[\\u0000-\\u001f\\u007f<>]/.test(value)))return false;
+  }
+  return !history||seen.has('id');
+}
 function validQuery(url) {
+  if(COMMUNITY_ROUTES.has(url.pathname))return validCommunityQuery(url);
   if (!url.search) return true;
   if (url.pathname !== '/control/oauth/callback') return false;
   const allowed = new Set(['state', 'code', 'error', 'error_description', 'iss']);
@@ -194,6 +210,89 @@ export function projectOwnerHostPreview(raw) {
     observedAt:raw.observedAt,slots};
 }
 
+// Public ARK gameplay only. Re-project every backend field at the Cloudflare
+// boundary; raw /api/players, /api/heatmap and platform/account data stay closed.
+const CLUSTERS=new Set(['legacy','limited','unknown']);
+const VALID_MAPS=new Set(['The Island','Scorched Earth','Aberration','Extinction',
+  'Genesis','Valguero','Ragnarok','The Center','Astraeos','Lost Colony','Unknown']);
+function safeIso(value){
+  if(value===null)return null;
+  return typeof value==='string'&&/^(?:20\d{2})-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(value)&&
+    Number.isFinite(Date.parse(value))?value:undefined;
+}
+function intWithin(value,max=1e7){return Number.isInteger(value)&&value>=0&&value<=max;}
+function publicName(name){return typeof name==='string'&&name.length>=1&&name.length<=80&&
+  !/[\x00-\x1f\x7f<>]/.test(name);}
+function publicMap(c,m){return CLUSTERS.has(c)&&VALID_MAPS.has(m);}
+function projectPlayer(row){
+  if(!row||typeof row!=='object'||!publicName(row.displayName)||
+    !/^[0-9a-f]{24}$/.test(row.id)||
+    !Number.isFinite(row.totalHours)||row.totalHours<0||row.totalHours>1e8||
+    !intWithin(row.timesJoined)||!intWithin(row.sessionCount)||!intWithin(row.transferCount)||
+    typeof row.isOnline!=='boolean'||safeIso(row.firstSeen)===undefined||
+    safeIso(row.lastSeen)===undefined||
+    !(row.currentCluster===null&&row.currentMap===null) &&
+    !publicMap(row.currentCluster,row.currentMap))
+    throw Error('Untrusted player summary');
+  return {id:row.id,displayName:row.displayName,totalHours:row.totalHours,
+    timesJoined:row.timesJoined,firstSeen:row.firstSeen,lastSeen:row.lastSeen,
+    isOnline:row.isOnline,currentCluster:row.currentCluster,currentMap:row.currentMap,
+    sessionCount:row.sessionCount,transferCount:row.transferCount};
+}
+export function projectPublicRoster(raw){
+  if(!raw||typeof raw!=='object'||raw.schema!=='adult-asa.community.v1.roster'||
+    raw.state!=='RETAINED_GAME_DATA'||safeIso(raw.updatedAt)===undefined||
+    !intWithin(raw.totalPlayers,20000)||!intWithin(raw.totalPages,1000)||
+    !intWithin(raw.page,1000)||raw.page<1||raw.pageSize!==40||
+    !Array.isArray(raw.players)||raw.players.length>40)
+      throw Error('Invalid public player roster');
+  const ids=new Set(),players=raw.players.map(row=>{
+    const p=projectPlayer(row);
+    if(ids.has(p.id))throw Error('Duplicate public player ID');
+    ids.add(p.id);return p;
+  });
+  if(players.length>raw.totalPlayers||raw.totalPages!==Math.ceil(raw.totalPlayers/40))
+    throw Error('Inconsistent roster totals');
+  return {schema:'adult-asa.community.v1.roster',state:'RETAINED_GAME_DATA',
+    updatedAt:raw.updatedAt,totalPlayers:raw.totalPlayers,page:raw.page,
+    pageSize:40,totalPages:raw.totalPages,players};
+}
+export function projectPublicHistory(raw){
+  if(!raw||typeof raw!=='object'||raw.schema!=='adult-asa.community.v1.history'||
+    raw.state!=='RETAINED_GAME_DATA'||safeIso(raw.updatedAt)===undefined||
+    !intWithin(raw.totalEvents,1000000)||!intWithin(raw.totalPages,12500)||
+    !intWithin(raw.page,1000)||raw.page<1||raw.pageSize!==80||
+    !Array.isArray(raw.events)||raw.events.length>80||
+    !Array.isArray(raw.mapTotals)||raw.mapTotals.length>16)
+    throw Error('Invalid public player history');
+  const player=projectPlayer(raw.player);
+  const mapTotals=raw.mapTotals.map(x=>{
+    if(!x||!publicMap(x.cluster,x.map)||!intWithin(x.visits)||!intWithin(x.totalMinutes,1e9))
+      throw Error('Invalid map history');
+    return {cluster:x.cluster,map:x.map,visits:x.visits,totalMinutes:x.totalMinutes};
+  });
+  const events=raw.events.map(x=>{
+    if(!x||safeIso(x.occurredAt)===undefined)return (()=>{throw Error('Invalid observed event')})();
+    if(x.type==='session'){
+      if(!publicMap(x.cluster,x.map)||safeIso(x.endedAt)===undefined||
+        !intWithin(x.durationMinutes,1e7))throw Error('Invalid session event');
+      return {type:'session',occurredAt:x.occurredAt,endedAt:x.endedAt,
+        cluster:x.cluster,map:x.map,durationMinutes:x.durationMinutes};
+    }
+    if(x.type==='transfer'&&publicMap(x.fromCluster,x.fromMap)&&
+       publicMap(x.toCluster,x.toMap)&&typeof x.inferred==='boolean')
+      return {type:'transfer',occurredAt:x.occurredAt,
+        fromCluster:x.fromCluster,fromMap:x.fromMap,toCluster:x.toCluster,
+        toMap:x.toMap,inferred:x.inferred};
+    throw Error('Invalid transfer event');
+  });
+  if(raw.totalPages!==Math.ceil(raw.totalEvents/80)||events.length>raw.totalEvents)
+    throw Error('Inconsistent history totals');
+  return {schema:'adult-asa.community.v1.history',state:'RETAINED_GAME_DATA',
+    updatedAt:raw.updatedAt,player,totalEvents:raw.totalEvents,
+    page:raw.page,pageSize:80,totalPages:raw.totalPages,mapTotals,events};
+}
+
 export function createHandler({ fetchImpl = globalThis.fetch, timeoutMs = 12000, now = Date.now } = {}) {
   return async function handle(request, env) {
     const url = new URL(request.url), pathname = url.pathname;
@@ -211,10 +310,11 @@ export function createHandler({ fetchImpl = globalThis.fetch, timeoutMs = 12000,
     if (isControl || isApi) {
       if (isControl && url.origin !== CANONICAL) return errorResponse('USE_CANONICAL_LOGIN', 403);
       const isStatus = STATUS_ROUTES.has(pathname);
+      const isCommunity = COMMUNITY_ROUTES.has(pathname);
       const isLogout = pathname === '/control/api/logout';
       const isDevicePost = BEACON_DEVICE_POST.has(pathname);
       const isMutation = isLogout || isDevicePost;
-      if (!isStatus && !PRIVATE_GET.has(pathname) && !isMutation) return errorResponse('NOT_FOUND', 404);
+      if (!isStatus && !isCommunity && !PRIVATE_GET.has(pathname) && !isMutation) return errorResponse('NOT_FOUND', 404);
       const methodOK = isMutation ? request.method === 'POST' : ['GET', 'HEAD'].includes(request.method);
       if (!methodOK) return errorResponse('METHOD_NOT_ALLOWED', 405);
       if (url.search && (pathname === '/control/' || pathname === '/control/login') &&
@@ -254,6 +354,18 @@ export function createHandler({ fetchImpl = globalThis.fetch, timeoutMs = 12000,
             return errorResponse('UPSTREAM_UNAVAILABLE',502);
           const safe=projectOwnerHostPreview(JSON.parse(new TextDecoder().decode(bytes)));
           return new Response(request.method==='HEAD'?null:JSON.stringify(safe),{
+            status:200,headers:secureHeaders({'Content-Type':'application/json; charset=utf-8'}),
+          });
+        }
+        if(isCommunity){
+          if(upstream.status===400)return errorResponse('INVALID_QUERY',400);
+          if(upstream.status===404)return errorResponse('NOT_FOUND',404);
+          if(upstream.status!==200||!/^application\/json\b/i.test(upstream.headers.get('Content-Type')||''))
+            return errorResponse('UPSTREAM_UNAVAILABLE',502);
+          const raw=JSON.parse(new TextDecoder().decode(bytes));
+          const projected=pathname==='/api/community/players'?
+            projectPublicRoster(raw):projectPublicHistory(raw);
+          return new Response(request.method==='HEAD'?null:JSON.stringify(projected),{
             status:200,headers:secureHeaders({'Content-Type':'application/json; charset=utf-8'}),
           });
         }
