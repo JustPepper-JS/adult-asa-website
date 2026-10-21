@@ -49,6 +49,11 @@
   }
   function normalize(value) { return String(value || '').toLowerCase().replace(/[^a-z0-9]/g,''); }
   function inferMap(row, options) {
+    // Nitrado/Rexy currently lists Legacy Scorched Earth as 'Adult ASA - SE'.
+    // Match the short name exactly: never treat a generic 'se' substring as a map.
+    if (options.includes('Scorched Earth') &&
+        (/^Adult ASA(?: Legacy)?\s*-\s*SE$/i.test(String(row.name || '').trim()) ||
+         ['se', 'sewp'].includes(normalize(row.map)))) return 'Scorched Earth';
     for (const field of [row.map, row.name]) {
       const n = normalize(field);
       if (!n) continue;
