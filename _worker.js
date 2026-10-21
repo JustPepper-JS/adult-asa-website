@@ -138,7 +138,7 @@ function validCommunityQuery(url){
     seen.add(key);
     if(key==='page'&&!/^[1-9][0-9]{0,2}$/.test(value))return false;
     if(key==='id'&&!/^[0-9a-f]{24}$/.test(value))return false;
-    if(key==='q'&&(value.length>50||/[\\u0000-\\u001f\\u007f<>]/.test(value)))return false;
+    if(key==='q'&&(value.length>50||/[\x00-\x1f\x7f<>]/.test(value)))return false;
   }
   return !history||seen.has('id');
 }
@@ -229,6 +229,8 @@ function projectPlayer(row){
     !/^[0-9a-f]{24}$/.test(row.id)||
     !Number.isFinite(row.totalHours)||row.totalHours<0||row.totalHours>1e8||
     !intWithin(row.timesJoined)||!intWithin(row.sessionCount)||!intWithin(row.transferCount)||
+    !Array.isArray(row.clustersVisited)||row.clustersVisited.length>2||
+    row.clustersVisited.some(c=>!['legacy','limited'].includes(c))||
     typeof row.isOnline!=='boolean'||safeIso(row.firstSeen)===undefined||
     safeIso(row.lastSeen)===undefined||
     !(row.currentCluster===null&&row.currentMap===null) &&
@@ -237,7 +239,7 @@ function projectPlayer(row){
   return {id:row.id,displayName:row.displayName,totalHours:row.totalHours,
     timesJoined:row.timesJoined,firstSeen:row.firstSeen,lastSeen:row.lastSeen,
     isOnline:row.isOnline,currentCluster:row.currentCluster,currentMap:row.currentMap,
-    sessionCount:row.sessionCount,transferCount:row.transferCount};
+    clustersVisited:[...new Set(row.clustersVisited)],sessionCount:row.sessionCount,transferCount:row.transferCount};
 }
 export function projectPublicRoster(raw){
   if(!raw||typeof raw!=='object'||raw.schema!=='adult-asa.community.v1.roster'||
