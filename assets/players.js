@@ -81,12 +81,12 @@ function cardFor(player){
   main.append(stats);
   const favorite=node('p','player-favorite');
   favorite.append(node('span','player-favorite-label','Favorite map'));
-  const info=player.favoriteMap;
-  if(info){
-    const name=node('strong','player-favorite-map '+info.cluster,
-      fullCluster(info.cluster)+' · '+info.map);
+  const favData=player.favoriteMap;
+  if(favData){
+    const name=node('strong','player-favorite-map '+favData.cluster,
+      fullCluster(favData.cluster)+' · '+favData.map);
     favorite.append(name);
-    favorite.title=info.basis==='sampled-time'?
+    favorite.title=favData.basis==='sampled-time'?
       'Most time counted between consecutive reliable named-player scans. This is partial tracked activity, not full lifetime playtime.':
       'Largest sum of retained completed map sessions. Missing activity is not included.';
   }else{
