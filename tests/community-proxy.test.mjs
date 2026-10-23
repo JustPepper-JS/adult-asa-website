@@ -8,12 +8,16 @@ const record=()=>({
   id:'0123456789abcdef01234567',displayName:'ARK Survivor',
   totalHours:11.5,timesJoined:4,firstSeen:'2026-10-18T10:00:00.000Z',
   lastSeen:now,isOnline:true,currentCluster:'limited',currentMap:'Astraeos',
-  clustersVisited:['legacy','limited'],sessionCount:2,transferCount:1,
+  clustersVisited:['legacy','limited'],sessionCount:2,visitCount:0,transferCount:1,
   platformId:secret,steamId:secret,ip:secret,adminPassword:secret,
 });
 const roster=()=>({
   schema:'adult-asa.community.v1.roster',state:'RETAINED_GAME_DATA',
   updatedAt:now,page:1,pageSize:40,totalPages:1,totalPlayers:1,
+  coverage:{historyComplete:false,limitedAvailability:'recording',legacyFirstRecordedAt:null,
+    limited:['Astraeos','Extinction','Genesis','Lost Colony','The Island'].map(map=>({
+      map,firstObservedAt:map==='Astraeos'?now:null,lastObservedAt:map==='Astraeos'?now:null,
+      reliableScans:map==='Astraeos'?3:0,gapScans:0,host:secret,apiKey:secret}))},
   players:[record()],host:secret,apiKey:secret,
 });
 const history=()=>({
@@ -41,9 +45,11 @@ test('public roster strips all upstream private/account/provider fields',()=>{
  assert.equal(row.totalPlayers,1);
  assert.equal(row.players[0].displayName,'ARK Survivor');
  assert.deepEqual(row.players[0].clustersVisited,['legacy','limited']);
+ assert.equal(row.coverage.limited.length,5);
+ assert.equal(row.coverage.historyComplete,false);
  assert.deepEqual(Object.keys(row.players[0]).sort(),[
    'id','displayName','totalHours','timesJoined','firstSeen','lastSeen','isOnline',
-   'currentCluster','currentMap','clustersVisited','sessionCount','transferCount'
+   'currentCluster','currentMap','clustersVisited','sessionCount','visitCount','transferCount'
  ].sort());
  const encoded=JSON.stringify(row);
  for(const field of [secret,'steamId','platformId','adminPassword','host','apiKey'])
@@ -128,6 +134,8 @@ test('reject unknown, duplicate, malicious queries, unsafe methods and old raw h
   '/api/community/players?page=1000',
   '/api/community/players?page=1&page=2',
   '/api/community/players?token=secret',
+  '/api/community/players?cluster=admin',
+  '/api/community/players?cluster=limited&cluster=all',
   '/api/community/players/history',
   '/api/community/players/history?id=x',
   '/api/community/players/history?id=0123456789abcdef01234567&role=admin',
@@ -149,4 +157,46 @@ test('upstream errors, malformed JSON and HTML fail to private data-safe status'
   assert.equal(response.status,502);
   assert.ok(!(await response.text()).includes(secret));
  }
+});
+
+test('server-wide Limited query is forwarded without account identity or cookies',async()=>{
+ const handler=createHandler({fetchImpl:async(url,options)=>{
+   assert.equal(url,BACKEND+'/api/community/players?page=1&cluster=limited');
+   assert.equal(options.headers.get('Cookie'),null);
+   return json(roster());
+ }});
+ const response=await handler(req('/api/community/players?page=1&cluster=limited'),env);
+ assert.equal(response.status,200);
+ const body=await response.json();
+ assert.equal(body.coverage.limited[0].map,'Astraeos');
+ assert.ok(!JSON.stringify(body).includes(secret));
+});
+test('Limited visit projection is evidence-bounded and raw fields never escape',()=>{
+ const x=history();
+ x.events[1]={type:'visit',occurredAt:'2026-10-20T11:00:00.000Z',
+   endedAt:'2026-10-20T11:20:00.000Z',cluster:'limited',map:'Astraeos',
+   durationMinutes:0,evidence:'named-rcon-poll',endedReason:'still_observed',
+   actualLogoutConfirmed:false,accessKey:secret,playerId:secret};
+ const projection=projectPublicHistory(x);
+ assert.equal(projection.events[1].type,'visit');
+ assert.equal(projection.events[1].endedReason,'still_observed');
+ assert.ok(!JSON.stringify(projection).includes(secret));
+ for(const mutation of [
+   y=>{y.evidence='caller-defined';},
+   y=>{y.actualLogoutConfirmed=true;},
+   y=>{y.durationMinutes=20;},
+   y=>{y.endedReason='guessed-transfer';},
+   y=>{y.cluster='legacy';}
+ ]){const bad=history();bad.events[1]={...x.events[1]};mutation(bad.events[1]);
+   assert.throws(()=>projectPublicHistory(bad));}
+});
+test('bad or incomplete coverage never gets a public projection',()=>{
+ for(const mutate of [
+   x=>{x.coverage.limited.pop();},
+   x=>{x.coverage.historyComplete=true;},
+   x=>{x.coverage.limited[0].reliableScans=-1;},
+   x=>{x.coverage.limited[0].map='Admin Base';},
+   x=>{x.coverage.limited[0].lastObservedAt='2026-10-20T00:00:00.000Z';},
+   x=>{x.coverage.limitedAvailability='secret';}
+ ]){const obj=roster();mutate(obj);assert.throws(()=>projectPublicRoster(obj));}
 });

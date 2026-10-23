@@ -22,7 +22,18 @@ export function activityDescription(event){
   if(event?.type==='transfer'){
     return 'Transfer: '+fullCluster(event.fromCluster)+' / '+event.fromMap+
       ' → '+fullCluster(event.toCluster)+' / '+event.toMap+
-      ' · '+when(event.occurredAt)+(event.inferred?' · inferred by Rexy':' · recorded transfer');
+      ' · '+when(event.occurredAt)+(event.inferred?' · inferred by Rexy':' · observed map switch; identity unverified');
+  }
+  if(event?.type==='visit'){
+    const end=event.endedAt?when(event.endedAt):'unknown';
+    const reason=event.endedReason==='restart_gap'?'tracker restarted':
+      event.endedReason==='coverage_gap'?'monitoring gap':
+      event.endedReason==='observed_absence'?'not seen in next reliable scan':
+      event.endedReason==='still_observed'?'still seen in latest named scan':'tracking state unknown';
+    return 'Observed map visit: Limited / '+event.map+
+      ' · First detected '+when(event.occurredAt)+
+      ' · Last detected '+end+' · '+reason+
+      ' · actual play duration and logout not established';
   }
   if(event?.type==='session'){
     return 'Session: '+fullCluster(event.cluster)+' / '+event.map+
@@ -59,8 +70,9 @@ function cardFor(player){
   main.append(node('p','player-bio',status));
   const stats=node('div','player-stats');
   stats.append(node('span','',hours(player.totalHours)+' tracked'),
-    node('span','',player.sessionCount+' recorded sessions'),
-    node('span','',player.transferCount+' transfers'));
+    node('span','',player.sessionCount+' completed sessions'),
+    node('span','',(player.visitCount||0)+' observed map visits'),
+    node('span','',player.transferCount+' transfer records'));
   main.append(stats);
   card.append(main);
   const button=node('button','player-history-trigger','View map and transfer history');
@@ -82,15 +94,15 @@ function cardFor(player){
       if(data.schema!=='adult-asa.community.v1.history'||data.player.id!==player.id)
         throw Error('Unexpected history response');
       if(nextPage===1){
-        summary.replaceChildren(node('h4','','Map history ('+data.mapTotals.length+')'));
-        if(!data.mapTotals.length)summary.append(node('p','quiet','No completed map sessions retained.'));
+        summary.replaceChildren(node('h4','','Recorded map activity ('+data.mapTotals.length+')'));
+        if(!data.mapTotals.length)summary.append(node('p','quiet','No recorded map activity retained.'));
         for(const m of data.mapTotals)
           summary.append(node('p','player-map-entry',fullCluster(m.cluster)+' · '+m.map+
-            ' · '+m.visits+' visits · '+hours(m.totalMinutes/60)));
+            ' · '+m.visits+' retained entries · '+hours(m.totalMinutes/60)+' confirmed session durations'));
         events.replaceChildren();
       }
       for(const event of data.events)events.append(node('li','',activityDescription(event)));
-      if(nextPage===1&&!data.events.length)events.append(node('li','quiet','No sessions or transfers retained.'));
+      if(nextPage===1&&!data.events.length)events.append(node('li','quiet','No retained events for this display name.'));
       more.hidden=nextPage>=data.totalPages;
       nextPage++;
     }catch(_){
@@ -111,26 +123,48 @@ function cardFor(player){
 async function init(){
   const list=$('player-directory'),status=$('directory-status'),
     search=$('player-search'),filter=$('player-cluster'),
-    more=$('player-load-more');
+    more=$('player-load-more'),coveragePanel=$('player-coverage');
   if(!list||!status||!search||!filter||!more)return;
   let rows=[],nextPage=1,lastTotal=0,lastPages=0,query='',ticket=0,loading=false;
+  let historyCoverage=null;
+  function renderCoverage(){
+    if(!coveragePanel)return;
+    coveragePanel.replaceChildren();
+    coveragePanel.append(node('h3','','Where the records begin'));
+    if(!historyCoverage){
+      coveragePanel.append(node('p','quiet','Tracking coverage is not yet available.'));
+      return;
+    }
+    coveragePanel.append(node('p','quiet','Historical coverage is incomplete. Gaps and unobserved gameplay are not reconstructed.'));
+    if(historyCoverage.legacyFirstRecordedAt)
+      coveragePanel.append(node('p','','Legacy tracking snapshot begins '+when(historyCoverage.legacyFirstRecordedAt)));
+    if(historyCoverage.limitedAvailability==='unavailable')
+      coveragePanel.append(node('p','player-coverage-warning','Limited history recording is unavailable; existing evidence has not been replaced.'));
+    const mapList=node('div','player-coverage-maps');
+    for(const m of historyCoverage.limited||[]){
+      const entry=node('div','player-coverage-map');
+      entry.append(node('strong','',m.map));
+      entry.append(node('span','',m.firstObservedAt
+        ?'First reliable scan '+when(m.firstObservedAt)+' · '+m.reliableScans+' scans · '+m.gapScans+' gaps'
+        :'No reliable named-player scans recorded yet'));
+      mapList.append(entry);
+    }
+    coveragePanel.append(mapList);
+  }
   function render(){
     list.replaceChildren();
-    const cluster=filter.value;
-    const filtered=rows.filter(p=>cluster==='all'||p.clustersVisited.includes(cluster));
-    list.append(...filtered.map(cardFor));
-    if(!filtered.length){
+    // Filter on the backend against ALL retained player names before paging.
+    list.append(...rows.map(cardFor));
+    if(!rows.length&&!loading){
       const panel=node('div','player-empty');
       panel.append(node('span','player-empty-glyph','◇'),
-        node('h3','',rows.length?'No matching cluster':'No recorded player profiles found'),
-        node('p','',rows.length?
-          'Switch the cluster filter to view more players.':
-          'Rexy has no player records to display for this search, or the history service is unavailable.'));
+        node('h3','','No matching retained player profiles'),
+        node('p','','Try another cluster or name. Unobserved players cannot appear in these records.'));
       list.append(panel);
     }
     more.hidden=loading||nextPage>lastPages;
     status.textContent=loading?'Loading Rexy player records…':
-      filtered.length+' displayed · '+lastTotal+' matching game names in Rexy’s retained records';
+      rows.length+' displayed · '+lastTotal+' matching game names in Rexy’s retained records';
   }
   async function load(reset=false){
     if(loading&&!reset)return;
@@ -138,11 +172,13 @@ async function init(){
     const myTicket=++ticket;loading=true;
     more.disabled=true;render();
     try{
-      const data=await getJson(endpoint('',{page:String(nextPage),...(query?{q:query}:{})}));
+      const data=await getJson(endpoint('',{page:String(nextPage),...(query?{q:query}:{}),
+        ...(filter.value!=='all'?{cluster:filter.value}:{})}));
       if(myTicket!==ticket)return;
       if(data.schema!=='adult-asa.community.v1.roster'||data.state!=='RETAINED_GAME_DATA')
         throw Error('Unexpected roster response');
       lastTotal=data.totalPlayers;lastPages=data.totalPages;
+      historyCoverage=data.coverage;renderCoverage();
       rows.push(...data.players);nextPage++;
     }catch(_){
       if(myTicket!==ticket)return;
@@ -158,7 +194,7 @@ async function init(){
       query=search.value.trim().slice(0,50);load(true);
     },250);
   });
-  filter.addEventListener('change',render);
+  filter.addEventListener('change',()=>load(true));
   more.addEventListener('click',()=>load(false));
   await load(true);
 }

@@ -131,7 +131,7 @@ function isRemovableTrackingQuery(url) {
 function validCommunityQuery(url){
   if(url.search.length>220)return false;
   const history=url.pathname==='/api/community/players/history';
-  const allowed=new Set(history?['id','page']:['page','q']);
+  const allowed=new Set(history?['id','page']:['page','q','cluster']);
   const seen=new Set();
   for(const [key,value] of url.searchParams){
     if(!allowed.has(key)||seen.has(key))return false;
@@ -139,6 +139,7 @@ function validCommunityQuery(url){
     if(key==='page'&&!/^[1-9][0-9]{0,2}$/.test(value))return false;
     if(key==='id'&&!/^[0-9a-f]{24}$/.test(value))return false;
     if(key==='q'&&(value.length>50||/[\x00-\x1f\x7f<>]/.test(value)))return false;
+    if(key==='cluster'&&!['all','legacy','limited'].includes(value))return false;
   }
   return !history||seen.has('id');
 }
@@ -228,7 +229,7 @@ function projectPlayer(row){
   if(!row||typeof row!=='object'||!publicName(row.displayName)||
     !/^[0-9a-f]{24}$/.test(row.id)||
     !Number.isFinite(row.totalHours)||row.totalHours<0||row.totalHours>1e8||
-    !intWithin(row.timesJoined)||!intWithin(row.sessionCount)||!intWithin(row.transferCount)||
+    !intWithin(row.timesJoined)||!intWithin(row.sessionCount)||!intWithin(row.visitCount)||!intWithin(row.transferCount)||
     !Array.isArray(row.clustersVisited)||row.clustersVisited.length>2||
     row.clustersVisited.some(c=>!['legacy','limited'].includes(c))||
     typeof row.isOnline!=='boolean'||safeIso(row.firstSeen)===undefined||
@@ -239,7 +240,32 @@ function projectPlayer(row){
   return {id:row.id,displayName:row.displayName,totalHours:row.totalHours,
     timesJoined:row.timesJoined,firstSeen:row.firstSeen,lastSeen:row.lastSeen,
     isOnline:row.isOnline,currentCluster:row.currentCluster,currentMap:row.currentMap,
-    clustersVisited:[...new Set(row.clustersVisited)],sessionCount:row.sessionCount,transferCount:row.transferCount};
+    clustersVisited:[...new Set(row.clustersVisited)],sessionCount:row.sessionCount,
+    visitCount:row.visitCount,transferCount:row.transferCount};
+}
+// Strict second projection of aggregate collection windows, no host addresses
+// or account identifiers. A missing map is explicitly unobserved.
+const LIMITED_PUBLIC_MAPS=['Astraeos','Extinction','Genesis','Lost Colony','The Island'];
+function projectCoverage(raw){
+  if(!raw||raw.historyComplete!==false||
+      !['recording','unavailable'].includes(raw.limitedAvailability)||
+      safeIso(raw.legacyFirstRecordedAt)===undefined||
+      !Array.isArray(raw.limited)||raw.limited.length!==5)
+    throw Error('Invalid public history coverage');
+  const seen=new Set(),limited=raw.limited.map(x=>{
+    if(!x||!LIMITED_PUBLIC_MAPS.includes(x.map)||seen.has(x.map)||
+        safeIso(x.firstObservedAt)===undefined||
+        safeIso(x.lastObservedAt)===undefined||
+        !intWithin(x.reliableScans)||!intWithin(x.gapScans)||
+        (x.firstObservedAt&&x.lastObservedAt&&
+          x.firstObservedAt>x.lastObservedAt))
+      throw Error('Invalid public map coverage');
+    seen.add(x.map);
+    return {map:x.map,firstObservedAt:x.firstObservedAt,
+      lastObservedAt:x.lastObservedAt,reliableScans:x.reliableScans,gapScans:x.gapScans};
+  });
+  return {historyComplete:false,limitedAvailability:raw.limitedAvailability,
+    legacyFirstRecordedAt:raw.legacyFirstRecordedAt,limited};
 }
 export function projectPublicRoster(raw){
   if(!raw||typeof raw!=='object'||raw.schema!=='adult-asa.community.v1.roster'||
@@ -257,7 +283,7 @@ export function projectPublicRoster(raw){
     throw Error('Inconsistent roster totals');
   return {schema:'adult-asa.community.v1.roster',state:'RETAINED_GAME_DATA',
     updatedAt:raw.updatedAt,totalPlayers:raw.totalPlayers,page:raw.page,
-    pageSize:40,totalPages:raw.totalPages,players};
+    pageSize:40,totalPages:raw.totalPages,coverage:projectCoverage(raw.coverage),players};
 }
 export function projectPublicHistory(raw){
   if(!raw||typeof raw!=='object'||raw.schema!=='adult-asa.community.v1.history'||
@@ -280,6 +306,17 @@ export function projectPublicHistory(raw){
         !intWithin(x.durationMinutes,1e7))throw Error('Invalid session event');
       return {type:'session',occurredAt:x.occurredAt,endedAt:x.endedAt,
         cluster:x.cluster,map:x.map,durationMinutes:x.durationMinutes};
+    }
+    if(x.type==='visit'){
+      if(x.cluster!=='limited'||!publicMap(x.cluster,x.map)||
+         safeIso(x.endedAt)===undefined||x.durationMinutes!==0||
+         x.evidence!=='named-rcon-poll'||x.actualLogoutConfirmed!==false||
+         !['restart_gap','coverage_gap','observed_absence','still_observed','unknown'].includes(x.endedReason))
+        throw Error('Invalid observed Limited visit');
+      return {type:'visit',occurredAt:x.occurredAt,endedAt:x.endedAt,
+        cluster:'limited',map:x.map,durationMinutes:0,
+        evidence:'named-rcon-poll',endedReason:x.endedReason,
+        actualLogoutConfirmed:false};
     }
     if(x.type==='transfer'&&publicMap(x.fromCluster,x.fromMap)&&
        publicMap(x.toCluster,x.toMap)&&typeof x.inferred==='boolean')
