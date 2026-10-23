@@ -96,3 +96,28 @@
 @media(max-width:1100px){.player-coverage-maps{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:600px){.player-coverage{padding:16px}.player-coverage-maps{grid-template-columns:1fr 1fr}.player-coverage-map{padding:10px}}
 @media(max-width:390px){.player-coverage-maps{grid-template-columns:1fr}}
+
+/* W1F: actual retained-name totals, honest favorite evidence, separate Limited crest. */
+.player-counts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:4px 0 9px}
+.player-count-card{min-width:0;display:flex;flex-direction:column;gap:5px;padding:19px 21px;
+ border:1px solid #46667e;border-radius:16px;background:linear-gradient(135deg,#173149,#132236)}
+.player-count-card strong{font-size:clamp(29px,3vw,40px);font-variant-numeric:tabular-nums;line-height:1.1;letter-spacing:-.035em;color:#e6f5ff}
+.player-count-label{font-size:13px;font-weight:800;letter-spacing:.02em;color:#d4eaf8}
+.player-count-card small{font-size:11px;color:#a9c3d8}
+.player-count-card-legacy{border-color:#39749b;background:linear-gradient(125deg,#173650,#12253c)}
+.player-count-card-legacy strong{color:#91dfff}
+.player-count-card-limited{border-color:#7f6540;background:linear-gradient(120deg,#362b24,#1b2836)}
+.player-count-card-limited strong{color:#ffd28c}
+.player-count-note{font-size:11px;line-height:1.6;color:#a5bed0;margin:1px 0 21px}
+.player-avatar.limited-primary{background:linear-gradient(145deg,#745329,#33281f);border:1px solid #d69b4b;
+ color:#ffe0a1;border-radius:0;clip-path:polygon(50% 0,95% 22%,95% 78%,50% 100%,5% 78%,5% 22%);
+ box-shadow:inset 0 0 0 2px #d9a25926;font-size:27px}
+.player-favorite{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;
+ border-top:1px solid #355169;margin:12px 0 15px;padding-top:12px;line-height:1.5}
+.player-favorite-label{font-size:11px;color:#b9d6e7;font-weight:750}
+.player-favorite-map{font-size:12px;color:#b1e7fc}
+.player-favorite-map.limited{color:#f2ca7b}
+.player-favorite-unknown{font-size:11px;color:#9fb4c5;font-style:italic}
+@media(max-width:760px){.player-counts{grid-template-columns:1fr 1fr}}
+@media(max-width:540px){.player-counts{grid-template-columns:1fr;gap:9px}
+ .player-count-card{padding:13px 18px;gap:2px}.player-count-card strong{font-size:30px}}
