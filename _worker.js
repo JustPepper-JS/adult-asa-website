@@ -281,6 +281,17 @@ export function projectPublicHistory(raw){
       return {type:'session',occurredAt:x.occurredAt,endedAt:x.endedAt,
         cluster:x.cluster,map:x.map,durationMinutes:x.durationMinutes};
     }
+    if(x.type==='visit'){
+      if(x.cluster!=='limited'||!publicMap(x.cluster,x.map)||
+         safeIso(x.endedAt)===undefined||x.durationMinutes!==0||
+         x.evidence!=='named-rcon-poll'||x.actualLogoutConfirmed!==false||
+         !['restart_gap','coverage_gap','observed_absence','unknown'].includes(x.endedReason))
+        throw Error('Invalid observed Limited visit');
+      return {type:'visit',occurredAt:x.occurredAt,endedAt:x.endedAt,
+        cluster:'limited',map:x.map,durationMinutes:0,
+        evidence:'named-rcon-poll',endedReason:x.endedReason,
+        actualLogoutConfirmed:false};
+    }
     if(x.type==='transfer'&&publicMap(x.fromCluster,x.fromMap)&&
        publicMap(x.toCluster,x.toMap)&&typeof x.inferred==='boolean')
       return {type:'transfer',occurredAt:x.occurredAt,
