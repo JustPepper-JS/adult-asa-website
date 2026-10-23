@@ -52,3 +52,19 @@ test('mobile layouts and history card expansion are accessible with no direct pl
   assert.match(html,/Player account identifiers|Account IDs, credentials and base coordinates/i);
   assert.doesNotMatch(html,/Steam ID|EOS ID|RCON_PASSWORD|AdminPassword/);
 });
+
+test('W1E Limited observed visits never claim actual session length or logout',()=>{
+ const visit=activityDescription({type:'visit',cluster:'limited',map:'Astraeos',
+   occurredAt:'2026-10-23T15:00:00.000Z',endedAt:'2026-10-23T15:04:00.000Z',
+   endedReason:'coverage_gap',actualLogoutConfirmed:false,durationMinutes:0,
+   rconPassword:'DO-NOT-RENDER'});
+ assert.match(visit,/Observed map visit: Limited \/ Astraeos/);
+ assert.match(visit,/monitoring gap/);
+ assert.match(visit,/actual play duration and logout not established/);
+ assert.doesNotMatch(visit,/DO-NOT-RENDER/);
+ const worker=read('_worker.js');
+ assert.match(worker,/x\.type==='visit'/);
+ assert.match(worker,/x\.evidence!=='named-rcon-poll'/);
+ assert.match(worker,/x\.actualLogoutConfirmed!==false/);
+ assert.doesNotMatch(read('assets/players.js'),/document\.cookie|innerHTML/);
+});
