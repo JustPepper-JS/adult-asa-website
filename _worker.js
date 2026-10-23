@@ -225,11 +225,30 @@ function intWithin(value,max=1e7){return Number.isInteger(value)&&value>=0&&valu
 function publicName(name){return typeof name==='string'&&name.length>=1&&name.length<=80&&
   !/[\x00-\x1f\x7f<>]/.test(name);}
 function publicMap(c,m){return CLUSTERS.has(c)&&VALID_MAPS.has(m);}
+function projectFavoriteMap(value){
+  if(value===null)return null;
+  if(!value||typeof value!=='object'||!['legacy','limited'].includes(value.cluster)||
+    !VALID_MAPS.has(value.map)||value.map==='Unknown'||
+    !['sampled-time','retained-sessions'].includes(value.basis)||
+    (value.basis==='retained-sessions'&&value.cluster!=='legacy'))
+    throw Error('Untrusted favorite map');
+  return {cluster:value.cluster,map:value.map,basis:value.basis};
+}
+function projectTotals(value){
+  if(!value||!['all','legacy','limited','both'].every(k=>intWithin(value[k],20000))||
+     value.both>Math.min(value.legacy,value.limited)||
+     value.all<Math.max(value.legacy,value.limited)||
+     value.all<value.legacy+value.limited-value.both)
+    throw Error('Inconsistent complete roster totals');
+  return {all:value.all,legacy:value.legacy,limited:value.limited,both:value.both};
+}
 function projectPlayer(row){
   if(!row||typeof row!=='object'||!publicName(row.displayName)||
     !/^[0-9a-f]{24}$/.test(row.id)||
     !Number.isFinite(row.totalHours)||row.totalHours<0||row.totalHours>1e8||
     !intWithin(row.timesJoined)||!intWithin(row.sessionCount)||!intWithin(row.visitCount)||!intWithin(row.transferCount)||
+    !['legacy','limited',null].includes(row.dominantCluster)||
+    !['sampled-time','retained-sessions','insufficient'].includes(row.favoriteEvidence)||
     !Array.isArray(row.clustersVisited)||row.clustersVisited.length>2||
     row.clustersVisited.some(c=>!['legacy','limited'].includes(c))||
     typeof row.isOnline!=='boolean'||safeIso(row.firstSeen)===undefined||
@@ -237,11 +256,17 @@ function projectPlayer(row){
     !(row.currentCluster===null&&row.currentMap===null) &&
     !publicMap(row.currentCluster,row.currentMap))
     throw Error('Untrusted player summary');
+  const favoriteMap=projectFavoriteMap(row.favoriteMap);
+  if((favoriteMap===null&&row.favoriteEvidence==='retained-sessions')||
+    (favoriteMap!==null&&favoriteMap.basis!==row.favoriteEvidence)||
+    (row.dominantCluster!==null&&row.favoriteEvidence!=='sampled-time'))
+    throw Error('Conflicting favorite evidence');
   return {id:row.id,displayName:row.displayName,totalHours:row.totalHours,
     timesJoined:row.timesJoined,firstSeen:row.firstSeen,lastSeen:row.lastSeen,
     isOnline:row.isOnline,currentCluster:row.currentCluster,currentMap:row.currentMap,
     clustersVisited:[...new Set(row.clustersVisited)],sessionCount:row.sessionCount,
-    visitCount:row.visitCount,transferCount:row.transferCount};
+    visitCount:row.visitCount,transferCount:row.transferCount,
+    favoriteMap,dominantCluster:row.dominantCluster,favoriteEvidence:row.favoriteEvidence};
 }
 // Strict second projection of aggregate collection windows, no host addresses
 // or account identifiers. A missing map is explicitly unobserved.
@@ -250,6 +275,8 @@ function projectCoverage(raw){
   if(!raw||raw.historyComplete!==false||
       !['recording','unavailable'].includes(raw.limitedAvailability)||
       safeIso(raw.legacyFirstRecordedAt)===undefined||
+      safeIso(raw.mapTimeStartedAt)===undefined||
+      !['recording','unavailable'].includes(raw.mapTimeAvailability)||
       !Array.isArray(raw.limited)||raw.limited.length!==5)
     throw Error('Invalid public history coverage');
   const seen=new Set(),limited=raw.limited.map(x=>{
@@ -265,7 +292,8 @@ function projectCoverage(raw){
       lastObservedAt:x.lastObservedAt,reliableScans:x.reliableScans,gapScans:x.gapScans};
   });
   return {historyComplete:false,limitedAvailability:raw.limitedAvailability,
-    legacyFirstRecordedAt:raw.legacyFirstRecordedAt,limited};
+    legacyFirstRecordedAt:raw.legacyFirstRecordedAt,
+    mapTimeStartedAt:raw.mapTimeStartedAt,mapTimeAvailability:raw.mapTimeAvailability,limited};
 }
 export function projectPublicRoster(raw){
   if(!raw||typeof raw!=='object'||raw.schema!=='adult-asa.community.v1.roster'||
@@ -279,11 +307,13 @@ export function projectPublicRoster(raw){
     if(ids.has(p.id))throw Error('Duplicate public player ID');
     ids.add(p.id);return p;
   });
-  if(players.length>raw.totalPlayers||raw.totalPages!==Math.ceil(raw.totalPlayers/40))
+  const totals=projectTotals(raw.totals);
+  if(players.length>raw.totalPlayers||raw.totalPlayers>totals.all||
+     raw.totalPages!==Math.ceil(raw.totalPlayers/40))
     throw Error('Inconsistent roster totals');
   return {schema:'adult-asa.community.v1.roster',state:'RETAINED_GAME_DATA',
     updatedAt:raw.updatedAt,totalPlayers:raw.totalPlayers,page:raw.page,
-    pageSize:40,totalPages:raw.totalPages,coverage:projectCoverage(raw.coverage),players};
+    pageSize:40,totalPages:raw.totalPages,totals,coverage:projectCoverage(raw.coverage),players};
 }
 export function projectPublicHistory(raw){
   if(!raw||typeof raw!=='object'||raw.schema!=='adult-asa.community.v1.history'||
