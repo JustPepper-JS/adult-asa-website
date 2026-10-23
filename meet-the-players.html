@@ -58,6 +58,24 @@
       <div><p class="eyebrow">THE COMMUNITY DIRECTORY</p><h2 id="directory-title">Find your fellow survivors.</h2></div>
       <p>Search all in-game names Rexy has retained. Browse map history and transfers with full pagination, not a ten-event preview.</p>
     </div>
+    <div class="player-counts" aria-label="Total recorded survivor names by cluster">
+      <div class="player-count-card">
+        <span class="player-count-label">Total players</span>
+        <strong id="player-total-all" aria-live="polite">—</strong>
+        <small>Retained in-game names</small>
+      </div>
+      <div class="player-count-card player-count-card-legacy">
+        <span class="player-count-label">Legacy players</span>
+        <strong id="player-total-legacy" aria-live="polite">—</strong>
+        <small>Seen on Legacy maps</small>
+      </div>
+      <div class="player-count-card player-count-card-limited">
+        <span class="player-count-label">Limited players</span>
+        <strong id="player-total-limited" aria-live="polite">—</strong>
+        <small>Seen on Limited maps</small>
+      </div>
+    </div>
+    <p class="player-count-note">Players active in both clusters count in each cluster total, but only once in the overall directory. Totals represent retained in-game names, not verified unique accounts.</p>
     <div class="players-filters" role="search" aria-label="Search public player profiles">
       <label for="player-search">Player name
         <input id="player-search" type="search" placeholder="Search survivor names" autocomplete="off" maxlength="50">
@@ -77,7 +95,7 @@
     <p id="directory-status" class="player-directory-status" role="status" aria-live="polite">Loading recorded ARK player history…</p>
     <div class="player-list" id="player-directory" aria-live="polite"></div>
     <button id="player-load-more" class="button button-secondary player-load-more" type="button" hidden>Load more players</button>
-    <p class="players-footer-note">Only in-game display names and gameplay observations appear here. Limited named-poll visits indicate observed presence, not independently confirmed login, logout or full session duration. History is limited to records Rexy still retains; a reused player name or an inferred transfer may not identify a unique person. Account IDs, credentials and base coordinates are excluded.</p>
+    <p class="players-footer-note">Favorite map and the gold Limited emblem come from available measured map activity, not a claim about a player's entire lifetime. When tracking cannot establish a favorite or primary cluster, the page says so. Only in-game display names and gameplay observations appear here. Limited named-poll visits indicate observed presence, not independently confirmed login, logout or full session duration. History is limited to records Rexy still retains; a reused player name or an inferred transfer may not identify a unique person. Account IDs, credentials and base coordinates are excluded.</p>
   </section>
   <section class="container section compact">
     <div class="players-cta">
