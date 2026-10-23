@@ -68,3 +68,23 @@ test('W1E Limited observed visits never claim actual session length or logout',(
  assert.match(worker,/x\.actualLogoutConfirmed!==false/);
  assert.doesNotMatch(read('assets/players.js'),/document\.cookie|innerHTML/);
 });
+
+test('full-roster cluster filtering, independent visit counts and map provenance render in real source',()=>{
+ const js=read('assets/players.js'),html=read('meet-the-players.html'),css=read('assets/players.css');
+ assert.match(js,/filter\.value!=='all'/);
+ assert.match(js,/filter\.addEventListener\('change',\(\)=>load\(true\)\)/);
+ assert.doesNotMatch(js,/rows\.filter\(p=>cluster==='all'/);
+ assert.match(js,/player\.visitCount/);
+ assert.match(js,/historyCoverage\.limited/);
+ assert.match(html,/id="player-coverage"/);
+ assert.match(css,/\.player-coverage-maps/);
+ assert.match(css,/@media\(max-width:390px\)/);
+});
+test('recent active Limited observation is shown as a visit and not a confirmed login',()=>{
+ const visit=activityDescription({type:'visit',cluster:'limited',map:'The Island',
+   occurredAt:'2026-10-23T15:00:00.000Z',endedAt:'2026-10-23T15:01:00.000Z',
+   endedReason:'still_observed',actualLogoutConfirmed:false,durationMinutes:0});
+ assert.match(visit,/Observed map visit/);
+ assert.match(visit,/still seen in latest named scan/);
+ assert.match(visit,/actual play duration and logout not established/);
+});
