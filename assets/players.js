@@ -24,6 +24,16 @@ export function activityDescription(event){
       ' → '+fullCluster(event.toCluster)+' / '+event.toMap+
       ' · '+when(event.occurredAt)+(event.inferred?' · inferred by Rexy':' · recorded transfer');
   }
+  if(event?.type==='visit'){
+    const end=event.endedAt?when(event.endedAt):'unknown';
+    const reason=event.endedReason==='restart_gap'?'tracker restarted':
+      event.endedReason==='coverage_gap'?'monitoring gap':
+      event.endedReason==='observed_absence'?'not seen in next reliable scan':'tracking ended';
+    return 'Observed map visit: Limited / '+event.map+
+      ' · First detected '+when(event.occurredAt)+
+      ' · Last detected '+end+' · '+reason+
+      ' · actual play duration and logout not established';
+  }
   if(event?.type==='session'){
     return 'Session: '+fullCluster(event.cluster)+' / '+event.map+
       ' · '+when(event.occurredAt)+' to '+when(event.endedAt)+
@@ -59,7 +69,7 @@ function cardFor(player){
   main.append(node('p','player-bio',status));
   const stats=node('div','player-stats');
   stats.append(node('span','',hours(player.totalHours)+' tracked'),
-    node('span','',player.sessionCount+' recorded sessions'),
+    node('span','',player.sessionCount+' retained sessions or observed visits'),
     node('span','',player.transferCount+' transfers'));
   main.append(stats);
   card.append(main);
@@ -82,15 +92,15 @@ function cardFor(player){
       if(data.schema!=='adult-asa.community.v1.history'||data.player.id!==player.id)
         throw Error('Unexpected history response');
       if(nextPage===1){
-        summary.replaceChildren(node('h4','','Map history ('+data.mapTotals.length+')'));
-        if(!data.mapTotals.length)summary.append(node('p','quiet','No completed map sessions retained.'));
+        summary.replaceChildren(node('h4','','Recorded map activity ('+data.mapTotals.length+')'));
+        if(!data.mapTotals.length)summary.append(node('p','quiet','No recorded map activity retained.'));
         for(const m of data.mapTotals)
           summary.append(node('p','player-map-entry',fullCluster(m.cluster)+' · '+m.map+
-            ' · '+m.visits+' visits · '+hours(m.totalMinutes/60)));
+            ' · '+m.visits+' retained entries · '+hours(m.totalMinutes/60)+' confirmed session durations'));
         events.replaceChildren();
       }
       for(const event of data.events)events.append(node('li','',activityDescription(event)));
-      if(nextPage===1&&!data.events.length)events.append(node('li','quiet','No sessions or transfers retained.'));
+      if(nextPage===1&&!data.events.length)events.append(node('li','quiet','No retained events for this display name.'));
       more.hidden=nextPage>=data.totalPages;
       nextPage++;
     }catch(_){
