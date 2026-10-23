@@ -9,12 +9,16 @@ const record=()=>({
   totalHours:11.5,timesJoined:4,firstSeen:'2026-10-18T10:00:00.000Z',
   lastSeen:now,isOnline:true,currentCluster:'limited',currentMap:'Astraeos',
   clustersVisited:['legacy','limited'],sessionCount:2,visitCount:0,transferCount:1,
+  favoriteMap:{cluster:'limited',map:'Astraeos',basis:'sampled-time'},
+  dominantCluster:'limited',favoriteEvidence:'sampled-time',
   platformId:secret,steamId:secret,ip:secret,adminPassword:secret,
 });
 const roster=()=>({
   schema:'adult-asa.community.v1.roster',state:'RETAINED_GAME_DATA',
   updatedAt:now,page:1,pageSize:40,totalPages:1,totalPlayers:1,
+  totals:{all:1,legacy:1,limited:1,both:1,internalSecret:secret},
   coverage:{historyComplete:false,limitedAvailability:'recording',legacyFirstRecordedAt:null,
+    mapTimeStartedAt:now,mapTimeAvailability:'recording',
     limited:['Astraeos','Extinction','Genesis','Lost Colony','The Island'].map(map=>({
       map,firstObservedAt:map==='Astraeos'?now:null,lastObservedAt:map==='Astraeos'?now:null,
       reliableScans:map==='Astraeos'?3:0,gapScans:0,host:secret,apiKey:secret}))},
@@ -47,9 +51,12 @@ test('public roster strips all upstream private/account/provider fields',()=>{
  assert.deepEqual(row.players[0].clustersVisited,['legacy','limited']);
  assert.equal(row.coverage.limited.length,5);
  assert.equal(row.coverage.historyComplete,false);
+ assert.deepEqual(row.totals,{all:1,legacy:1,limited:1,both:1});
+ assert.equal(row.players[0].favoriteMap.map,'Astraeos');
  assert.deepEqual(Object.keys(row.players[0]).sort(),[
    'id','displayName','totalHours','timesJoined','firstSeen','lastSeen','isOnline',
-   'currentCluster','currentMap','clustersVisited','sessionCount','visitCount','transferCount'
+   'currentCluster','currentMap','clustersVisited','sessionCount','visitCount','transferCount',
+   'favoriteMap','dominantCluster','favoriteEvidence'
  ].sort());
  const encoded=JSON.stringify(row);
  for(const field of [secret,'steamId','platformId','adminPassword','host','apiKey'])
@@ -199,4 +206,39 @@ test('bad or incomplete coverage never gets a public projection',()=>{
    x=>{x.coverage.limited[0].lastObservedAt='2026-10-20T00:00:00.000Z';},
    x=>{x.coverage.limitedAvailability='secret';}
  ]){const obj=roster();mutate(obj);assert.throws(()=>projectPublicRoster(obj));}
+});
+
+test('raw per-map evidence, provider fields and secret keys cannot escape public totals',()=>{
+ const item=roster();
+ item.players[0].mapTimeRaw={'limited|Astraeos':999999};
+ item.players[0].steamId=secret;
+ const projection=projectPublicRoster(item);
+ assert.ok(!JSON.stringify(projection).includes(secret));
+ assert.ok(!JSON.stringify(projection).includes('mapTimeRaw'));
+ assert.deepEqual(projection.totals,{all:1,legacy:1,limited:1,both:1});
+});
+test('overlap totals are coherent and favor only known cluster/map evidence',()=>{
+ const invalid=[
+  x=>{x.totals.all=0;},
+  x=>{x.totals.both=2;},
+  x=>{x.totals.legacy=0;},
+  x=>{x.players[0].favoriteMap.map='Private Base XYZ';},
+  x=>{x.players[0].favoriteMap.basis='owner-verified';},
+  x=>{x.players[0].dominantCluster='admin';},
+  x=>{x.players[0].favoriteEvidence='guessed';},
+  x=>{x.players[0].favoriteEvidence='retained-sessions';},
+  x=>{x.coverage.mapTimeAvailability='offline-proxy';},
+  x=>{x.coverage.mapTimeStartedAt='not a time';},
+ ];
+ for(const mutate of invalid){const x=roster();mutate(x);
+  assert.throws(()=>projectPublicRoster(x));}
+});
+test('unknown preference remains unknown, not automatically Legacy',()=>{
+ const x=roster();
+ x.players[0].favoriteMap=null;
+ x.players[0].dominantCluster=null;
+ x.players[0].favoriteEvidence='insufficient';
+ const p=projectPublicRoster(x).players[0];
+ assert.equal(p.favoriteMap,null);
+ assert.equal(p.dominantCluster,null);
 });

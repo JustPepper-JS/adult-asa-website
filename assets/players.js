@@ -56,7 +56,12 @@ async function getJson(url){
 function cardFor(player){
   const card=node('article','player-card');
   const top=node('div','player-card-top');
-  top.append(node('span','player-avatar','✦'));
+  const primarilyLimited=player.dominantCluster==='limited';
+  const emblem=node('span','player-avatar'+(primarilyLimited?' limited-primary':''),primarilyLimited?'✹':'✦');
+  emblem.setAttribute('aria-label',primarilyLimited?
+    'Mostly Limited by reliably observed map time':'Community survivor emblem');
+  if(primarilyLimited)emblem.title='Mostly Limited in sampled tracked map time';
+  top.append(emblem);
   for(const cluster of player.clustersVisited.length?player.clustersVisited:['unknown']){
     top.append(node('span','player-tag '+cluster,fullCluster(cluster)));
   }
@@ -74,6 +79,21 @@ function cardFor(player){
     node('span','',(player.visitCount||0)+' observed map visits'),
     node('span','',player.transferCount+' transfer records'));
   main.append(stats);
+  const favorite=node('p','player-favorite');
+  favorite.append(node('span','player-favorite-label','Favorite map'));
+  const favData=player.favoriteMap;
+  if(favData){
+    const name=node('strong','player-favorite-map '+favData.cluster,
+      fullCluster(favData.cluster)+' · '+favData.map);
+    favorite.append(name);
+    favorite.title=favData.basis==='sampled-time'?
+      'Most time counted between consecutive reliable named-player scans. This is partial tracked activity, not full lifetime playtime.':
+      'Largest sum of retained completed map sessions. Missing activity is not included.';
+  }else{
+    favorite.append(node('span','player-favorite-unknown','Not established yet'));
+    favorite.title='Insufficient comparable map-time records; no favorite is guessed.';
+  }
+  main.append(favorite);
   card.append(main);
   const button=node('button','player-history-trigger','View map and transfer history');
   button.type='button';button.setAttribute('aria-expanded','false');
@@ -127,6 +147,16 @@ async function init(){
   if(!list||!status||!search||!filter||!more)return;
   let rows=[],nextPage=1,lastTotal=0,lastPages=0,query='',ticket=0,loading=false;
   let historyCoverage=null;
+  function renderTotals(totals){
+    if(!totals)return;
+    const fields=[['player-total-all','all'],['player-total-legacy','legacy'],
+      ['player-total-limited','limited']];
+    for(const [id,key] of fields){
+      const element=$(id);
+      if(element&&Number.isInteger(totals[key]))
+        element.textContent=totals[key].toLocaleString();
+    }
+  }
   function renderCoverage(){
     if(!coveragePanel)return;
     coveragePanel.replaceChildren();
@@ -138,6 +168,11 @@ async function init(){
     coveragePanel.append(node('p','quiet','Historical coverage is incomplete. Gaps and unobserved gameplay are not reconstructed.'));
     if(historyCoverage.legacyFirstRecordedAt)
       coveragePanel.append(node('p','','Legacy tracking snapshot begins '+when(historyCoverage.legacyFirstRecordedAt)));
+    coveragePanel.append(node('p','',historyCoverage.mapTimeStartedAt?
+      'Favorite-map comparisons use bounded, consecutive named scans since '+when(historyCoverage.mapTimeStartedAt)+'.':
+      'Per-map time comparisons are starting; earlier missing hours are not guessed.'));
+    if(historyCoverage.mapTimeAvailability==='unavailable')
+      coveragePanel.append(node('p','player-coverage-warning','Per-map time sampling is temporarily unavailable; existing evidence is preserved.'));
     if(historyCoverage.limitedAvailability==='unavailable')
       coveragePanel.append(node('p','player-coverage-warning','Limited history recording is unavailable; existing evidence has not been replaced.'));
     const mapList=node('div','player-coverage-maps');
@@ -179,6 +214,7 @@ async function init(){
         throw Error('Unexpected roster response');
       lastTotal=data.totalPlayers;lastPages=data.totalPages;
       historyCoverage=data.coverage;renderCoverage();
+      renderTotals(data.totals);
       rows.push(...data.players);nextPage++;
     }catch(_){
       if(myTicket!==ticket)return;

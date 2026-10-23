@@ -88,3 +88,32 @@ test('recent active Limited observation is shown as a visit and not a confirmed 
  assert.match(visit,/still seen in latest named scan/);
  assert.match(visit,/actual play duration and logout not established/);
 });
+
+test('three responsive global totals and their overlapping-pseudonym explanation are visible',()=>{
+ const html=read('meet-the-players.html'),css=read('assets/players.css');
+ for(const id of ['player-total-all','player-total-legacy','player-total-limited'])
+  assert.ok(html.includes('id="'+id+'"'));
+ assert.match(html,/count in each cluster total, but only once in the overall directory/);
+ assert.match(css,/\.player-counts/);
+ assert.match(css,/@media\(max-width:540px\)/);
+});
+test('Limited majority uses a distinct gold hexagonal emblem while uncertain stays neutral',()=>{
+ const js=read('assets/players.js'),css=read('assets/players.css');
+ assert.match(js,/player\.dominantCluster==='limited'/);
+ assert.match(js,/primarilyLimited\?'✹':'✦'/);
+ assert.match(js,/Favorite map/);
+ assert.match(js,/Not established yet/);
+ assert.match(js,/player\.favoriteMap/);
+ assert.match(css,/\.player-avatar\.limited-primary/);
+ assert.match(css,/clip-path:polygon/);
+ assert.match(css,/\.player-favorite-map\.limited/);
+});
+test('complete roster totals are independent of paging, search and cluster filters',()=>{
+ const js=read('assets/players.js');
+ assert.match(js,/renderTotals\(data\.totals\)/);
+ assert.match(js,/player-total-all/);
+ assert.match(js,/player-total-legacy/);
+ assert.match(js,/player-total-limited/);
+ assert.match(js,/filter\.addEventListener\('change',\(\)=>load\(true\)\)/);
+ assert.match(js,/endpoint\('',\{page:String\(nextPage\)/);
+});
