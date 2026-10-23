@@ -78,3 +78,8 @@
 .player-load-more{display:block;margin:21px auto 0;min-height:45px}
 .player-load-more[hidden]{display:none}
 .player-list .player-empty{min-height:185px}
+
+/* W1E: readable evidence caveats on narrow devices; no fabricated records. */
+.player-events li{line-height:1.75;border-left:3px solid #527f9d;padding:12px 13px;font-size:12px}
+.player-stats span{line-height:1.5}
+@media(max-width:600px){.player-card{padding:18px}.player-history-trigger{width:100%;text-align:center;min-height:46px}.players-footer-note{font-size:13px}.player-events li{font-size:12px}.players-filters input,.players-filters select{min-height:48px}}
