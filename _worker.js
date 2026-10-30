@@ -20,6 +20,7 @@ const PUBLIC_FILES = new Set([
   '/index.html', '/servers.html', '/meet-the-players.html', '/mods.html', '/admin.html', '/gateway.css',
   '/assets/site.css', '/assets/site.js', '/assets/players.css', '/assets/players.js',
   '/assets/players-directory.json', '/assets/icon.svg', '/assets/mod-catalog.json',
+  '/app.webmanifest', '/sw.js', '/assets/install-app.js', '/assets/app-192.png',
   '/robots.txt', '/sitemap.xml',
 ]);
 // Historic public screens included identifiable movement and unused placeholder tools.
@@ -482,6 +483,12 @@ export function createHandler({ fetchImpl = globalThis.fetch, timeoutMs = 12000,
       }
       if (response.status !== 200) return errorResponse('ASSET_UNAVAILABLE', 404);
       const headers = secureHeaders(response.headers);
+      if (file === '/sw.js') {
+        headers.set('Content-Type','application/javascript; charset=utf-8');
+        headers.set('Service-Worker-Allowed','/');
+      }
+      if (file === '/app.webmanifest') headers.set('Content-Type','application/manifest+json; charset=utf-8');
+      if (file === '/assets/app-192.png') headers.set('Content-Type','image/png');
       if (file === '/admin.html') { headers.set('Content-Security-Policy', CSP); headers.set('X-Robots-Tag', 'noindex'); }
       else if (['/index.html', '/servers.html', '/meet-the-players.html', '/mods.html'].includes(file)) headers.set('Content-Security-Policy', PUBLIC_CSP);
       return new Response(request.method === 'HEAD' ? null : response.body, { status: 200, headers });
