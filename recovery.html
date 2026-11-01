@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#081321">
+  <meta name="description" content="Lost items in ARK? Send a recovery request to Adult ASA staff.">
+  <link rel="canonical" href="https://adult-asa.org/recovery">
+  <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/site.css">
+  <link rel="stylesheet" href="/assets/recovery.css">
+  <script src="/assets/site.js" defer></script>
+  <script src="/assets/recovery.js" defer></script>
+  <title>Need a hand? | Adult ASA</title>
+</head>
+<body data-page="recovery">
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header"><div class="nav-shell container">
+  <a class="brand" href="/" aria-label="Adult ASA home"><span class="brand-icon" aria-hidden="true">A</span><span class="brand-wordmark">ADULT ASA<small>PVE CLUSTER</small></span></a>
+  <button class="menu-button" type="button" aria-controls="primary-nav" aria-expanded="false" aria-label="Toggle navigation"><span></span><span></span><span></span></button>
+  <nav class="main-nav" id="primary-nav" aria-label="Primary navigation"><a href="/">Home</a><a href="/servers">Servers</a><a href="/meet-the-players">Players</a><a href="/mods">Mods</a><a href="/recovery.html" aria-current="page">Get help</a></nav>
+  <a class="nav-admin" href="/admin">Staff login</a>
+</div></header>
+<main id="main">
+  <section class="page-hero container recovery-intro">
+    <p class="eyebrow">PLAYER SUPPORT</p>
+    <h1>Lost something?<br><em>Tell us what happened.</em></h1>
+    <p>ARK has its moments. If a transfer, crash, or other issue cost you your gear, send us the details. We'll check what we can verify and let you know what happens next.</p>
+  </section>
+  <section class="section compact container recovery-columns">
+    <div class="recovery-card">
+      <h2>Request item recovery</h2>
+      <p>You don't need to be staff to submit a request. Please only send one report for the same incident.</p>
+      <form id="recovery-request-form" autocomplete="off" novalidate>
+        <div class="recovery-fields">
+          <label for="survivor-name">Survivor name
+            <input id="survivor-name" name="survivorName" maxlength="80" minlength="1" required placeholder="Your in-game survivor name"></label>
+          <label for="discord-contact">How can staff reach you?
+            <input id="discord-contact" name="contact" maxlength="100" required placeholder="Your Discord username"></label>
+          <label for="cluster-choice">Which cluster?
+            <select id="cluster-choice" name="cluster" required>
+              <option value="legacy">Legacy</option>
+              <option value="limited">Limited</option>
+              <option value="unknown">Not sure</option>
+            </select></label>
+          <label for="map-choice">Map
+            <select id="map-choice" name="map" required>
+              <option>The Island</option><option>Scorched Earth</option><option>Aberration</option>
+              <option>Extinction</option><option>Ragnarok</option><option>Valguero</option>
+              <option>The Center</option><option>Astraeos</option><option>Genesis</option>
+              <option>Lost Colony</option><option>Unknown</option>
+            </select></label>
+          <label class="recovery-wide" for="description">What happened, and what did you lose?
+            <textarea id="description" name="description" required minlength="15" maxlength="800" rows="6" placeholder="Tell us when it happened, what items you're missing, and anything else that might help."></textarea></label>
+          <div class="recovery-honeypot" aria-hidden="true"><label for="website">Website<input type="text" tabindex="-1" id="website" name="website"></label></div>
+          <button id="recovery-submit" type="submit" class="button button-primary">Send recovery request</button>
+          <p id="recovery-feedback" role="status" aria-live="polite" class="recovery-feedback"></p>
+        </div>
+      </form>
+    </div>
+    <aside class="recovery-steps" aria-label="What happens next">
+      <h2>What happens next?</h2>
+      <ol>
+        <li><strong>We check your report.</strong> Staff will look into the incident and any available saves.</li>
+        <li><strong>A senior staff member reviews replacements.</strong> Moderators can't approve their own requests. Staff approvals require two-factor sign-in.</li>
+        <li><strong>We arrange delivery.</strong> If replacement is approved and available, we'll contact you to get the items back to your survivor.</li>
+      </ol>
+      <p>Old saves help us investigate, but they don't always show exactly what was lost. Modded items and stored creatures may take a separate check.</p>
+      <a href="https://discord.gg/adultasa" target="_blank" rel="noopener noreferrer" class="text-link">Talk to staff on Discord</a>
+    </aside>
+  </section>
+</main>
+<footer class="site-footer"><div class="container footer-main"><div><a class="brand" href="/"><span class="brand-icon" aria-hidden="true">A</span><span class="brand-wordmark">ADULT ASA<small>PVE CLUSTER</small></span></a><p>ARK PvE servers. Good people. No scheduled wipes.</p></div><div class="footer-links"><a href="/servers">Servers</a><a href="/meet-the-players">Players</a><a href="/mods">Mods</a><a href="/recovery.html">Get help</a><a href="/admin">Staff login</a><a href="https://discord.gg/adultasa" target="_blank" rel="noopener noreferrer">Discord</a></div></div><div class="container footer-bottom"><span>© 2026 Adult ASA. Independent community server; not affiliated with Studio Wildcard.</span></div></footer>
+</body></html>
