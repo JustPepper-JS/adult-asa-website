@@ -39,3 +39,15 @@ jobs:
           test "$CODE" = 401
           ! grep -q 'survivorName' /tmp/private-body
           echo "PASS anonymous staff queue denied"
+      - name: Check public intake safely rejects an invalid report without creating one
+        run: |
+          set -euo pipefail
+          CODE=$(curl --silent --show-error --max-time 25 -o /tmp/invalid-report \
+            -w "%{http_code}" -X POST \
+            -H 'Origin: https://adult-asa.org' \
+            -H 'Content-Type: application/json' \
+            -H 'Accept: application/json' \
+            -d '{}' https://adult-asa.org/control/api/recovery/requests/public)
+          test "$CODE" = 400
+          grep -q "CHECK_REQUEST_DETAILS" /tmp/invalid-report
+          echo "PASS public recovery route validates input without creating a ticket"
