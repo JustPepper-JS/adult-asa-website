@@ -1,6 +1,6 @@
 // W1A: explicit public-to-private routing. Discord authorization remains in AASA.
 // This module runs in Cloudflare Pages advanced mode and Workers static assets.
-export const RELEASE = 'W1B-control-marketing-query-20261018-r1';
+export const RELEASE = 'W2-rexy-recovery-request-20261101';
 export const CANONICAL = 'https://adult-asa.org';
 export const BACKEND = 'https://aasa-discord-bot-v-20-production.up.railway.app';
 const COOKIE_NAMES = new Set(['__Host-rexy_console', '__Host-rexy_oauth']);
@@ -10,16 +10,37 @@ const PRIVATE_GET = new Set([
   '/control/api/me', '/control/api/overview', '/control/api/capabilities',
   '/control/api/beacon/status', '/control/api/beacon/services',
   '/control/api/beacon/host-preview',
+  '/control/observatory.js','/control/recovery.js','/control/requests.js',
+  '/control/api/observatory/players','/control/api/observatory/player-evidence',
+  '/control/api/observatory/commands','/control/api/observatory/capabilities',
+  '/control/api/observatory/wildlife','/control/api/observatory/creature-events',
+  '/control/api/observatory/dinos',
+  '/control/api/operations/trackers','/control/api/operations/targets',
+  '/control/api/operations/preview',
+  '/control/api/recovery/cases','/control/api/recovery/case',
+  '/control/api/recovery/requests',
 ]);
 const BEACON_DEVICE_POST = new Set(['/control/api/beacon/start','/control/api/beacon/poll']);
+const RECOVERY_POST = new Set(['/control/api/recovery/requests','/control/api/recovery/plan']);
+const PUBLIC_RECOVERY_POST = '/control/api/recovery/requests/public';
+const RECOVERY_ACTION_POST = /^\/control\/api\/recovery\/requests\/[a-f0-9]{8}-[a-f0-9-]{27,40}\/(?:plan|approve|execute|confirm)$/i;
+const CONTROL_QUERY = new Map([
+  ['/control/api/recovery/case',new Set(['caseId'])],
+  ['/control/api/operations/preview',new Set(['cluster','map','command'])],
+  ['/control/api/observatory/player-evidence',new Set(['cluster','map','name','offset','limit'])],
+  ['/control/api/observatory/wildlife',new Set(['cluster','map','type','name','offset','limit'])],
+  ['/control/api/observatory/creature-events',new Set(['cluster','map','type','name','offset','limit'])],
+  ['/control/api/observatory/dinos',new Set(['serviceId'])],
+]);
 const COMMUNITY_ROUTES = new Set(['/api/community/players','/api/community/players/history']);
 const STATUS_ROUTES = new Map([
   ['/api/status', 'legacy'], ['/api/status/legacy', 'legacy'], ['/api/status/limited', 'limited'],
 ]);
 const PUBLIC_FILES = new Set([
-  '/index.html', '/servers.html', '/meet-the-players.html', '/mods.html', '/admin.html', '/gateway.css',
+  '/index.html', '/servers.html', '/meet-the-players.html', '/mods.html', '/admin.html', '/recovery.html', '/gateway.css',
   '/assets/site.css', '/assets/site.js', '/assets/players.css', '/assets/players.js',
   '/assets/players-directory.json', '/assets/icon.svg', '/assets/mod-catalog.json',
+  '/assets/recovery.js',
   '/robots.txt', '/sitemap.xml',
 ]);
 // Historic public screens included identifiable movement and unused placeholder tools.
@@ -146,6 +167,16 @@ function validCommunityQuery(url){
 function validQuery(url) {
   if(COMMUNITY_ROUTES.has(url.pathname))return validCommunityQuery(url);
   if (!url.search) return true;
+  if(CONTROL_QUERY.has(url.pathname)){
+    if(url.search.length>650)return false;
+    const allowed=CONTROL_QUERY.get(url.pathname),seen=new Set();
+    for(const [key,value] of url.searchParams){
+      if(!allowed.has(key)||seen.has(key)||value.length>110||
+        /[\x00-\x1f\x7f<>]/.test(value))return false;
+      seen.add(key);
+    }
+    return seen.size>=1;
+  }
   if (url.pathname !== '/control/oauth/callback') return false;
   const allowed = new Set(['state', 'code', 'error', 'error_description', 'iss']);
   const seen = new Set();
@@ -382,7 +413,10 @@ export function createHandler({ fetchImpl = globalThis.fetch, timeoutMs = 12000,
       const isCommunity = COMMUNITY_ROUTES.has(pathname);
       const isLogout = pathname === '/control/api/logout';
       const isDevicePost = BEACON_DEVICE_POST.has(pathname);
-      const isMutation = isLogout || isDevicePost;
+      const isPublicRecovery = pathname===PUBLIC_RECOVERY_POST;
+      const isRecoveryPost = RECOVERY_POST.has(pathname)||RECOVERY_ACTION_POST.test(pathname);
+      const isMutation = isLogout || isDevicePost || isRecoveryPost || isPublicRecovery;
+      const needsCsrf=isMutation&&!isPublicRecovery;
       if (!isStatus && !isCommunity && !PRIVATE_GET.has(pathname) && !isMutation) return errorResponse('NOT_FOUND', 404);
       const methodOK = isMutation ? request.method === 'POST' : ['GET', 'HEAD'].includes(request.method);
       if (!methodOK) return errorResponse('METHOD_NOT_ALLOWED', 405);
@@ -394,7 +428,7 @@ export function createHandler({ fetchImpl = globalThis.fetch, timeoutMs = 12000,
       }
       if (!validQuery(url)) return errorResponse('INVALID_QUERY', 400);
       if (isMutation && (request.headers.get('Origin') !== CANONICAL ||
-          !/^[A-Za-z0-9_-]{43}$/.test(request.headers.get('X-CSRF-Token') || '') ||
+          (needsCsrf&&!/^[A-Za-z0-9_-]{43}$/.test(request.headers.get('X-CSRF-Token') || '')) ||
           !/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type') || '')))
         return errorResponse('CSRF_DENIED', 403);
       const controller = new AbortController();
@@ -406,11 +440,11 @@ export function createHandler({ fetchImpl = globalThis.fetch, timeoutMs = 12000,
           if (cookies) headers.set('Cookie', cookies);
           if (isMutation) {
             headers.set('Origin', CANONICAL);
-            headers.set('X-CSRF-Token', request.headers.get('X-CSRF-Token'));
+            if(needsCsrf)headers.set('X-CSRF-Token', request.headers.get('X-CSRF-Token'));
             headers.set('Content-Type', 'application/json');
           }
         }
-        const body = isMutation ? await boundedBytes(request.body, 1024, controller.signal) : undefined;
+        const body = isMutation ? await boundedBytes(request.body, isPublicRecovery||isRecoveryPost?2048:1024, controller.signal) : undefined;
         const upstream = await fetchImpl(BACKEND + pathname + url.search, {
           method: isStatus || isCommunity || pathname === '/control/api/beacon/host-preview' ? 'GET' : request.method, headers, body, redirect: 'manual',
           signal: controller.signal, cf: { cacheTtl: 0, cacheEverything: false },
@@ -467,7 +501,7 @@ export function createHandler({ fetchImpl = globalThis.fetch, timeoutMs = 12000,
     if (LEGACY_REDIRECTS.has(pathname)) return redirect(LEGACY_REDIRECTS.get(pathname));
     const file = pathname === '/' ? '/index.html' : pathname === '/admin' ? '/admin.html'
       : pathname === '/servers' ? '/servers.html' : pathname === '/meet-the-players' ? '/meet-the-players.html'
-      : pathname === '/mods' ? '/mods.html' : pathname;
+      : pathname === '/mods' ? '/mods.html' : pathname === '/recovery' ? '/recovery.html' : pathname;
     if (!PUBLIC_FILES.has(file)) return errorResponse('NOT_FOUND', 404);
     try {
       const assetURL = new URL(file, url.origin);
@@ -483,7 +517,7 @@ export function createHandler({ fetchImpl = globalThis.fetch, timeoutMs = 12000,
       if (response.status !== 200) return errorResponse('ASSET_UNAVAILABLE', 404);
       const headers = secureHeaders(response.headers);
       if (file === '/admin.html') { headers.set('Content-Security-Policy', CSP); headers.set('X-Robots-Tag', 'noindex'); }
-      else if (['/index.html', '/servers.html', '/meet-the-players.html', '/mods.html'].includes(file)) headers.set('Content-Security-Policy', PUBLIC_CSP);
+      else if (['/index.html', '/servers.html', '/meet-the-players.html', '/mods.html', '/recovery.html'].includes(file)) headers.set('Content-Security-Policy', PUBLIC_CSP);
       return new Response(request.method === 'HEAD' ? null : response.body, { status: 200, headers });
     } catch (_) { return errorResponse('ASSET_UNAVAILABLE', 503); }
   };
