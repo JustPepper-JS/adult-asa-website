@@ -415,7 +415,7 @@ export function createHandler({ fetchImpl = globalThis.fetch, timeoutMs = 12000,
       const isDevicePost = BEACON_DEVICE_POST.has(pathname);
       const isPublicRecovery = pathname===PUBLIC_RECOVERY_POST;
       const isRecoveryPost = RECOVERY_POST.has(pathname)||RECOVERY_ACTION_POST.test(pathname);
-      const isMutation = isLogout || isDevicePost || isRecoveryPost || isPublicRecovery;
+      const isMutation = request.method==='POST' && (isLogout || isDevicePost || isRecoveryPost || isPublicRecovery);
       const needsCsrf=isMutation&&!isPublicRecovery;
       if (!isStatus && !isCommunity && !PRIVATE_GET.has(pathname) && !isMutation) return errorResponse('NOT_FOUND', 404);
       const methodOK = isMutation ? request.method === 'POST' : ['GET', 'HEAD'].includes(request.method);
