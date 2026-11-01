@@ -40,7 +40,7 @@ const PUBLIC_FILES = new Set([
   '/index.html', '/servers.html', '/meet-the-players.html', '/mods.html', '/admin.html', '/recovery.html', '/gateway.css',
   '/assets/site.css', '/assets/site.js', '/assets/players.css', '/assets/players.js',
   '/assets/players-directory.json', '/assets/icon.svg', '/assets/mod-catalog.json',
-  '/assets/recovery.js',
+  '/assets/recovery.js','/assets/recovery.css',
   '/robots.txt', '/sitemap.xml',
 ]);
 // Historic public screens included identifiable movement and unused placeholder tools.
