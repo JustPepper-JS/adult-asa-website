@@ -18,10 +18,11 @@ const PRIVATE_GET = new Set([
   '/control/api/operations/trackers','/control/api/operations/targets',
   '/control/api/operations/preview',
   '/control/api/recovery/cases','/control/api/recovery/case',
-  '/control/api/recovery/requests',
+  '/control/api/recovery/requests', '/control/api/recovery/mfa/status',
 ]);
 const BEACON_DEVICE_POST = new Set(['/control/api/beacon/start','/control/api/beacon/poll']);
-const RECOVERY_POST = new Set(['/control/api/recovery/requests','/control/api/recovery/plan']);
+const RECOVERY_POST = new Set(['/control/api/recovery/requests','/control/api/recovery/plan',
+  '/control/api/recovery/mfa/start','/control/api/recovery/mfa/complete']);
 const PUBLIC_RECOVERY_POST = '/control/api/recovery/requests/public';
 const RECOVERY_ACTION_POST = /^\/control\/api\/recovery\/requests\/[a-f0-9]{8}-[a-f0-9-]{27,40}\/(?:plan|approve|execute|confirm)$/i;
 const CONTROL_QUERY = new Map([
