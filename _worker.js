@@ -415,10 +415,13 @@ export function createHandler({ fetchImpl = globalThis.fetch, timeoutMs = 12000,
       const isDevicePost = BEACON_DEVICE_POST.has(pathname);
       const isPublicRecovery = pathname===PUBLIC_RECOVERY_POST;
       const isRecoveryPost = RECOVERY_POST.has(pathname)||RECOVERY_ACTION_POST.test(pathname);
-      const isMutation = request.method==='POST' && (isLogout || isDevicePost || isRecoveryPost || isPublicRecovery);
+      const isMutationRoute=isLogout || isDevicePost || isRecoveryPost || isPublicRecovery;
+      const isMutation=request.method==='POST'&&isMutationRoute;
+      const mixedReadWrite=pathname==='/control/api/recovery/requests';
       const needsCsrf=isMutation&&!isPublicRecovery;
-      if (!isStatus && !isCommunity && !PRIVATE_GET.has(pathname) && !isMutation) return errorResponse('NOT_FOUND', 404);
-      const methodOK = isMutation ? request.method === 'POST' : ['GET', 'HEAD'].includes(request.method);
+      if (!isStatus && !isCommunity && !PRIVATE_GET.has(pathname) && !isMutationRoute) return errorResponse('NOT_FOUND', 404);
+      const methodOK=mixedReadWrite?['GET','HEAD','POST'].includes(request.method):
+        isMutationRoute?request.method==='POST':['GET','HEAD'].includes(request.method);
       if (!methodOK) return errorResponse('METHOD_NOT_ALLOWED', 405);
       if (url.search && (pathname === '/control/' || pathname === '/control/login') &&
           isRemovableTrackingQuery(url)) {
