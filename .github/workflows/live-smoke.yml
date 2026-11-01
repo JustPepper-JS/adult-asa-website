@@ -1,0 +1,41 @@
+name: Adult ASA live website smoke check
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/live-smoke.yml'
+permissions:
+  contents: read
+jobs:
+  production-http:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Check current public homepage is deployed
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location --retry 1 --max-time 25 \
+            -D /tmp/asa-headers -o /tmp/asa-home https://adult-asa.org/
+          grep -q "Build something" /tmp/asa-home
+          grep -q "Get help" /tmp/asa-home
+          grep -qi "W2-rexy-recovery-request-20261101" /tmp/asa-headers
+          echo "PASS live home copy and Cloudflare worker W2 release"
+      - name: Check public recovery page and assets
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location --retry 1 --max-time 25 \
+            -o /tmp/asa-recovery https://adult-asa.org/recovery.html
+          grep -q "Lost something?" /tmp/asa-recovery
+          curl --fail --silent --show-error --location --retry 1 --max-time 25 \
+            -o /tmp/asa-recovery-js https://adult-asa.org/assets/recovery.js
+          grep -q "recovery-request-form" /tmp/asa-recovery-js
+          echo "PASS public recovery form and script"
+      - name: Check privileged recovery API is not public
+        run: |
+          set -euo pipefail
+          CODE=$(curl --silent --show-error --max-time 25 -o /tmp/private-body \
+            -w "%{http_code}" https://adult-asa.org/control/api/recovery/requests)
+          test "$CODE" = 401
+          ! grep -q 'survivorName' /tmp/private-body
+          echo "PASS anonymous staff queue denied"
