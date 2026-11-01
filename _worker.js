@@ -19,11 +19,13 @@ const PRIVATE_GET = new Set([
   '/control/api/operations/preview',
   '/control/api/recovery/cases','/control/api/recovery/case',
   '/control/api/recovery/requests', '/control/api/recovery/mfa/status',
+  '/control/api/recovery/owner-one-time/status',
 ]);
 const BEACON_DEVICE_POST = new Set(['/control/api/beacon/start','/control/api/beacon/poll']);
 const RECOVERY_POST = new Set(['/control/api/recovery/requests','/control/api/recovery/plan',
   '/control/api/recovery/mfa/start','/control/api/recovery/mfa/complete']);
 const PUBLIC_RECOVERY_POST = '/control/api/recovery/requests/public';
+const OWNER_ONE_TIME_POST = '/control/api/recovery/owner-one-time/start';
 const RECOVERY_ACTION_POST = /^\/control\/api\/recovery\/requests\/[a-f0-9]{8}-[a-f0-9-]{27,40}\/(?:plan|approve|execute|confirm)$/i;
 const CONTROL_QUERY = new Map([
   ['/control/api/recovery/case',new Set(['caseId'])],
@@ -415,7 +417,7 @@ export function createHandler({ fetchImpl = globalThis.fetch, timeoutMs = 12000,
       const isLogout = pathname === '/control/api/logout';
       const isDevicePost = BEACON_DEVICE_POST.has(pathname);
       const isPublicRecovery = pathname===PUBLIC_RECOVERY_POST;
-      const isRecoveryPost = RECOVERY_POST.has(pathname)||RECOVERY_ACTION_POST.test(pathname);
+      const isRecoveryPost = RECOVERY_POST.has(pathname)||RECOVERY_ACTION_POST.test(pathname)||pathname===OWNER_ONE_TIME_POST;
       const isMutationRoute=isLogout || isDevicePost || isRecoveryPost || isPublicRecovery;
       const isMutation=request.method==='POST'&&isMutationRoute;
       const mixedReadWrite=pathname==='/control/api/recovery/requests';
