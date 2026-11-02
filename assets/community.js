@@ -8,7 +8,7 @@
   const KINDS=new Set(['event','challenge','announcement']);
   const PHOTOS=new Set(['build','creature','moment']);
   const localPhoto=/^\/assets\/community\/gallery\/[a-z0-9][a-z0-9_-]{0,70}\.(?:webp|png|jpg)$/;
-  let catalog=null;
+  let catalog=null;let catalogUnavailable=false;
   function element(tag,className,text){
     const node=document.createElement(tag);
     if(className)node.className=className;
@@ -51,6 +51,7 @@
     return catalog[name].filter(row=>row&&row.approved===true&&typeof row==='object'&&!Array.isArray(row));
   }
   function renderEvents(){
+    if(catalogUnavailable){$('community-event-list').replaceChildren(empty('Community feed unavailable.','We could not verify the latest published updates. Check Discord instead.','View community Discord ↗'));$('community-event-status').textContent='Published updates unavailable';return;}
     const type=$('community-event-kind').value;
     const list=getList('updates').filter(item=>
       KINDS.has(item.kind)&&safeText(item.title,120)&&safeText(item.description,650)&&
@@ -72,6 +73,7 @@
     $('community-event-status').textContent=list.length===0?'No staff-reviewed updates published yet':list.length+' published '+(list.length===1?'update':'updates');
   }
   function renderShops(){
+    if(catalogUnavailable){$('community-shop-list').replaceChildren(empty('Shop listings unavailable.','We could not verify the current approved directory.','Ask staff on Discord ↗'));$('community-shop-status').textContent='Approved shop listings unavailable';return;}
     const query=norm($('community-shop-search').value);
     const list=getList('shops').filter(item=>{
       if(!safeText(item.name,100)||!safeText(item.description,520))return false;
@@ -96,6 +98,7 @@
     $('community-shop-status').textContent=list.length?list.length+' matching approved '+(list.length===1?'shop':'shops'):'No approved shops currently listed';
   }
   function renderGallery(){
+    if(catalogUnavailable){$('community-gallery-list').replaceChildren(empty('Gallery unavailable.','Approved images could not be verified right now.','Visit community Discord ↗'));$('community-gallery-status').textContent='Approved gallery unavailable';return;}
     const filter=$('community-gallery-filter').value;
     const list=getList('gallery').filter(item=>
       safeText(item.title,100)&&safeText(item.alt,180)&&typeof item.image==='string'&&
@@ -133,9 +136,7 @@
       catalog=data;
     }catch(_){
       catalog=null;
-      for(const label of ['community-event-status','community-shop-status','community-gallery-status']){
-        $(label).textContent='Community listings temporarily unavailable';
-      }
+      catalogUnavailable=true;
     }
     renderEvents();renderShops();renderGallery();
   }
