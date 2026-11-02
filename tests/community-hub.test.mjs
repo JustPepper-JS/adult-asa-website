@@ -114,3 +114,13 @@ test('W3 mod field guide visuals are original first-party CSS with author resear
   assert.match(mod,/not a live installed-mod list/);
   assert.doesNotMatch(site,/<img[^>]+src=['"]https?:/);
 });
+
+
+test('W3 unavailable catalog remains unavailable and is never described as an empty live directory',async()=>{
+  const {nodes}=simulatedCommunity(null);
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.match(nodes['community-event-status'].textContent,/unavailable/i);
+  assert.match(nodes['community-shop-status'].textContent,/unavailable/i);
+  assert.match(nodes['community-gallery-status'].textContent,/unavailable/i);
+  assert.match(flatten(nodes['community-event-list']),/Community feed unavailable/);
+});
