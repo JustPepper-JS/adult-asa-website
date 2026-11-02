@@ -38,14 +38,16 @@ const STATUS_ROUTES = new Map([
   ['/api/status', 'legacy'], ['/api/status/legacy', 'legacy'], ['/api/status/limited', 'limited'],
 ]);
 const PUBLIC_FILES = new Set([
-  '/index.html', '/servers.html', '/meet-the-players.html', '/mods.html', '/admin.html', '/recovery.html', '/gateway.css',
-  '/assets/site.css', '/assets/site.js', '/assets/players.css', '/assets/players.js',
+  '/index.html', '/servers.html', '/meet-the-players.html', '/mods.html', '/community.html', '/admin.html', '/recovery.html', '/gateway.css',
+  '/assets/site.css', '/assets/site.js', '/assets/community.css', '/assets/community.js', '/assets/community-content.json', '/assets/players.css', '/assets/players.js',
   '/assets/players-directory.json', '/assets/icon.svg', '/assets/mod-catalog.json',
   '/assets/recovery.js','/assets/recovery.css',
   '/robots.txt', '/sitemap.xml',
 ]);
 // Historic public screens included identifiable movement and unused placeholder tools.
 // De-link and reject their assets; offer only safe public destinations.
+// Only staff-reviewed, first-party gallery assets can be published in this directory.
+const PUBLIC_GALLERY = /^\/assets\/community\/gallery\/[a-z0-9][a-z0-9_-]{0,70}\.(?:webp|png|jpg)$/;
 const LEGACY_REDIRECTS = new Map([
   ['/cluster-status.html', '/servers'], ['/movement.html', '/servers'],
   ['/heatmap.html', '/servers'], ['/players.html', '/servers'],
@@ -505,8 +507,8 @@ export function createHandler({ fetchImpl = globalThis.fetch, timeoutMs = 12000,
     if (LEGACY_REDIRECTS.has(pathname)) return redirect(LEGACY_REDIRECTS.get(pathname));
     const file = pathname === '/' ? '/index.html' : pathname === '/admin' ? '/admin.html'
       : pathname === '/servers' ? '/servers.html' : pathname === '/meet-the-players' ? '/meet-the-players.html'
-      : pathname === '/mods' ? '/mods.html' : pathname === '/recovery' ? '/recovery.html' : pathname;
-    if (!PUBLIC_FILES.has(file)) return errorResponse('NOT_FOUND', 404);
+      : pathname === '/mods' ? '/mods.html' : pathname === '/community' ? '/community.html' : pathname === '/recovery' ? '/recovery.html' : pathname;
+    if (!PUBLIC_FILES.has(file) && !PUBLIC_GALLERY.test(file)) return errorResponse('NOT_FOUND', 404);
     try {
       const assetURL = new URL(file, url.origin);
       let response = await env.ASSETS.fetch(new Request(assetURL, { method: request.method }));
@@ -521,7 +523,7 @@ export function createHandler({ fetchImpl = globalThis.fetch, timeoutMs = 12000,
       if (response.status !== 200) return errorResponse('ASSET_UNAVAILABLE', 404);
       const headers = secureHeaders(response.headers);
       if (file === '/admin.html') { headers.set('Content-Security-Policy', CSP); headers.set('X-Robots-Tag', 'noindex'); }
-      else if (['/index.html', '/servers.html', '/meet-the-players.html', '/mods.html', '/recovery.html'].includes(file)) headers.set('Content-Security-Policy', PUBLIC_CSP);
+      else if (['/index.html', '/servers.html', '/meet-the-players.html', '/mods.html', '/community.html', '/recovery.html'].includes(file)) headers.set('Content-Security-Policy', PUBLIC_CSP);
       return new Response(request.method === 'HEAD' ? null : response.body, { status: 200, headers });
     } catch (_) { return errorResponse('ASSET_UNAVAILABLE', 503); }
   };

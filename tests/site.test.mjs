@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 const root=new URL('../',import.meta.url);
 const read=(file)=>fs.readFileSync(new URL(file,root),'utf8');
-const pages=['index.html','servers.html','mods.html','meet-the-players.html'];
+const pages=['index.html','servers.html','mods.html','meet-the-players.html','community.html'];
 const css=read('assets/site.css'),js=read('assets/site.js'),worker=read('_worker.js');
 const siteLinks=(html)=>[...html.matchAll(/(?:href|src)="([^"]+)"/g)].map(x=>x[1]);
 
@@ -17,7 +17,7 @@ test('public pages use the same accessible, standalone navigation and stylesheet
     assert.match(html,/aria-label="Primary navigation"/);
     assert.doesNotMatch(html,/localStorage|type="password"|onclick=|onload=/i);
     for(const url of siteLinks(html))if(url.startsWith('/')){
-      const clean=url.split('?')[0].split('#')[0];if(['','/','/admin','/servers','/mods','/meet-the-players'].includes(clean))continue;
+      const clean=url.split('?')[0].split('#')[0];if(['','/','/admin','/servers','/mods','/community','/meet-the-players'].includes(clean))continue;
       assert.ok(fs.existsSync(new URL('.'+clean,root)),page+' references missing asset '+clean);
     }
   }

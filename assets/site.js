@@ -172,9 +172,17 @@
   function groupFor(mod){const categories=Array.isArray(mod.categories)?mod.categories:[];return GROUPS.filter(g=>g[2].some(key=>categories.includes(key))).map(g=>g[0]);}
   function modCard(mod){
     const card=el('article','mod-card');const badges=el('div','mod-badges');
-    const cats=groupFor(mod);badges.append(el('span','mod-badge',GROUPS.find(g=>g[0]===cats[0])?.[1]||'Other'));
+    const cats=groupFor(mod);
+    const theme=cats[0]||'misc';
+    const sigils=Object.freeze({creatures:'◉',building:'▤',quality:'✦',breeding:'◈',
+      trade:'◇',travel:'⌁',resources:'▦',misc:'✳'});
+    const illustration=el('div','mod-visual mod-visual-'+theme);
+    illustration.setAttribute('aria-hidden','true');
+    illustration.append(el('span','mod-visual-glyph',sigils[theme]),
+      el('span','mod-visual-label','REXY / FIELD GUIDE'));
+    badges.append(el('span','mod-badge',GROUPS.find(g=>g[0]===cats[0])?.[1]||'Other'));
     badges.append(el('span',mod.listedLegacyOn?'mod-badge evidence':'mod-badge',mod.listedLegacyOn?'Legacy list observed · Oct 8':'Author research · Aug 7'));
-    card.append(badges,el('h3','',mod.name),el('p','',mod.summary));
+    card.append(illustration,badges,el('h3','',mod.name),el('p','',mod.summary));
     const details=el('details');details.append(el('summary','',mod.features?.length?'What this mod covers':'Research & evidence'));
     const area=el('div');if(Array.isArray(mod.features)&&mod.features.length){const list=el('ul');mod.features.slice(0,5).forEach(f=>list.append(el('li','',f)));area.append(list);}
     area.append(el('p','map-note',mod.listedLegacyOn?'Observed in Legacy enabled-mod listings on 2026-10-08; in-game loading still unverified.':'Cataloged from earlier community research; not confirmed installed today.'));

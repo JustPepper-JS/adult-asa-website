@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#081321">
+  <meta name="description" content="Explore the Adult ASA community hub: events, player shops, gallery, and Rexy's ARK mod field guide.">
+  <link rel="canonical" href="https://adult-asa.org/community">
+  <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/site.css">
+  <link rel="stylesheet" href="/assets/community.css">
+  <script src="/assets/site.js" defer></script>
+  <script src="/assets/community.js" defer></script>
+  <title>Community Hub — Adult ASA</title>
+</head>
+<body data-page="community">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header"><div class="nav-shell container">
+    <a class="brand" href="/" aria-label="Adult ASA home"><span class="brand-icon" aria-hidden="true">A</span><span class="brand-wordmark">ADULT ASA<small>PVE CLUSTER</small></span></a>
+    <button class="menu-button" type="button" aria-controls="primary-nav" aria-expanded="false" aria-label="Toggle navigation"><span></span><span></span><span></span></button>
+    <nav class="main-nav" id="primary-nav" aria-label="Primary navigation">
+      <a href="/">Home</a><a href="/servers">Servers</a><a href="/meet-the-players">Players</a><a href="/mods">Mods</a><a href="/community" aria-current="page">Community</a><a href="/recovery.html">Get help</a>
+    </nav>
+    <a class="nav-admin" href="/admin">Staff login</a>
+  </div></header>
+  <main id="main">
+    <section class="community-hero container" aria-labelledby="community-title">
+      <div class="community-hero-copy">
+        <p class="eyebrow"><span class="community-beacon" aria-hidden="true"></span> THE ADULT ASA COMMUNITY</p>
+        <h1 id="community-title">More than<br><em>the next tame.</em></h1>
+        <p class="community-lede">Fifteen worlds to explore. One community to call home. Find player shops, discover shared builds, follow upcoming events and see what everyone's creating across Legacy and Limited.</p>
+        <div class="community-actions">
+          <a class="button button-primary" href="#community-events">Explore community updates <span aria-hidden="true">↘</span></a>
+          <a class="button button-quiet" href="https://discord.gg/adultasa" target="_blank" rel="noopener noreferrer">Join our Discord <span aria-hidden="true">↗</span></a>
+        </div>
+        <div class="community-trust"><span>Legacy · 10 maps</span><span>Limited · 5 maps</span><span>Crossplay PvE</span></div>
+      </div>
+      <div class="community-signal" role="img" aria-label="Original holographic-style Adult ASA community illustration with intersecting orbit lines and three world signals">
+        <div class="community-signal-grid" aria-hidden="true"></div>
+        <div class="signal-ring signal-ring-one" aria-hidden="true"></div>
+        <div class="signal-ring signal-ring-two" aria-hidden="true"></div>
+        <div class="signal-node node-one" aria-hidden="true"></div>
+        <div class="signal-node node-two" aria-hidden="true"></div>
+        <div class="signal-node node-three" aria-hidden="true"></div>
+        <div class="signal-console">
+          <span class="signal-kicker">REXY / COMMUNITY FEED</span>
+          <strong>ADULT<br>ASA</strong>
+          <div class="signal-rule"></div>
+          <span>ONE COMMUNITY · TWO WAYS TO PLAY</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="community-paths container section compact" aria-labelledby="path-title">
+      <div class="section-heading"><div><p class="eyebrow">EXPLORE</p><h2 id="path-title">Your world extends beyond the map.</h2></div><p>Follow the community without leaving the place you already use to check your servers.</p></div>
+      <div class="community-path-grid">
+        <a class="path-tile" href="#community-shops"><span class="path-glyph" aria-hidden="true">◇</span><span class="path-label">01 / TRADE</span><strong>Player shops</strong><span>Find community-run sellers and specialties.</span><span class="path-arrow" aria-hidden="true">↗</span></a>
+        <a class="path-tile" href="#community-events"><span class="path-glyph" aria-hidden="true">✳</span><span class="path-label">02 / GATHER</span><strong>Events &amp; news</strong><span>Community happenings, challenges and updates.</span><span class="path-arrow" aria-hidden="true">↗</span></a>
+        <a class="path-tile" href="#community-gallery"><span class="path-glyph" aria-hidden="true">▣</span><span class="path-label">03 / DISCOVER</span><strong>Community gallery</strong><span>See builds, tames and survivor moments.</span><span class="path-arrow" aria-hidden="true">↗</span></a>
+        <a class="path-tile" href="/mods"><span class="path-glyph" aria-hidden="true">✦</span><span class="path-label">04 / LEARN</span><strong>Rexy's field guide</strong><span>Explore researched mods and available evidence.</span><span class="path-arrow" aria-hidden="true">↗</span></a>
+      </div>
+    </section>
+
+    <section class="community-panel-wrap section" id="community-events" aria-labelledby="events-title">
+      <div class="container">
+        <div class="section-heading"><div><p class="eyebrow">UPCOMING &amp; ANNOUNCED</p><h2 id="events-title">What's happening around the ARKs.</h2></div><p>Only staff-reviewed announcements are published here. Discord remains the source for immediate changes.</p></div>
+        <div class="community-toolbar">
+          <label for="community-event-kind">Show updates <select id="community-event-kind"><option value="all">All updates</option><option value="event">Events</option><option value="challenge">Challenges</option><option value="announcement">Announcements</option></select></label>
+          <a class="community-toolbar-link" href="https://discord.gg/adultasa" target="_blank" rel="noopener noreferrer">Community Discord ↗</a>
+        </div>
+        <p id="community-event-status" class="community-count" role="status" aria-live="polite">Checking published updates…</p>
+        <div id="community-event-list" class="community-event-grid" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="section container" id="community-shops" aria-labelledby="shops-title">
+      <div class="section-heading"><div><p class="eyebrow">COMMUNITY MARKETPLACE</p><h2 id="shops-title">Player-powered. ARK-inspired.</h2></div><p>Find published player-owned shops by name or specialty. Listings are opt-in and reviewed before they appear here.</p></div>
+      <div class="community-toolbar">
+        <label class="community-search" for="community-shop-search">Find a shop <input id="community-shop-search" type="search" placeholder="Shop, owner or creature" maxlength="80" autocomplete="off"></label>
+        <a class="community-toolbar-link" href="https://discord.gg/adultasa" target="_blank" rel="noopener noreferrer">Ask about listing your shop ↗</a>
+      </div>
+      <p id="community-shop-status" class="community-count" role="status" aria-live="polite">Checking published shops…</p>
+      <div id="community-shop-list" class="community-shop-grid" aria-live="polite"></div>
+    </section>
+
+    <section class="community-panel-wrap section" id="community-gallery" aria-labelledby="gallery-title">
+      <div class="container">
+        <div class="section-heading"><div><p class="eyebrow">THE COMMUNITY THROUGH YOUR EYES</p><h2 id="gallery-title">Built to be remembered.</h2></div><p>Base builds, incredible tames and memorable moments. Shared only after the creator approves publication.</p></div>
+        <div class="community-toolbar">
+          <label for="community-gallery-filter">Gallery collection <select id="community-gallery-filter"><option value="all">All photos</option><option value="build">Builds</option><option value="creature">Creatures</option><option value="moment">Adventures</option></select></label>
+          <a class="community-toolbar-link" href="https://discord.gg/adultasa" target="_blank" rel="noopener noreferrer">Share with staff on Discord ↗</a>
+        </div>
+        <p id="community-gallery-status" class="community-count" role="status" aria-live="polite">Checking approved photos…</p>
+        <div id="community-gallery-list" class="community-gallery-grid" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="container section compact" aria-labelledby="field-title">
+      <div class="community-field-panel">
+        <div><p class="eyebrow">REXY'S FIELD GUIDE</p><h2 id="field-title">Know your mods. Build your next adventure.</h2><p>Browse the researched mod guide, category filters and links to creators. We distinguish author documentation from a mod verified running on an Adult ASA server.</p><a class="button button-primary" href="/mods">Open the mod field guide <span aria-hidden="true">↗</span></a></div>
+        <div class="community-field-mark" aria-hidden="true"><span>R</span><small>REXY FIELD GUIDE</small></div>
+      </div>
+    </section>
+    <section class="container section compact"><div class="community-next"><div><p class="eyebrow">NEED A HAND?</p><h2>Every great ARK story needs a good crew.</h2><p>Meet the survivors, check the maps or request help with a transfer or lost item. Rexy's staff tools stay behind authenticated access.</p></div><div class="community-next-links"><a href="/meet-the-players">Meet the players ↗</a><a href="/servers">All 15 maps ↗</a><a href="/recovery.html">Get help ↗</a></div></div></section>
+  </main>
+  <footer class="site-footer"><div class="container footer-main"><div><a class="brand" href="/"><span class="brand-icon" aria-hidden="true">A</span><span class="brand-wordmark">ADULT ASA<small>PVE CLUSTER</small></span></a><p>ARK PvE. Good people. No scheduled wipes.</p></div><div class="footer-links"><a href="/servers">Servers</a><a href="/meet-the-players">Players</a><a href="/mods">Mods</a><a href="/community">Community</a><a href="/recovery.html">Get help</a><a href="/admin">Staff login</a><a href="https://discord.gg/adultasa" target="_blank" rel="noopener noreferrer">Discord ↗</a></div></div><div class="container footer-bottom"><span>© 2026 Adult ASA. Independent community server; not affiliated with Studio Wildcard.</span><span>Community content is staff-reviewed and opt-in.</span></div></footer>
+</body>
+</html>
