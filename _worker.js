@@ -46,6 +46,8 @@ const PUBLIC_FILES = new Set([
 ]);
 // Historic public screens included identifiable movement and unused placeholder tools.
 // De-link and reject their assets; offer only safe public destinations.
+// Only staff-reviewed, first-party gallery assets can be published in this directory.
+const PUBLIC_GALLERY = /^\/assets\/community\/gallery\/[a-z0-9][a-z0-9_-]{0,70}\.(?:webp|png|jpg)$/;
 const LEGACY_REDIRECTS = new Map([
   ['/cluster-status.html', '/servers'], ['/movement.html', '/servers'],
   ['/heatmap.html', '/servers'], ['/players.html', '/servers'],
@@ -506,7 +508,7 @@ export function createHandler({ fetchImpl = globalThis.fetch, timeoutMs = 12000,
     const file = pathname === '/' ? '/index.html' : pathname === '/admin' ? '/admin.html'
       : pathname === '/servers' ? '/servers.html' : pathname === '/meet-the-players' ? '/meet-the-players.html'
       : pathname === '/mods' ? '/mods.html' : pathname === '/community' ? '/community.html' : pathname === '/recovery' ? '/recovery.html' : pathname;
-    if (!PUBLIC_FILES.has(file)) return errorResponse('NOT_FOUND', 404);
+    if (!PUBLIC_FILES.has(file) && !PUBLIC_GALLERY.test(file)) return errorResponse('NOT_FOUND', 404);
     try {
       const assetURL = new URL(file, url.origin);
       let response = await env.ASSETS.fetch(new Request(assetURL, { method: request.method }));
