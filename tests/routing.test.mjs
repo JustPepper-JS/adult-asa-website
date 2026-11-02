@@ -32,13 +32,13 @@ test('admin aliases reach the dedicated login landing page', async () => {
 test('only redesigned public files are served, with safe legacy redirects', async () => {
   const handle = createHandler({ fetchImpl: failFetch });
   assert.equal(await (await handle(request('/'), env)).text(), 'asset:/index.html');
-  for (const path of ['/mods','/servers','/meet-the-players','/mods.html','/servers.html','/meet-the-players.html','/gateway.css','/assets/site.css','/assets/site.js','/assets/players.css','/assets/players.js','/assets/players-directory.json','/assets/mod-catalog.json','/assets/icon.svg','/robots.txt','/sitemap.xml']) {
+  for (const path of ['/mods','/servers','/meet-the-players','/community','/community.html','/assets/community.js','/assets/community.css','/assets/community-content.json','/mods.html','/servers.html','/meet-the-players.html','/gateway.css','/assets/site.css','/assets/site.js','/assets/players.css','/assets/players.js','/assets/players-directory.json','/assets/mod-catalog.json','/assets/icon.svg','/robots.txt','/sitemap.xml']) {
     const res = await handle(request(path), env); assert.equal(res.status, 200, path); noCache(res);
   }
   for (const [path, destination] of [['/movement.html','/servers'],['/heatmap.html','/servers'],['/players.html','/servers'],['/tracker.html','/servers'],['/link-survivor.html','/'],['/tribe.html','/']]) {
     const res = await handle(request(path), env); assert.equal(res.status, 302, path); assert.equal(res.headers.get('Location'), destination);
   }
-  for (const path of ['/','/servers','/mods','/meet-the-players']) {
+  for (const path of ['/','/servers','/mods','/meet-the-players','/community']) {
     const res=await handle(request(path),env);assert.match(res.headers.get('Content-Security-Policy')||'', /script-src 'self'/);
   }
 });
