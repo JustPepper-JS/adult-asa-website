@@ -28,7 +28,7 @@ test('W3 private records and credentialed requests are never wired into public c
   assert.doesNotMatch(script,/innerHTML|localStorage|sessionStorage|document\.cookie|eval\(|fetch\(['"]\/control|fetch\(['"]\/api\/(?:community\/players|heatmap|sessions)/);
   assert.match(script,/\.textContent/);
   assert.match(script,/approved===true/);
-  assert.match(script,/community\/gallery/);
+  assert.match(script,/const localPhoto=/);
   assert.match(script,/credentials:'omit'/);
   assert.match(script,/url\.hostname==='discord\.com'/);
 });
